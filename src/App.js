@@ -1,23 +1,26 @@
-import logo from './logo.svg';
 import './App.css';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import LoginForm from './components/LoginForm';
+import Dashboard from './components/Dashboard';
+import NewRepairOrderForm from './components/NewRepairOrderForm';
 
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <h1 className="text-3xl font-bold border-2 m-8 flex space-x-3 mr-2 font-semibold 
+        bg-gradient-to-r from-gray-700 via-gray-800 to-gray-900 
+        text-gray-100 rounded-sm ring-2 ring-gray-200 px-6 py-2 mx-8">
+        GSM Online
+      </h1>
+      <div className='container'>
+        <BrowserRouter>
+          <Routes>
+            <Route path='/' element={<LoginForm />} />
+            <Route path='/dashboard' element={<Dashboard />} />
+            <Route path='/add-repair-order' element={<NewRepairOrderForm />} />
+          </Routes>
+        </BrowserRouter>
+      </div>
     </div>
   );
 }
