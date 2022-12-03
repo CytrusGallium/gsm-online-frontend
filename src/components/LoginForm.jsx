@@ -16,17 +16,20 @@ const LoginForm = () => {
         
         event.preventDefault();
         let res;
+
+        setErrorMessage("Connexion en cours...");
         
         try {
             
             // Build Req/Res
             const url = GetBackEndUrl() + "/api/login";
+            console.log("Login URL = " + url);
             res = await axios.post(url, loginInfo);
 
             if (res.data["token"])
             {
                 localStorage.setItem("token", res.data["token"]);
-                setErrorMessage("Welcome !");
+                setErrorMessage("Bienvenue !");
                 window.location = "/Dashboard";
             }
 
