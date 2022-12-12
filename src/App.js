@@ -3,6 +3,8 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import LoginForm from './components/LoginForm';
 import Dashboard from './components/Dashboard';
 import NewRepairOrderForm from './components/NewRepairOrderForm';
+import ConnexionSettings from './pages/ConnexionSettings';
+import RepairOrdersList from './pages/RepairOrdersList';
 
 function App() {
   return (
@@ -18,6 +20,8 @@ function App() {
             <Route path='/' element={<LoginForm />} />
             <Route path='/dashboard' element={<Dashboard />} />
             <Route path='/add-repair-order' element={<NewRepairOrderForm />} />
+            <Route path='/connexion-settings' element={<ConnexionSettings />} />
+            <Route path='/repair-orders-list' element={<RepairOrdersList />} />
           </Routes>
         </BrowserRouter>
       </div>

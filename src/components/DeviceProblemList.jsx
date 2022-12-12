@@ -26,18 +26,20 @@ export default class DeviceProblemList extends Component {
 
     HandleNameOrPriceChange = ({ currentTarget: input }) => {
 
+        console.log("MARK 1");
         let tmpState = this.state;
-
+        
         let result = null;
-
+        
         tmpState.problems.forEach(element => {
             if (element.key == input.id)
-                result = element;
-            console.log("Result = " + JSON.stringify(result));
+            result = element;
         });
 
         if (result == null)
             return;
+        
+        console.log("MARK 2 : " + result.key);
 
         if (input.name == "problem")
             result.name = input.value;
@@ -73,13 +75,13 @@ export default class DeviceProblemList extends Component {
                         return true;
                     }}
                 ></ReactHotkeys>
-                {this.state.problems.length > 1 && <p className='text-gray-100 mb-1'>List Des Pannes</p>}
+                {this.state.problems.length > 1 && <p className='text-gray-100 mb-1'>Liste Des Pannes</p>}
                 {
                     this.state.problems.map(problem =>
                         <div className='flex-1 flex-nowrap flex-row' key={problem.key}>
                             {this.state.problems.length > 1 && <span className='text-gray-100'>{problem.key} </span>}
-                            <input type="text" name="problem" id={problem.key} placeholder="Panne.." onChange={this.HandleNameOrPriceChange} className={this.inputStyle + ((this.state.problems.length > 1) ? " w-1/3" : " w-full")} />
-                            {this.state.problems.length > 1 && <input type="text" name="price" id={problem.key} placeholder="Prix.." onChange={this.HandleNameOrPriceChange} className={this.inputStyle + " w-1/3"} />}
+                            <input type="text" name="problem" id={problem.key} placeholder="Panne.." onChange={this.HandleNameOrPriceChange} className={this.inputStyle + ((this.state.problems.length > 1) ? " w-1/3" : " w-full")} autoComplete="off" />
+                            {this.state.problems.length > 1 && <input type="number" name="price" id={problem.key} placeholder="Prix.." onChange={this.HandleNameOrPriceChange} className={this.inputStyle + " w-1/3"}  autoComplete="off"/>}
                         </div>
                     )
                 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaSitemap, FaUserFriends, FaClipboardList, FaSearch } from 'react-icons/fa';
+import { FaUserFriends, FaClipboardList, FaList } from 'react-icons/fa';
 
 const Dashboard = () => {
   
@@ -12,7 +12,7 @@ const Dashboard = () => {
       <div className='flex flex-col'>
         <h3 className={buttonStyling}><a href='/add-repair-order'><FaClipboardList />Ajouter un Ordre de Réparation</a></h3>
         <br/>
-        <h3 className={buttonStyling}><a href='/item-manager'><FaSearch />Chercher un Ordre de Répartion</a></h3>
+        <h3 className={buttonStyling}><a href='/repair-orders-list'><FaList />Liste des Ordres de Répartion</a></h3>
         <br/>
         <h3 className={buttonStyling}><a href='/user-manager'><FaUserFriends />Gestion des Utilisateur</a></h3>
       </div>

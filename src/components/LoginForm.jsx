@@ -2,71 +2,82 @@ import React from 'react';
 import { useState } from 'react';
 import axios from "axios";
 import GetBackEndUrl from '../const';
+import { BarLoader } from 'react-spinners';
+import { FaCog } from 'react-icons/fa';
+import { AwesomeButton } from 'react-awesome-button';
+import 'react-awesome-button/dist/styles.css';
 
 const LoginForm = () => {
-  
-    const [ loginInfo, setLoginInfo ] = useState( { username:"", password:"" } );
-    const [ errorMessage, setErrorMessage ] = useState("");
+
+    const [loginInfo, setLoginInfo] = useState({ username: "", password: "" });
+    const [uiMessage, setUIMessage] = useState("");
+    const [isBusy, setIsBusy] = useState(false);
 
     const handleChange = ({ currentTarget: input }) => {
-        setLoginInfo({...loginInfo, [input.name]: input.value });
+        setLoginInfo({ ...loginInfo, [input.name]: input.value });
     }
 
     const LoginOnClick = async (event) => {
-        
+
+        setIsBusy(true);
         event.preventDefault();
         let res;
 
-        setErrorMessage("Connexion en cours...");
-        
+        setUIMessage("Connexion en cours...");
+
         try {
-            
+
             // Build Req/Res
             const url = GetBackEndUrl() + "/api/login";
             console.log("Login URL = " + url);
             res = await axios.post(url, loginInfo);
 
-            if (res.data["token"])
-            {
+            if (res.data["token"]) {
                 localStorage.setItem("token", res.data["token"]);
-                setErrorMessage("Bienvenue !");
+                setUIMessage("Bienvenue !");
                 window.location = "/Dashboard";
             }
 
         } catch (error) {
             console.log("ERROR : " + error);
+            setIsBusy(false);
 
             if (error.response && error.response.status >= 400 && error.response.status <= 500) {
-                
+
                 console.log(error.response.data);
-                
+
                 if (error.response.data["code"] === "USER_NOT_FOUND")
-                    setErrorMessage("Utilisateur Introuvables :(");
-                    
+                    setUIMessage("Utilisateur Introuvables :(");
+
                 if (error.response.data["code"] === "INCORRECT_PASSWORD")
-                    setErrorMessage("Mot de Passe Incorrect :(");
+                    setUIMessage("Mot de Passe Incorrect :(");
             }
         }
-        
+
     }
 
     return (
-        <div>
+        <div className='flex flex-col items-center'>
             <form onSubmit={LoginOnClick}>
-            <div>
-                <input type="text" name="username" placeholder="Nom d'Utilisateur..." value={loginInfo.username} onChange={handleChange} required className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500' />
-            </div>
-            <br/>
-            <div>
-                <input type="password" name="password" placeholder="Mot de passe..." value={loginInfo.password} onChange={handleChange} required className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500' />
-            </div>
-            <br/>
-            <div>
-                <button type="submit" className="bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded">Se Connecter</button>
-            </div>
+                <div>
+                    <input type="text" name="username" placeholder="Nom d'Utilisateur..." value={loginInfo.username} onChange={handleChange} required className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500' />
+                </div>
+                <br />
+                <div>
+                    <input type="password" name="password" placeholder="Mot de passe..." value={loginInfo.password} onChange={handleChange} required className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500' />
+                </div>
+                <br />
+                <div>
+                    <button type="submit" className="bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded">Se Connecter</button>
+                </div>
             </form>
-            <br/>
-            <p className='text-gray-100'>{errorMessage}</p>
+            <br />
+            <p className='text-gray-100'>{uiMessage}</p>
+            <br />
+            {isBusy && <BarLoader color='#AAAAAA' />}
+            <br />
+            <br />
+            <AwesomeButton type="primary" before={<FaCog />}><a href='/connexion-settings'>Options de Connexion</a></AwesomeButton>
         </div>
     )
 }
