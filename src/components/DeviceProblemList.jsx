@@ -26,7 +26,7 @@ export default class DeviceProblemList extends Component {
 
     HandleNameOrPriceChange = ({ currentTarget: input }) => {
 
-        console.log("MARK 1");
+        // console.log("MARK 1");
         let tmpState = this.state;
         
         let result = null;
@@ -39,7 +39,7 @@ export default class DeviceProblemList extends Component {
         if (result == null)
             return;
         
-        console.log("MARK 2 : " + result.key);
+        // console.log("MARK 2 : " + result.key);
 
         if (input.name == "problem")
             result.name = input.value;

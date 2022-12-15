@@ -1,62 +1,9 @@
-// import React from 'react';
-// import Table from 'rc-table';
-// import axios from 'axios';
-
-// const RepairOrdersList = () => {
-
-//     const columns = [
-//         {
-//             title: 'Name',
-//             dataIndex: 'name',
-//             key: 'name',
-//             width: 100,
-//             className:'border border-gray-500'
-//         },
-//         {
-//             title: 'Age',
-//             dataIndex: 'age',
-//             key: 'age',
-//             width: 100,
-//             className:'border border-gray-500'
-//         },
-//         {
-//             title: 'Address',
-//             dataIndex: 'address',
-//             key: 'address',
-//             width: 200,
-//             className:'border border-gray-500'
-//         },
-//         {
-//             title: 'Operations',
-//             dataIndex: '',
-//             key: 'operations',
-//             render: () => <a href="#">Delete</a>,
-//             className:'border border-gray-500'
-//         },
-//     ];
-
-//     const data = [
-//         { name: 'Jack', age: 28, address: 'some where', key: '1' },
-//         { name: 'Rose', age: 36, address: 'some where', key: '2' },
-//     ];
-
-//     return (
-//         <div className='text-gray-100 flex flex-col items-center'>
-//             RepairOrdersList
-//             <br />
-//             <br />
-//             <Table columns={columns} data={data} />
-//         </div>
-//     )
-// }
-
-// export default RepairOrdersList
-
 import React, { Component } from 'react';
 import Table from 'rc-table';
 import { GridLoader, PulseLoader } from 'react-spinners';
 import axios from "axios";
 import GetBackEndUrl from '../const';
+import DeviceIconList from '../components/DeviceIconList';
 
 export default class RepairOrderID extends Component {
 
@@ -94,12 +41,15 @@ export default class RepairOrderID extends Component {
             width: 200,
             className: 'border border-gray-500'
         },
-        // {
-        //     title: 'Liste des Appareils',
-        //     dataIndex: 'items',
-        //     key: 'items',
-        //     className: 'border border-gray-500'
-        // },
+        {
+            title: 'Liste des Appareils',
+            dataIndex: 'items',
+            key: 'items',
+            className: 'border border-gray-500',
+            // render: i => <p>Para {i[0].imei}</p>
+            // render: items => items.map(i => <p>{i.deviceType}</p>)
+            render: items => <DeviceIconList value={items}/>
+        }
     ];
 
     data = [

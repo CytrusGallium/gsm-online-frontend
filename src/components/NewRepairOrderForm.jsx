@@ -65,7 +65,7 @@ const NewRepairOrderForm = () => {
     let displayDate = FormatDate(new Date());
 
     const itemOnChange = (ParamItemState, ParamID) => {
-        console.log("MARK 4 : " + JSON.stringify(ParamItemState));
+        // console.log("MARK 4 : " + JSON.stringify(ParamItemState));
         let tmpItems = items;
         tmpItems[ParamID] = ParamItemState;
         setItems(tmpItems);
@@ -165,6 +165,13 @@ const NewRepairOrderForm = () => {
         });
     }
 
+    const DownloadHTML = () => {
+        html2canvas(document.querySelector("#printable")).then(resultCanvas => {
+            const img = resultCanvas.toDataURL('image/bmp');
+            Download(img, "Bon-GSM-Online.bmp");
+        });
+    }
+
     const RepairOrderIDOnChange = (ParamID) => {
         setROID(ParamID);
     }
@@ -206,8 +213,8 @@ const NewRepairOrderForm = () => {
             <h1 className='text-gray-100 text-3xl font-bold'>Aperçu Du Bon</h1>
             <br />
             {/* <div className='bg-white text-black border border-gray-900 w-128 p-2 grid h-screen place-items-center' id='printable'></div> */}
-            <div className='bg-white text-black border border-gray-900 w-128 p-2' id='printable'>
-                <h1 className='text-3xl font-bold text-white bg-black pb-1'>GSM Online</h1>
+            <div className='bg-white text-black border border-gray-900 w-128 p-2 m-2' id='printable'>
+                <h1 className='text-3xl font-bold text-white bg-black pb-3'>GSM Online</h1>
                 <h5>{displayDate}</h5>
                 <br />
                 <Barcode value={ROID} format="CODE128" width={1} height={24} />
@@ -217,12 +224,11 @@ const NewRepairOrderForm = () => {
                 <br />
                 {items.length > 1 && <p className='mb-3'>Liste des réparations : </p>}
                 {items.map(item =>
-                    <div className='text-xs border-dashed border-2 border-gray-500 mb-3' key={item.key}>
+                    <div className='text-xs border-dashed border-2 border-gray-500 mb-3 pb-3' key={item.key}>
                         <p>Model : {item.ref}</p>
                         <p>IMEI/NS : {item.imei}</p>
                         {((item.problems && item.problems.length > 1) ? <ProblemPriceGrid problems={item.problems} /> : <p>Panne/Motif : {(item.problems) ? item.problems[0].name : ""}</p>)}
                         <p>Prix Estimé : {item.estPrice} DA</p>
-                        {/* {items.length > 1 && <p>------------------------</p>} */}
                     </div>
                 )}
                 {items.length > 1 && <div><br /><p className='font-bold' data-tip="...">Prix Estimé Total : {totalEstPrice} DA</p><ReactTooltip /><br /></div>}
@@ -231,9 +237,7 @@ const NewRepairOrderForm = () => {
             <br />
             <br />
             <button onClick={PrintHTML} className={buttonStyle}>Imprimer le Bon</button>
-            <br />
-            <br />
-            {/* {canvas} */}
+            <button onClick={DownloadHTML} className={buttonStyle}>Télécharger le Bon</button>
             <br />
             <br />
             <p>🚧🚧🚧</p>

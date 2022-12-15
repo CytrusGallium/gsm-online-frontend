@@ -32,8 +32,6 @@ const RepairOrderItem = (props) => {
 
   const updateProblemList = (ParamProblems) => {
 
-    console.log("MARK 3 : " + JSON.stringify(ParamProblems));
-    
     let tmpItemState = itemState;
     tmpItemState.problems = ParamProblems.problems;
 
@@ -52,7 +50,7 @@ const RepairOrderItem = (props) => {
     <div className='w-64 flex flex-col border-2 border-gray-300 mt-2 py-2 rounded-lg'>
       <label className='text-gray-100'>N° {props.id + 1}</label>
       <br />
-      <select name="deviceType" className={inputStyle} value="SMART_PHONE" onChange={handleChange}>
+      <select name="deviceType" className={inputStyle} value={itemState.deviceType} onChange={handleChange}>
         <option value="SMART_PHONE">Smart Phone</option>
         <option value="PHONE">Téléphone Portable</option>
         <option value="TABLET">Tablette</option>

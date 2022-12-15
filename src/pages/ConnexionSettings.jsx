@@ -18,6 +18,7 @@ const ConnexionSettings = () => {
             <input className='rounded m-2' type="text" value={serverAddress} onChange={handleChange_for_select}/>
             <select className='rounded m-2 text-gray-500 bg-gray-900' name="cars" id="cars" onChange={handleChange_for_select}>
                 <option value="127.0.0.1:3000">127.0.0.1:3000</option>
+                <option value="127.0.0.1:3000">https://cream-successful-rest.glitch.me</option>
                 <option value="https://uttermost-first-gravity.glitch.me">https://uttermost-first-gravity.glitch.me</option>
                 <option value="http://localhost:4000">http://localhost:4000</option>
                 <option value="https://localhost:4000">https://localhost:4000</option>

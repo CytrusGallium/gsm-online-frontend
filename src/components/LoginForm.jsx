@@ -1,7 +1,7 @@
 import React from 'react';
-import { useState } from 'react';
 import axios from "axios";
 import GetBackEndUrl from '../const';
+import { useState } from 'react';
 import { BarLoader } from 'react-spinners';
 import { FaCog } from 'react-icons/fa';
 import { AwesomeButton } from 'react-awesome-button';
@@ -48,9 +48,10 @@ const LoginForm = () => {
 
                 if (error.response.data["code"] === "USER_NOT_FOUND")
                     setUIMessage("Utilisateur Introuvables :(");
-
-                if (error.response.data["code"] === "INCORRECT_PASSWORD")
+                else if (error.response.data["code"] === "INCORRECT_PASSWORD")
                     setUIMessage("Mot de Passe Incorrect :(");
+                else
+                    setUIMessage("Impossible de ce connecter :(");
             }
         }
 
@@ -77,7 +78,7 @@ const LoginForm = () => {
             {isBusy && <BarLoader color='#AAAAAA' />}
             <br />
             <br />
-            <AwesomeButton type="primary" before={<FaCog />}><a href='/connexion-settings'>Options de Connexion</a></AwesomeButton>
+            <AwesomeButton before={<FaCog />}><a href='/connexion-settings'>Options de Connexion</a></AwesomeButton>
         </div>
     )
 }
