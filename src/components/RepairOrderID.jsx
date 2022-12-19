@@ -11,7 +11,6 @@ export default class RepairOrderID extends Component {
     }
 
     componentDidMount() {
-        // console.log("MOUNT");
         this.GetIDFromDB();
     }
 
@@ -27,7 +26,7 @@ export default class RepairOrderID extends Component {
         try {
 
             // Build Req/Res
-            const url = GetBackEndUrl() + "/api/get-next-ro-id";
+            const url = GetBackEndUrl() + "/api/generate-empty-repair-order";
             res = await axios.get(url);
 
             if (res) {
@@ -46,15 +45,7 @@ export default class RepairOrderID extends Component {
     }
 
     UpdateID(ParamID) {
-        let result = '' + ParamID;
-
-        for (let index = result.length; index < 8; index++) {
-            result = '0' + result;
-        }
-
-        result = this.props.YearAndMonth + "-" + result;
-
-        this.setState({ id: result });
-        this.props.OnChange(result);
+        this.setState({ id: ParamID });
+        this.props.OnChange(ParamID);
     }
 }

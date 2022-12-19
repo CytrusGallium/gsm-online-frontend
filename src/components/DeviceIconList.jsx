@@ -12,13 +12,21 @@ const DeviceIconList = (props) => {
 
 const BuildTooltipText = (ParamIMEI, ParamProblems, ParamRef) => {
 
-    let problemsText = "";
+    try {
+        
+        let problemsText = "";
 
-    ParamProblems.forEach(p => {
-        problemsText += (p.name + " (" + p.price + " DA)");
-    });
+        ParamProblems.forEach(p => {
+            problemsText += (p.name + " (" + p.price + " DA)");
+        });
 
-    return ParamRef + "<br/><br/><br/>" + "Liste des Problems : <br/>" + problemsText;
+        return ParamRef + "<br/><br/><br/>" + "Liste des Problems : <br/>" + problemsText;
+
+    } catch (error) {
+
+        console.log("Error while building tooltip text : " + error);
+        
+    }
 }
 
 const DeviceTypeToIcon = (ParamDeviceType, ParamIMEI, ParamProblems, ParamRef) => {

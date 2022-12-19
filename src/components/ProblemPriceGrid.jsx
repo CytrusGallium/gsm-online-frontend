@@ -5,8 +5,8 @@ const ProblemPriceGrid = (props) => {
         <div className='font-bold m-1'>
             {props.problems.map(p =>
                 <div key={p.key} style={{ display: "grid", gridTemplateColumns: "75% 25%" }}>
-                    <span style={{ border: "solid 1px black" }}>{p.name}</span>
-                    <span style={{ border: "solid 1px black" }}>{p.price} DA</span>
+                    <span className='pb-3' style={{ border: "solid 1px black" }}>{p.name}</span>
+                    <span className='pb-3' style={{ border: "solid 1px black" }}>{p.price} DA</span>
                 </div>
             )}
         </div>

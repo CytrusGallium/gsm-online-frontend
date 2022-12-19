@@ -7,6 +7,7 @@ import { json } from 'react-router-dom';
 import RepairOrderID from './RepairOrderID';
 import GetBackEndUrl from '../const';
 import axios from "axios";
+import { AwesomeButton } from 'react-awesome-button';
 
 const printJS = require('print-js');
 const html2canvas = require('html2canvas');
@@ -14,6 +15,8 @@ const html2canvas = require('html2canvas');
 // const jsBarcode = require('jsbarcode');
 const ReactDOM = require('react-dom');
 const Barcode = require('react-barcode');
+
+var changesAvailable = false;
 
 const NewRepairOrderForm = () => {
 
@@ -51,17 +54,6 @@ const NewRepairOrderForm = () => {
         return [day, month, year].join('-') + " " + [hour, minute].join(':');
     }
 
-    function GetYYMM() {
-        var d = new Date();
-        var month = '' + (d.getMonth() + 1);
-        var year = '' + d.getFullYear();
-
-        if (month.length < 2)
-            month = '0' + month;
-
-        return year[2] + year[3] + "-" + month;
-    }
-
     let displayDate = FormatDate(new Date());
 
     const itemOnChange = (ParamItemState, ParamID) => {
@@ -71,6 +63,7 @@ const NewRepairOrderForm = () => {
         setItems(tmpItems);
         setTotalEstPrice(getTotalEstPrice());
         setDummy(dummy + 1);
+        changesAvailable = true;
     }
 
     const itemOnRemove = (ParamID) => {
@@ -100,19 +93,23 @@ const NewRepairOrderForm = () => {
 
     const handleChange = ({ currentTarget: input }) => {
         setRepairOrder({ ...repairOrder, [input.name]: input.value });
+        changesAvailable = true;
     }
 
     const ConfirmOnClick = async (event) => {
         event.preventDefault();
         let itemToPost = { location: repairOrder.location, customer: repairOrder.customer, phone: repairOrder.phone, items: items, roid: ROID };
-        console.log(JSON.stringify(itemToPost));
+        // console.log(JSON.stringify(itemToPost));
 
         let res;
-        const url = GetBackEndUrl() + "/api/add-repair-order";
+        // const url = GetBackEndUrl() + "/api/add-repair-order";
+        const url = GetBackEndUrl() + "/api/update-repair-order";
         res = await axios.post(url, itemToPost);
 
         if (res) {
-            console.log("Add Item Result = " + res);
+            // console.log("Update Item Result = " + res);
+            changesAvailable = false;
+            setDummy(dummy + 1);
         }
     }
 
@@ -122,13 +119,13 @@ const NewRepairOrderForm = () => {
 
     const AddItemOnClick = (event) => {
         event.preventDefault();
-        // setCounter(counter => counter + 1);
-        // items.push(<RepairOrderItem key={counter} id={counter} onChange={itemOnChange} onRemove={itemOnRemove} />);
+
         let tmpItems = items;
         tmpItems[items.length] = { key: items.length, deviceType: "", ref: "", imei: "", problem: "", estPrice: "0", price: "0", state: "Encours de réparation..." };
         setItems(tmpItems);
 
         setDummy(dummy + 1);
+        changesAvailable = true;
     }
 
     const getTotalEstPrice = () => {
@@ -192,7 +189,7 @@ const NewRepairOrderForm = () => {
                 <br />
                 <input type="text" name="phone" placeholder="Téléphone du Client..." value={repairOrder.phone} onChange={handleChange} required className={inputFieldStyle} />
                 <br />
-                <RepairOrderID YearAndMonth={GetYYMM()} OnChange={RepairOrderIDOnChange} />
+                <RepairOrderID OnChange={RepairOrderIDOnChange} />
                 <br />
                 <br />
                 <p className='text-gray-100 mt-4'>List des réparations :</p>
@@ -202,7 +199,8 @@ const NewRepairOrderForm = () => {
                 <br />
                 <br />
                 <br />
-                <button type="button" name='submit' className={buttonStyle} onClick={ConfirmOnClick}>Enregistrer Tout</button>
+                {changesAvailable && <button type="button" name='submit' className={buttonStyle} onClick={ConfirmOnClick}>Enregistrer Tout</button>}
+                {/* <AwesomeButton onClick={ConfirmOnClick}>Enregistrer Tout</AwesomeButton> */}
             </form>
             <br />
             <br />
@@ -226,7 +224,7 @@ const NewRepairOrderForm = () => {
                 {items.map(item =>
                     <div className='text-xs border-dashed border-2 border-gray-500 mb-3 pb-3' key={item.key}>
                         <p>Model : {item.ref}</p>
-                        <p>IMEI/NS : {item.imei}</p>
+                        <p className='pb-1'>IMEI/NS : {item.imei}</p>
                         {((item.problems && item.problems.length > 1) ? <ProblemPriceGrid problems={item.problems} /> : <p>Panne/Motif : {(item.problems) ? item.problems[0].name : ""}</p>)}
                         <p>Prix Estimé : {item.estPrice} DA</p>
                     </div>

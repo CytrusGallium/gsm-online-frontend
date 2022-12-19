@@ -6,6 +6,7 @@ import { BarLoader } from 'react-spinners';
 import { FaCog } from 'react-icons/fa';
 import { AwesomeButton } from 'react-awesome-button';
 import 'react-awesome-button/dist/styles.css';
+import { Login } from '../LoginManager';
 
 const LoginForm = () => {
 
@@ -33,7 +34,8 @@ const LoginForm = () => {
             res = await axios.post(url, loginInfo);
 
             if (res.data["token"]) {
-                localStorage.setItem("token", res.data["token"]);
+                // localStorage.setItem("token", res.data["token"]);
+                Login(res.data["token"]);
                 setUIMessage("Bienvenue !");
                 window.location = "/Dashboard";
             }
@@ -53,9 +55,19 @@ const LoginForm = () => {
                 else
                     setUIMessage("Impossible de ce connecter :(");
             }
+            else
+                setUIMessage("Impossible de ce connecter :(");
         }
 
     }
+
+    const awsBtnStyle = {
+        '--button-primary-color': "#111111", // BG
+        '--button-primary-color-dark': "#333333", // Shadow
+        '--button-primary-color-light': "#CCCCCC", // Text
+        '--button-primary-color-hover': "#333333", // Hover BG
+        // '--button-secondary-color-active': "#ff0505",
+    };
 
     return (
         <div className='flex flex-col items-center'>
@@ -78,7 +90,7 @@ const LoginForm = () => {
             {isBusy && <BarLoader color='#AAAAAA' />}
             <br />
             <br />
-            <AwesomeButton before={<FaCog />}><a href='/connexion-settings'>Options de Connexion</a></AwesomeButton>
+            <AwesomeButton type="primary" style={awsBtnStyle} before={<FaCog />}><a href='/connexion-settings'>Options de Connexion</a></AwesomeButton>
         </div>
     )
 }
