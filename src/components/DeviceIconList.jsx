@@ -1,19 +1,20 @@
 import React from 'react';
 import { FaMobileAlt, FaPhone, FaTabletAlt, FaQuestionCircle, FaLaptop, FaDesktop, FaTv } from 'react-icons/fa';
 import ReactTooltip from 'react-tooltip';
-
-const iconStyle = "inline";
+import ItemRepairState from '../Enums';
 
 const DeviceIconList = (props) => {
     return (
-        <div>{props.value.map(i => DeviceTypeToIcon(i.deviceType, i.imei, i.problems, i.ref))}<ReactTooltip multiline={true} /></div>
+        <div>
+            {props.value.map(i => DeviceTypeToIcon(i.deviceType, i.imei, i.problems, i.ref, i.key, i.state))}<ReactTooltip multiline={true} />
+        </div>
     )
 }
 
 const BuildTooltipText = (ParamIMEI, ParamProblems, ParamRef) => {
 
     try {
-        
+
         let problemsText = "";
 
         ParamProblems.forEach(p => {
@@ -25,33 +26,52 @@ const BuildTooltipText = (ParamIMEI, ParamProblems, ParamRef) => {
     } catch (error) {
 
         console.log("Error while building tooltip text : " + error);
-        
+
     }
 }
 
-const DeviceTypeToIcon = (ParamDeviceType, ParamIMEI, ParamProblems, ParamRef) => {
+const DeviceTypeToIcon = (ParamDeviceType, ParamIMEI, ParamProblems, ParamRef, ParamKey, ParamState) => {
+
+    let iconStyle = ItemStateToStyle(ParamState);
+
     switch (ParamDeviceType) {
         case "SMART_PHONE":
-            return <FaMobileAlt size='24' className={iconStyle} data-tip={BuildTooltipText(ParamIMEI, ParamProblems, ParamRef)} />
+            return <FaMobileAlt key={ParamKey} size='24' className={iconStyle} data-tip={BuildTooltipText(ParamIMEI, ParamProblems, ParamRef)} />
             break;
         case "TABLET":
-            return <FaTabletAlt size='24' className={iconStyle} data-tip={BuildTooltipText(ParamIMEI, ParamProblems, ParamRef)} />
+            return <FaTabletAlt key={ParamKey} size='24' className={iconStyle} data-tip={BuildTooltipText(ParamIMEI, ParamProblems, ParamRef)} />
             break;
         case "PHONE":
-            return <FaPhone size='24' className={iconStyle} data-tip={BuildTooltipText(ParamIMEI, ParamProblems, ParamRef)} />
+            return <FaPhone key={ParamKey} size='24' className={iconStyle} data-tip={BuildTooltipText(ParamIMEI, ParamProblems, ParamRef)} />
             break;
         case "LAPTOP":
-            return <FaLaptop size='24' className={iconStyle} data-tip={BuildTooltipText(ParamIMEI, ParamProblems, ParamRef)} />
+            return <FaLaptop key={ParamKey} size='24' className={iconStyle} data-tip={BuildTooltipText(ParamIMEI, ParamProblems, ParamRef)} />
             break;
         case "PC":
-            return <FaDesktop size='24' className={iconStyle} data-tip={BuildTooltipText(ParamIMEI, ParamProblems, ParamRef)} />
+            return <FaDesktop key={ParamKey} size='24' className={iconStyle} data-tip={BuildTooltipText(ParamIMEI, ParamProblems, ParamRef)} />
             break;
         case "AIO":
-            return <FaTv size='24' className={iconStyle} data-tip={BuildTooltipText(ParamIMEI, ParamProblems, ParamRef)} />
+            return <FaTv key={ParamKey} size='24' className={iconStyle} data-tip={BuildTooltipText(ParamIMEI, ParamProblems, ParamRef)} />
             break;
         default:
-            return <FaQuestionCircle size='24' className={iconStyle} data-tip={BuildTooltipText(ParamIMEI, ParamProblems, ParamRef)} />
+            return <FaQuestionCircle key={ParamKey} size='24' className={iconStyle} data-tip={BuildTooltipText(ParamIMEI, ParamProblems, ParamRef)} />
             break;
+    }
+}
+
+const ItemStateToStyle = (ParamState) => {
+
+    switch (ParamState) {
+        case ItemRepairState.PENDING:
+            return "inline text-blue-500";
+        case ItemRepairState.DONE:
+            return "inline text-green-500";
+        case ItemRepairState.UNFIXABLE:
+            return "inline text-red-500";
+        case ItemRepairState.CANCELED:
+            return "inline text-gray-600";
+        default:
+            return "inline text-gray-100";
     }
 }
 

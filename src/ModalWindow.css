@@ -1,0 +1,38 @@
+.modal {
+    font-size: 16px;
+}
+
+.modal>.header {
+    width: 100%;
+    border-bottom: 1px solid gray;
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+    padding: 5px;
+}
+
+.modal>.content {
+    width: 100%;
+    padding: 10px 5px;
+}
+
+.modal>.actions {
+    width: 100%;
+    padding: 10px 5px;
+    margin: auto;
+    text-align: center;
+}
+
+.modal>.close {
+    cursor: pointer;
+    position: absolute;
+    display: block;
+    padding: 2px 2px;
+    line-height: 20px;
+    right: -10px;
+    top: -10px;
+    font-size: 24px;
+    background: #222222;
+    border-radius: 18px;
+    border: 2px solid #cfcece;
+}

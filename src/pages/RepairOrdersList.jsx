@@ -5,12 +5,17 @@ import axios from "axios";
 import GetBackEndUrl from '../const';
 import DeviceIconList from '../components/DeviceIconList';
 import { FaSearch, FaTimesCircle } from 'react-icons/fa';
+import Popup from 'reactjs-popup';
+import 'reactjs-popup/dist/index.css';
+import '../ModalWindow.css';
+import { AwesomeButton } from 'react-awesome-button';
+import { AwesomeButtonProgress } from "react-awesome-button";
 
 export default class RepairOrderID extends Component {
 
     constructor(props) {
         super(props);
-        this.state = { tableData: [], isBusy: false };
+        this.state = { tableData: [], isBusy: false, validationWindowOpen: false, currentValidationROID: "" };
     }
 
     columns = [
@@ -18,9 +23,9 @@ export default class RepairOrderID extends Component {
             title: 'Operations',
             dataIndex: '',
             key: 'operations',
-            width: 512,
+            width: 256,
             className: 'border border-gray-500',
-            render: () => <a href="#">Valider</a>
+            render: i => <button onClick={() => { this.setState({ validationWindowOpen: true, currentValidationROID: i }) }}>Valider</button>
         },
         {
             title: 'Identifiant',
@@ -71,32 +76,77 @@ export default class RepairOrderID extends Component {
         this.GetRepairOrdersListFromDB();
     }
 
+    CloseModal() {
+        console.log("CLOSE MODAL");
+        this.setState({ validationWindowOpen: false });
+    }
+
     render() {
         return (
             <div className='text-gray-100 flex flex-col items-center'>
                 Liste des Orders de Réparation
+                <Popup
+                    open={this.state.validationWindowOpen}
+                    modal
+                    closeOnDocumentClick
+                    onClose={() => { this.CloseModal(); }}
+                >
+                    <div className="modal bg-gray-900 text-gray-100 p-2">
+                        <button className="close" onClick={() => { this.CloseModal(); }}>
+                            <FaTimesCircle />
+                        </button>
+                        <div className="header"> Validation de l'Ordre de Réparation </div>
+                        <div className="content flex flex-col items-center">
+                            Identifiant : {this.state.currentValidationROID.roid}
+                            <br />
+                            <DeviceIconList value={this.state.currentValidationROID.items} />
+                            <br />
+                            <br />
+                            <select name="state" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 my-0 mx-2 py-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" defaultValue="DONE">
+                                <option value="PENDING">En Cours de Réparation</option>
+                                <option value="DONE">Réparer</option>
+                                <option value="UNFIXABLE">Irréparable</option>
+                                <option value="CANCELED">Annulé</option>
+                            </select>
+                            <br />
+                            {/* <AwesomeButton type='primary'><div className='text-xl'>Valider</div></AwesomeButton> */}
+                            <AwesomeButtonProgress type="primary" onPress={async (element, next) => {
+                                // await for something then call
+                                let res;
+                                res = await axios.get("http://localhost:4000/api/ping");
+                                console.log(res);
+                                next();
+                            }}><div className='text-xl'>Valider</div></AwesomeButtonProgress>
+                        </div>
+                        {/* <div className="actions">
+                            <button
+                                className="button"
+                                onClick={() => {
+                                    console.log('Validation...');
+                                }}
+                            >
+                                Valider
+                            </button>
+                        </div> */}
+                    </div>
+                </Popup>
                 <br />
                 <br />
                 <div>
                     <FaSearch className='inline' size={24} />
                     <span className='mx-1'> </span>
                     <input type="text" value={this.state.inputValue} className='inline rounded p-2 text-black' onChange={e => this.SearchFieldOnChange(e)} placeholder="Identifiant du bon..." />
-                    {/* <span className='mx-1'> </span>
-                    <FaTimesCircle className='inline cursor-pointer' size={24} color="#999999" onClick={this.state.inputValue = ""}/> */}
+                    <span className='mx-1'> </span>
                 </div>
                 <br />
                 <br />
-                {/* {this.state.tableData.length > 0 ? <Table columns={this.columns} data={this.state.tableData}/> : <>{this.state.isBusy ? <GridLoader color='#AAAAAA' /> : <p>No Data To Display...</p>}</>} */}
-                {this.state.isBusy ? <GridLoader color='#AAAAAA' /> : <>{this.state.tableData.length > 0 ? <Table columns={this.columns} data={this.state.tableData} /> : <p>No Data To Display...</p>}</>}
+                {this.state.isBusy ? <GridLoader color='#AAAAAA' /> : <>{this.state.tableData.length > 0 ? <Table columns={this.columns} data={this.state.tableData} rowKey="roid" /> : <p>No Data To Display...</p>}</>}
             </div>
         )
     }
 
     async GetRepairOrdersListFromDB(ParamROID) {
 
-        console.log("STATE = " + JSON.stringify(this.state));
-
-        // this.state.isbusy = true;
         this.setState({ isBusy: true });
         let res;
 
@@ -113,7 +163,6 @@ export default class RepairOrderID extends Component {
 
             if (res) {
                 this.UpdateTableData(res.data);
-                // this.state.isbusy = false;
                 this.setState({ isBusy: false });
             }
 
@@ -129,26 +178,17 @@ export default class RepairOrderID extends Component {
     }
 
     UpdateTableData(ParamTableData) {
-        // console.log("QUERY RESULT = " + JSON.stringify(ParamTableData));
+        console.log("DATA = " + JSON.stringify(ParamTableData));
         this.setState({ tableData: ParamTableData });
-        // this.state.tableData = ParamTableData;
-        // this.props.OnChange(result);
-        this.forceUpdate();
     }
 
     searchTimeOut = null;
 
     SearchFieldOnChange(ParamEvent) {
-        // console.log("C : " + ParamEvent.target.value);
 
         if (this.searchTimeOut != null)
             clearTimeout(this.searchTimeOut);
 
-        // this.searchTimeOut = setTimeout(() => {this.RunSearchFromDB(ParamEvent.target.value)}, 500);
         this.searchTimeOut = setTimeout(() => { this.GetRepairOrdersListFromDB(ParamEvent.target.value) }, 500);
     }
-
-    // RunSearchFromDB(ParamROID) {
-    //     console.log("Searching For : " + ParamROID);
-    // }
 }

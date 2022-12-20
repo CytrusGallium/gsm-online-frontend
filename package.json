@@ -14,7 +14,7 @@
     "print-js": "^1.6.0",
     "rc-table": "^7.28.1",
     "react": "^18.2.0",
-    "react-awesome-button": "^7.0.4",
+    "react-awesome-button": "^7.0.5",
     "react-barcode": "^1.4.6",
     "react-datalist-input": "^3.2.1",
     "react-dom": "^18.2.0",
@@ -24,6 +24,7 @@
     "react-scripts": "5.0.1",
     "react-spinners": "^0.13.7",
     "react-tooltip": "^4.5.1",
+    "reactjs-popup": "^2.0.5",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
