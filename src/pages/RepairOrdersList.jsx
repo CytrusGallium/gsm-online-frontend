@@ -10,6 +10,7 @@ import 'reactjs-popup/dist/index.css';
 import '../ModalWindow.css';
 import { AwesomeButton } from 'react-awesome-button';
 import { AwesomeButtonProgress } from "react-awesome-button";
+import DeviceValidationList from '../components/DeviceValidationList';
 
 export default class RepairOrderID extends Component {
 
@@ -39,7 +40,8 @@ export default class RepairOrderID extends Component {
             dataIndex: 'time',
             key: 'time',
             width: 256,
-            className: 'border border-gray-500'
+            className: 'border border-gray-500',
+            render: d => (new Date(d)).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
         },
         {
             title: 'Client',
@@ -102,32 +104,23 @@ export default class RepairOrderID extends Component {
                             <DeviceIconList value={this.state.currentValidationROID.items} />
                             <br />
                             <br />
-                            <select name="state" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 my-0 mx-2 py-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" defaultValue="DONE">
+                            {/* <select name="state" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 my-0 mx-2 py-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" defaultValue="DONE">
                                 <option value="PENDING">En Cours de Réparation</option>
                                 <option value="DONE">Réparer</option>
                                 <option value="UNFIXABLE">Irréparable</option>
                                 <option value="CANCELED">Annulé</option>
-                            </select>
+                            </select> */}
+                            {/* <DeviceStateSelector onChange={(v) => {console.log(v)}}/> */}
+                            <DeviceValidationList value={this.state.currentValidationROID.items} />
                             <br />
-                            {/* <AwesomeButton type='primary'><div className='text-xl'>Valider</div></AwesomeButton> */}
                             <AwesomeButtonProgress type="primary" onPress={async (element, next) => {
-                                // await for something then call
+                                // await for something then call next()
                                 let res;
                                 res = await axios.get("http://localhost:4000/api/ping");
                                 console.log(res);
                                 next();
                             }}><div className='text-xl'>Valider</div></AwesomeButtonProgress>
                         </div>
-                        {/* <div className="actions">
-                            <button
-                                className="button"
-                                onClick={() => {
-                                    console.log('Validation...');
-                                }}
-                            >
-                                Valider
-                            </button>
-                        </div> */}
                     </div>
                 </Popup>
                 <br />
@@ -140,7 +133,7 @@ export default class RepairOrderID extends Component {
                 </div>
                 <br />
                 <br />
-                {this.state.isBusy ? <GridLoader color='#AAAAAA' /> : <>{this.state.tableData.length > 0 ? <Table columns={this.columns} data={this.state.tableData} rowKey="roid" /> : <p>No Data To Display...</p>}</>}
+                {this.state.isBusy ? <GridLoader color='#AAAAAA' /> : <>{this.state.tableData.length > 0 ? <Table columns={this.columns} data={this.state.tableData} rowKey="roid" /> : <p>Aucun Ordre de Réparation à Afficher...</p>}</>}
             </div>
         )
     }
@@ -178,7 +171,7 @@ export default class RepairOrderID extends Component {
     }
 
     UpdateTableData(ParamTableData) {
-        console.log("DATA = " + JSON.stringify(ParamTableData));
+        // console.log("DATA = " + JSON.stringify(ParamTableData));
         this.setState({ tableData: ParamTableData });
     }
 

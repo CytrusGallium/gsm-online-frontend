@@ -61,17 +61,19 @@ const DeviceTypeToIcon = (ParamDeviceType, ParamIMEI, ParamProblems, ParamRef, P
 
 const ItemStateToStyle = (ParamState) => {
 
+    let baseStyle = "inline mr-1 ";
+    
     switch (ParamState) {
         case ItemRepairState.PENDING:
-            return "inline text-blue-500";
+            return baseStyle + "text-blue-500"
         case ItemRepairState.DONE:
-            return "inline text-green-500";
+            return baseStyle + "text-green-500"
         case ItemRepairState.UNFIXABLE:
-            return "inline text-red-500";
+            return baseStyle + "text-red-500"
         case ItemRepairState.CANCELED:
-            return "inline text-gray-600";
+            return baseStyle + "text-gray-600"
         default:
-            return "inline text-gray-100";
+            return baseStyle + "text-gray-100"
     }
 }
 

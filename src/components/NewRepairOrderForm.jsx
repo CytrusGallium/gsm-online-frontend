@@ -1,5 +1,5 @@
 import React from 'react';
-import { useState/*, useEffect*/ } from 'react';
+import { useState, useEffect } from 'react';
 import ProblemPriceGrid from './ProblemPriceGrid';
 import RepairOrderItem from './RepairOrderItem';
 import ReactTooltip from 'react-tooltip';
@@ -11,7 +11,7 @@ import { AwesomeButton } from 'react-awesome-button';
 
 const printJS = require('print-js');
 const html2canvas = require('html2canvas');
-// const jspdf = require('jspdf');
+const jspdf = require('jspdf');
 // const jsBarcode = require('jsbarcode');
 const ReactDOM = require('react-dom');
 const Barcode = require('react-barcode');
@@ -24,9 +24,10 @@ const NewRepairOrderForm = () => {
     //     console.log("EFFECT");
     // });
 
-    // useEffect(() => {
-    //     console.log("EFFECT-ONCE");
-    // }, []);
+    useEffect(() => {
+        console.log("EFFECT-ONCE");
+        generatePDF();
+    }, []);
 
     const inputFieldStyle = 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 mt-2';
     const buttonStyle = "bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded mt-2";
@@ -173,21 +174,56 @@ const NewRepairOrderForm = () => {
         setROID(ParamID);
     }
 
-    // const generatePDF = () => {
-    //     const doc = new jspdf.jsPDF();
-    //     doc.text("Hello world!", 10, 10);
-    //     doc.save("a4.pdf");
-    // }
+    /**
+     * Draws a dotted line on a jsPDF doc between two points.
+     * Note that the segment length is adjusted a little so
+     * that we end the line with a drawn segment and don't
+     * overflow.
+     */
+    function dottedLine(doc, xFrom, yFrom, xTo, yTo, segmentLength) {
+        // Calculate line length (c)
+        var a = Math.abs(xTo - xFrom);
+        var b = Math.abs(yTo - yFrom);
+        var c = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
+
+        // Make sure we have an odd number of line segments (drawn or blank)
+        // to fit it nicely
+        var fractions = c / segmentLength;
+        var adjustedSegmentLength = (Math.floor(fractions) % 2 === 0) ? (c / Math.ceil(fractions)) : (c / Math.floor(fractions));
+
+        // Calculate x, y deltas per segment
+        var deltaX = adjustedSegmentLength * (a / c);
+        var deltaY = adjustedSegmentLength * (b / c);
+
+        var curX = xFrom, curY = yFrom;
+        while (curX <= xTo && curY <= yTo) {
+            doc.line(curX, curY, curX + deltaX, curY + deltaY);
+            curX += 2 * deltaX;
+            curY += 2 * deltaY;
+        }
+    }
+
+    const generatePDF = () => {
+        const doc = new jspdf.jsPDF();
+        doc.text("Hello world!", 10, 10);
+        dottedLine(doc, 0, 0, 100, 100, 1);
+        
+        doc.setDrawColor(255,0,0);
+        doc.setFillColor(0,255,0);
+        doc.setLineWidth(2);
+        doc.rect(10, 20, 150, 75, 'DF');
+        doc.save("a4.pdf");
+    }
 
     return (
         <div className='grid h-screen place-items-center'>
             <p className='text-gray-100 font-bold mb-4'>Ajouter Un Ordre de Réparation</p>
             <form>
-                <input type="text" name="location" placeholder="Emplacement..." value={repairOrder.location} onChange={handleChange} required className={inputFieldStyle} />
+                <input type="text" name="location" placeholder="Emplacement..." value={repairOrder.location} onChange={handleChange} required className={inputFieldStyle} require />
                 <br />
-                <input type="text" name="customer" placeholder="Nom du Client..." value={repairOrder.customer} onChange={handleChange} required className={inputFieldStyle} />
+                <input type="text" name="customer" placeholder="Nom du Client..." value={repairOrder.customer} onChange={handleChange} required className={inputFieldStyle} require />
                 <br />
-                <input type="text" name="phone" placeholder="Téléphone du Client..." value={repairOrder.phone} onChange={handleChange} required className={inputFieldStyle} />
+                <input type="text" name="phone" placeholder="Téléphone du Client..." value={repairOrder.phone} onChange={handleChange} required className={inputFieldStyle} require />
                 <br />
                 <RepairOrderID OnChange={RepairOrderIDOnChange} />
                 <br />
