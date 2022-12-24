@@ -10,15 +10,16 @@ const Dashboard = () => {
   return (
     <div>
       <div className='flex flex-col'>
-        {/* <h3 className={buttonStyling}><a href='/add-repair-order' className='text-xl'><FaClipboardList className='inline' size={24}/> Ajouter un Ordre de Réparation</a></h3>
+        <h3 className={buttonStyling}><a href='/add-repair-order' className='text-xl'><FaClipboardList className='inline' size={24}/> Ajouter un Ordre de Réparation</a></h3>
         <br/>
         <h3 className={buttonStyling}><a href='/repair-orders-list' className='text-xl'><FaList className='inline' size={24}/> Liste des Ordres de Répartion</a></h3>
-        <br/> */}
-        <h3 className={buttonStyling}><a href='/new-product' className='text-xl'><FaBox className='inline' size={24}/> Ajouter un Produit</a></h3>
+        <br/>
+        {/* <h3 className={buttonStyling}><a href='/new-product' className='text-xl'><FaBox className='inline' size={24}/> Ajouter un Produit</a></h3>
         <br/>
         <h3 className={buttonStyling}><a href='/sales-point' className='text-xl'><FaShoppingCart className='inline' size={24}/> Point de Vente</a></h3>
-        {/* <br/>
-        <h3 className={buttonStyling}><a href='/user-manager' className='text-xl'><FaUserFriends className='inline' size={24}/> Gestion des Utilisateur</a></h3> */}
+        <br/> */}
+        <h3 className={buttonStyling}><a href='/user-manager' className='text-xl'><FaUserFriends className='inline' size={24}/> Gestion des Utilisateur</a></h3>
+        <br/>
       </div>
     </div>
   )
