@@ -26,7 +26,7 @@ const NewRepairOrderForm = () => {
 
     useEffect(() => {
         console.log("EFFECT-ONCE");
-        generatePDF();
+        // generatePDF();
     }, []);
 
     const inputFieldStyle = 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 mt-2';
@@ -215,6 +215,33 @@ const NewRepairOrderForm = () => {
         doc.save("a4.pdf");
     }
 
+    const DownloadTestPDF = () => {
+        const doc = new jspdf.jsPDF('p', 'mm', [160, 60]); // Portrait, Milimeter, Height, Width
+        
+        // GSM Online BG
+        doc.setDrawColor(0,0,0);
+        doc.setFillColor(0,0,0);
+        doc.setLineWidth(1);
+        doc.rect(0, 0, 150, 15, 'DF');
+
+        doc.setTextColor(255,255,255);
+        doc.setFontSize(24);
+        doc.text("GSM Online", 10, 10);
+        
+        doc.setTextColor(0,0,0);
+        doc.setFontSize(12);
+        doc.text(JSON.stringify(repairOrder), 1, 20);
+        doc.text(JSON.stringify(items), 1, 30);
+        
+        // dottedLine(doc, 0, 0, 100, 100, 1);
+        
+        // doc.setDrawColor(255,0,0);
+        // doc.setFillColor(0,255,0);
+        // doc.setLineWidth(2);
+        // doc.rect(10, 20, 150, 75, 'DF');
+        doc.save("BON-GSM-Online.pdf");
+    }
+
     return (
         <div className='grid h-screen place-items-center'>
             <p className='text-gray-100 font-bold mb-4'>Ajouter Un Ordre de Réparation</p>
@@ -272,6 +299,7 @@ const NewRepairOrderForm = () => {
             <br />
             <button onClick={PrintHTML} className={buttonStyle}>Imprimer le Bon</button>
             <button onClick={DownloadHTML} className={buttonStyle}>Télécharger le Bon</button>
+            <button onClick={DownloadTestPDF} className={buttonStyle}>Télécharger le Bon (PDF)</button>
             <br />
             <br />
             <p>🚧🚧🚧</p>

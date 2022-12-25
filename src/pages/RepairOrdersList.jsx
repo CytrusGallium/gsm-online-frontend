@@ -4,13 +4,15 @@ import { GridLoader, PulseLoader } from 'react-spinners';
 import axios from "axios";
 import GetBackEndUrl from '../const';
 import DeviceIconList from '../components/DeviceIconList';
-import { FaSearch, FaTimesCircle } from 'react-icons/fa';
+import { FaSearch, FaTimesCircle, FaWrench, FaLock } from 'react-icons/fa';
 import Popup from 'reactjs-popup';
 import 'reactjs-popup/dist/index.css';
 import '../ModalWindow.css';
 import { AwesomeButton } from 'react-awesome-button';
 import { AwesomeButtonProgress } from "react-awesome-button";
 import DeviceValidationList from '../components/DeviceValidationList';
+import DeviceStateSelector from '../components/DeviceStateSelector';
+import RepairOrderValidationPopup from '../components/RepairOrderValidationPopup';
 
 export default class RepairOrderID extends Component {
 
@@ -21,12 +23,20 @@ export default class RepairOrderID extends Component {
 
     columns = [
         {
+            title: 'Etat',
+            dataIndex: 'locked',
+            key: 'locked',
+            className: 'border border-gray-500',
+            width: 64,
+            render: lock => <div className='flex flex-col items-center'> <p>{lock ? <FaLock /> : <FaWrench />}</p></div>
+        },
+        {
             title: 'Operations',
             dataIndex: '',
             key: 'operations',
-            width: 256,
+            width: 128,
             className: 'border border-gray-500',
-            render: i => <button onClick={() => { this.setState({ validationWindowOpen: true, currentValidationROID: i }) }}>Valider</button>
+            render: i => <button className='bg-gray-900 text-gray-100 rounded-lg p-2 my-2 text-sm hover:bg-gray-700' onClick={() => { this.setState({ validationWindowOpen: true, currentValidationROID: i }) }}>Valider</button>
         },
         {
             title: 'Identifiant',
@@ -78,8 +88,8 @@ export default class RepairOrderID extends Component {
         this.GetRepairOrdersListFromDB();
     }
 
-    CloseModal() {
-        console.log("CLOSE MODAL");
+    popupOnClose() {
+        console.log("popupOnClose()");
         this.setState({ validationWindowOpen: false });
     }
 
@@ -87,42 +97,7 @@ export default class RepairOrderID extends Component {
         return (
             <div className='text-gray-100 flex flex-col items-center'>
                 Liste des Orders de Réparation
-                <Popup
-                    open={this.state.validationWindowOpen}
-                    modal
-                    closeOnDocumentClick
-                    onClose={() => { this.CloseModal(); }}
-                >
-                    <div className="modal bg-gray-900 text-gray-100 p-2">
-                        <button className="close" onClick={() => { this.CloseModal(); }}>
-                            <FaTimesCircle />
-                        </button>
-                        <div className="header"> Validation de l'Ordre de Réparation </div>
-                        <div className="content flex flex-col items-center">
-                            Identifiant : {this.state.currentValidationROID.roid}
-                            <br />
-                            <DeviceIconList value={this.state.currentValidationROID.items} />
-                            <br />
-                            <br />
-                            {/* <select name="state" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 my-0 mx-2 py-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" defaultValue="DONE">
-                                <option value="PENDING">En Cours de Réparation</option>
-                                <option value="DONE">Réparer</option>
-                                <option value="UNFIXABLE">Irréparable</option>
-                                <option value="CANCELED">Annulé</option>
-                            </select> */}
-                            {/* <DeviceStateSelector onChange={(v) => {console.log(v)}}/> */}
-                            <DeviceValidationList value={this.state.currentValidationROID.items} />
-                            <br />
-                            <AwesomeButtonProgress type="primary" onPress={async (element, next) => {
-                                // await for something then call next()
-                                let res;
-                                res = await axios.get("http://localhost:4000/api/ping");
-                                console.log(res);
-                                next();
-                            }}><div className='text-xl'>Valider</div></AwesomeButtonProgress>
-                        </div>
-                    </div>
-                </Popup>
+                <RepairOrderValidationPopup value={this.state.currentValidationROID} isOpen={this.state.validationWindowOpen} onClose={() => { this.popupOnClose() }} />
                 <br />
                 <br />
                 <div>
@@ -133,7 +108,7 @@ export default class RepairOrderID extends Component {
                 </div>
                 <br />
                 <br />
-                {this.state.isBusy ? <GridLoader color='#AAAAAA' /> : <>{this.state.tableData.length > 0 ? <Table columns={this.columns} data={this.state.tableData} rowKey="roid" /> : <p>Aucun Ordre de Réparation à Afficher...</p>}</>}
+                {this.state.isBusy ? <GridLoader color='#AAAAAA' /> : <>{this.state.tableData.length > 0 ? <Table columns={this.columns} data={this.state.tableData} rowKey="roid" className='ml-16' /> : <p>Aucun Ordre de Réparation à Afficher...</p>}</>}
             </div>
         )
     }
@@ -171,7 +146,7 @@ export default class RepairOrderID extends Component {
     }
 
     UpdateTableData(ParamTableData) {
-        // console.log("DATA = " + JSON.stringify(ParamTableData));
+        console.log("DATA = " + JSON.stringify(ParamTableData));
         this.setState({ tableData: ParamTableData });
     }
 
