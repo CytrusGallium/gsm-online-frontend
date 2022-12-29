@@ -1,6 +1,6 @@
 import { React, useState } from 'react';
 import { HashLoader } from 'react-spinners';
-import GetBackEndUrl from '../const';
+import { GetBackEndUrl } from '../const';
 
 const NetImage = (props) => {
 

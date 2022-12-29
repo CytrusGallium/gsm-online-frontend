@@ -1,11 +1,11 @@
-import React from 'react';
-import { useState, useEffect } from 'react';
+// import  from 'react';
+import React, { useState, useEffect } from 'react';
 import ProblemPriceGrid from './ProblemPriceGrid';
 import RepairOrderItem from './RepairOrderItem';
 import ReactTooltip from 'react-tooltip';
 import { json } from 'react-router-dom';
 import RepairOrderID from './RepairOrderID';
-import GetBackEndUrl from '../const';
+import { GetBackEndUrl, GetPrintServerAddress, GetPrinterName } from '../const';
 import axios from "axios";
 import { AwesomeButton } from 'react-awesome-button';
 
@@ -207,39 +207,112 @@ const NewRepairOrderForm = () => {
         const doc = new jspdf.jsPDF();
         doc.text("Hello world!", 10, 10);
         dottedLine(doc, 0, 0, 100, 100, 1);
-        
-        doc.setDrawColor(255,0,0);
-        doc.setFillColor(0,255,0);
+
+        doc.setDrawColor(255, 0, 0);
+        doc.setFillColor(0, 255, 0);
         doc.setLineWidth(2);
         doc.rect(10, 20, 150, 75, 'DF');
         doc.save("a4.pdf");
     }
 
-    const DownloadTestPDF = () => {
+    const DownloadTestPDF = async () => {
         const doc = new jspdf.jsPDF('p', 'mm', [160, 60]); // Portrait, Milimeter, Height, Width
-        
+        var cursorY = 10;
+
         // GSM Online BG
-        doc.setDrawColor(0,0,0);
-        doc.setFillColor(0,0,0);
+        doc.setDrawColor(0, 0, 0);
+        doc.setFillColor(0, 0, 0);
         doc.setLineWidth(1);
         doc.rect(0, 0, 150, 15, 'DF');
 
-        doc.setTextColor(255,255,255);
+        doc.setTextColor(255, 255, 255);
         doc.setFontSize(24);
-        doc.text("GSM Online", 10, 10);
-        
-        doc.setTextColor(0,0,0);
+        doc.text("GSM Online", 30, cursorY, 'center');
+        cursorY += 10;
+
+        doc.setTextColor(0, 0, 0);
         doc.setFontSize(12);
-        doc.text(JSON.stringify(repairOrder), 1, 20);
-        doc.text(JSON.stringify(items), 1, 30);
-        
+        doc.text(displayDate, 30, cursorY, 'center');
+        cursorY += 12;
+
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(14);
+        doc.text("N° " + ROID, 30, cursorY, 'center');
+        cursorY += 12;
+
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(10);
+        doc.text("Client : " + repairOrder.customer, 30, cursorY, 'center');
+        cursorY += 4;
+
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(10);
+        doc.text("Tel : " + repairOrder.phone, 30, cursorY, 'center');
+        cursorY += 8;
+
+        dottedLine(doc, 5, cursorY, 55, cursorY, 2);
+        cursorY += 8;
+
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(10);
+        doc.text("Model : " + items[0].ref, 30, cursorY, 'center');
+        cursorY += 4;
+
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(10);
+        doc.text("IMEI/NS : " + items[0].imei, 30, cursorY, 'center');
+        cursorY += 4;
+
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(10);
+        doc.text("Panne/Motif : ???????", 30, cursorY, 'center');
+        cursorY += 4;
+
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(10);
+        doc.text("Prix Estimé : " + items[0].estPrice, 30, cursorY, 'center');
+        cursorY += 8;
+
+        dottedLine(doc, 5, cursorY, 55, cursorY, 2);
+        cursorY += 10;
+
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(12);
+        doc.text("Prix Estimé Total : " + totalEstPrice + " DA", 30, cursorY, 'center');
+        cursorY += 8;
+
+        // doc.text(JSON.stringify(repairOrder), 1, 20);
+        // doc.text(JSON.stringify(items), 1, 30);
+
         // dottedLine(doc, 0, 0, 100, 100, 1);
-        
+
         // doc.setDrawColor(255,0,0);
         // doc.setFillColor(0,255,0);
         // doc.setLineWidth(2);
         // doc.rect(10, 20, 150, 75, 'DF');
-        doc.save("BON-GSM-Online.pdf");
+
+
+
+        // doc.save("BON-GSM-Online.pdf");
+
+        // Build form
+        const formData = new FormData();
+        formData.append("pdf", doc.output('blob'));
+        // formData.append("pdf", "H81932HR9F82HJ198EJ9128JE");
+
+        // Add token
+        const token = localStorage.getItem("token");
+        const config = {
+            headers: { Authorization: `Bearer ${token}` }
+        };
+
+        // Build Req/Res
+        const response = await axios({
+            method: "post",
+            // url: "http://localhost:5000/upload?printer=Microsoft XPS Document Writer",
+            url: GetPrintServerAddress() + "?printer=" + GetPrinterName(),
+            data: formData
+        }, {}, () => console.log("CALLBACK"));
     }
 
     return (

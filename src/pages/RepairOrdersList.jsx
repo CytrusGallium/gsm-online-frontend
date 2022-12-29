@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
 import Table from 'rc-table';
-import { GridLoader, PulseLoader } from 'react-spinners';
+import { GridLoader } from 'react-spinners';
 import axios from "axios";
-import GetBackEndUrl from '../const';
+import { GetBackEndUrl } from '../const';
 import DeviceIconList from '../components/DeviceIconList';
-import { FaSearch, FaTimesCircle, FaWrench, FaLock } from 'react-icons/fa';
+import { FaSearch, FaTimesCircle, FaWrench, FaLock, FaCheck, FaEdit, FaTrash, FaUnlock, FaKey } from 'react-icons/fa';
 import Popup from 'reactjs-popup';
 import 'reactjs-popup/dist/index.css';
 import '../ModalWindow.css';
@@ -18,7 +18,7 @@ export default class RepairOrderID extends Component {
 
     constructor(props) {
         super(props);
-        this.state = { tableData: [], isBusy: false, validationWindowOpen: false, currentValidationROID: "" };
+        this.state = { tableData: [], isBusy: false, validationWindowOpen: false, currentValidationRepairOrder: "" };
     }
 
     columns = [
@@ -36,7 +36,8 @@ export default class RepairOrderID extends Component {
             key: 'operations',
             width: 128,
             className: 'border border-gray-500',
-            render: i => <button className='bg-gray-900 text-gray-100 rounded-lg p-2 my-2 text-sm hover:bg-gray-700' onClick={() => { this.setState({ validationWindowOpen: true, currentValidationROID: i }) }}>Valider</button>
+            // render: i => <button className='bg-gray-900 text-gray-100 rounded-lg p-2 my-2 text-sm hover:bg-gray-700' onClick={() => { this.setState({ validationWindowOpen: true, currentValidationRepairOrder: i }); }}>Valider</button>
+            render: i => this.GenerateOperationButtons(i)
         },
         {
             title: 'Identifiant',
@@ -97,7 +98,7 @@ export default class RepairOrderID extends Component {
         return (
             <div className='text-gray-100 flex flex-col items-center'>
                 Liste des Orders de Réparation
-                <RepairOrderValidationPopup value={this.state.currentValidationROID} isOpen={this.state.validationWindowOpen} onClose={() => { this.popupOnClose() }} />
+                <RepairOrderValidationPopup value={this.state.currentValidationRepairOrder} isOpen={this.state.validationWindowOpen} onClose={() => { this.popupOnClose() }} />
                 <br />
                 <br />
                 <div>
@@ -158,5 +159,27 @@ export default class RepairOrderID extends Component {
             clearTimeout(this.searchTimeOut);
 
         this.searchTimeOut = setTimeout(() => { this.GetRepairOrdersListFromDB(ParamEvent.target.value) }, 500);
+    }
+
+    GenerateOperationButtons(ParamRepairOrder) {
+
+        const buttonStyle = 'bg-gray-900 text-gray-100 rounded-lg p-2 my-2 mx-1 text-sm hover:bg-gray-700 inline';
+
+        if (ParamRepairOrder) {
+            if (ParamRepairOrder.locked) {
+                return <button className={buttonStyle} onClick={() => { console.log("Unlock"); }}><FaKey size={20} /></button>
+            }
+            else {
+                return (
+                    <div className='flex flex-row'>
+                        <button className={buttonStyle} onClick={() => { this.setState({ validationWindowOpen: true, currentValidationRepairOrder: ParamRepairOrder }); }}> <FaCheck size={20} /> </button>
+                        <button className={buttonStyle} onClick={() => { console.log("EDIT"); }}> <FaEdit size={20} /> </button>
+                        <button className={buttonStyle} onClick={() => { console.log("DELETE"); }}> <FaTrash size={20} /> </button>
+                    </div>
+                )
+            }
+        }
+
+        return "N/A";
     }
 }

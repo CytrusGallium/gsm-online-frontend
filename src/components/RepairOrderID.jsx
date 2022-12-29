@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { PulseLoader } from 'react-spinners';
 import axios from "axios";
-import GetBackEndUrl from '../const';
+import { GetBackEndUrl } from '../const';
 
 export default class RepairOrderID extends Component {
 

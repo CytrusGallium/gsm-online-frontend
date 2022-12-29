@@ -5,7 +5,7 @@ import DeviceStateSelector from './DeviceStateSelector';
 import { AwesomeButtonProgress } from 'react-awesome-button';
 import { FaTimesCircle } from 'react-icons/fa';
 import Popup from 'reactjs-popup';
-import GetBackEndUrl from '../const';
+import { GetBackEndUrl } from '../const';
 
 const RepairOrderValidationPopup = (props) => {
 
@@ -14,6 +14,7 @@ const RepairOrderValidationPopup = (props) => {
     const [checked, setChecked] = useState(true);
     const [roState, setRoState] = useState("DONE");
     const [note, setNote] = useState("");
+    // const [totalEstPrice, setTotalEstPrice] = useState(0);
     const [paiment, setPaiment] = useState(0);
 
     const handleChange = () => {
@@ -30,7 +31,7 @@ const RepairOrderValidationPopup = (props) => {
 
         try {
 
-            let validationToPost = { roid: ParamROID, state: ParamState, fulfilledPaiement: ParamPaiement, locked: ParamLock, note : ParamNote };
+            let validationToPost = { roid: ParamROID, state: ParamState, fulfilledPaiement: ParamPaiement, locked: ParamLock, note: ParamNote };
             let url = GetBackEndUrl() + "/api/validate-repair-order";
             let res = await axios.post(url, validationToPost);
 
@@ -46,6 +47,21 @@ const RepairOrderValidationPopup = (props) => {
 
     const handlePriceChange = (event) => {
         setPaiment(Number(event.target.value));
+    }
+
+    const GetTotalPrice = (ParamRepairOrder) => {
+
+        if (!ParamRepairOrder || !ParamRepairOrder.items)
+            return 0;
+
+        let total = Number(0);
+        ParamRepairOrder.items.forEach(i => {
+            i.problems.forEach(p => {
+                total += Number(p.price);
+            });
+        });
+
+        return total;
     }
 
     return (
@@ -67,12 +83,14 @@ const RepairOrderValidationPopup = (props) => {
                         <br />
                         <DeviceIconList value={props.value.items} />
                         <br />
+                        <p className='text-3xl font-bold'>Prix Total Estimé : {GetTotalPrice(props.value)} DA</p>
+                        <br />
                         <DeviceStateSelector onChange={handleRoStateOnChange} />
                         <br />
                         <input type="text" name='price' placeholder='Montant payer...' className={inputFieldStyle} onChange={handlePriceChange} />
                         <br />
-                        <textarea name="note" className={inputFieldStyle} value={note} rows="3" placeholder="Ajouter une Note/Observation..." onChange={(e) => {setNote(e.target.value)}} />
-                        <br/>
+                        <textarea name="note" className={inputFieldStyle} value={note} rows="3" placeholder="Ajouter une Note/Observation..." onChange={(e) => { setNote(e.target.value) }} />
+                        <br />
                         <label>
                             <input type="checkbox" checked={checked} onChange={handleChange} className='mx-1' />
                             Vérouiller

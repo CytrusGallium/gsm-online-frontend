@@ -18,7 +18,7 @@ const BuildTooltipText = (ParamIMEI, ParamProblems, ParamRef) => {
         let problemsText = "";
 
         ParamProblems.forEach(p => {
-            problemsText += (p.name + " (" + p.price + " DA)");
+            problemsText += (p.name + " (" + p.price + " DA)<br/>");
         });
 
         return ParamRef + "<br/><br/><br/>" + "Liste des Problems : <br/>" + problemsText;

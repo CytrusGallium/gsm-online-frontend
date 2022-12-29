@@ -1,6 +1,6 @@
 import React from 'react';
 import axios from "axios";
-import GetBackEndUrl from '../const';
+import { GetBackEndUrl } from '../const';
 import { useState } from 'react';
 import { BarLoader } from 'react-spinners';
 import { FaCog } from 'react-icons/fa';

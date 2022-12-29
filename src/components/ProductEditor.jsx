@@ -1,6 +1,6 @@
 import React from 'react';
 import { useState } from 'react';
-import GetBackEndUrl from '../const';
+import { GetBackEndUrl } from '../const';
 import axios from 'axios';
 import FileSelectAndDrop from './FileSelectAndDrop';
 import { AwesomeButton } from 'react-awesome-button';

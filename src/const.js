@@ -6,8 +6,29 @@ const GetBackEndUrl = () => {
     if (storedValue && storedValue != "")
         result = storedValue;
 
-    // return "https://uttermost-first-gravity.glitch.me";
     return result;
 }
 
-export default GetBackEndUrl;
+const GetPrintServerAddress = () => {
+    let result = "http://localhost:5000/print";
+
+    const storedValue = localStorage.getItem("printServerAddress");
+
+    if (storedValue && storedValue != "")
+        result = storedValue;
+
+    return result;
+}
+
+const GetPrinterName = () => {
+    let result = "Default Printer";
+
+    const storedValue = localStorage.getItem("printerName");
+
+    if (storedValue && storedValue != "")
+        result = storedValue;
+
+    return result;
+}
+
+module.exports = { GetBackEndUrl, GetPrintServerAddress, GetPrinterName };

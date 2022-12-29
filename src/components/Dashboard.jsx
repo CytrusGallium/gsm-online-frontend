@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaUserFriends, FaClipboardList, FaList, FaBox, FaShoppingCart } from 'react-icons/fa';
+import { FaUserFriends, FaClipboardList, FaList, FaBox, FaShoppingCart, FaCog } from 'react-icons/fa';
 
 const Dashboard = () => {
   
@@ -19,6 +19,8 @@ const Dashboard = () => {
         <h3 className={buttonStyling}><a href='/sales-point' className='text-xl'><FaShoppingCart className='inline' size={24}/> Point de Vente</a></h3>
         <br/> */}
         <h3 className={buttonStyling}><a href='/user-manager' className='text-xl'><FaUserFriends className='inline' size={24}/> Gestion des Utilisateur</a></h3>
+        <br/>
+        <h3 className={buttonStyling}><a href='/config' className='text-xl'><FaCog className='inline' size={24}/> Configuration</a></h3>
         <br/>
       </div>
     </div>
