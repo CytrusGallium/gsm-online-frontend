@@ -3,7 +3,7 @@ import NetImage from '../components/NetImage';
 import GetBackEndUrl from '../const';
 import axios from 'axios';
 
-const SalesPoint = () => {
+const CateringSalesPoint = () => {
 
     useEffect(() => {
         GetProductListFromDb();
@@ -64,9 +64,6 @@ const SalesPoint = () => {
             <div className='flex'>
                 {productList.map(p => <NetImage value={p} key={p._id} onClick={() => handleProductOnClick(p)} />)}
             </div>
-            {/* <div className='flex border-2 border-gray-100'>
-                {productList.map(p => <NetImage id={p._id} key={p._id} />)}
-            </div> */}
             <br />
             <br />
             <div className='bg-gray-900 w-full h-128 rounded-xl ml-4 text-gray-100 py-4 border-2 border-gray-100'>
@@ -83,4 +80,4 @@ const SalesPoint = () => {
     )
 }
 
-export default SalesPoint
+export default CateringSalesPoint

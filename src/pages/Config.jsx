@@ -7,23 +7,28 @@ const Config = () => {
 
     const [printServerAddress, setPrintServerAddress] = useState("");
     const [printerName, setPrinterName] = useState("");
+    const [footerNote, setFooterNote] = useState("");
     const [changesAvailable, setChangesAvailable] = useState(false);
 
     const handlePrintServerAddressChange = (e) => {
-        console.log(e.target.value);
         setPrintServerAddress(e.target.value);
         setChangesAvailable(true);
     }
     
     const handlePrinterNameChange = (e) => {
-        console.log(e.target.value);
         setPrinterName(e.target.value);
+        setChangesAvailable(true);
+    }
+
+    const handleFooterNoteChange = (e) => {
+        setFooterNote(e.target.value);
         setChangesAvailable(true);
     }
     
     const saveBtnOnClick = () => {
         localStorage.setItem("printServerAddress", printServerAddress);
         localStorage.setItem("printerName", printerName);
+        localStorage.setItem("footerNote", footerNote);
         setChangesAvailable(false);
     }
 
@@ -43,6 +48,11 @@ const Config = () => {
             <label className='text-gray-100 text-sm'>Nom de l'Imprimante : </label>
             <br />
             <input type='text' name='printerName' value={printerName} onChange={handlePrinterNameChange} placeholder="Nom de l'Imprimante..." className={InputFieldStyle} />
+            <br/>
+            <br/>
+            <label className='text-gray-100 text-sm'>Note en bas du Bon : </label>
+            <br />
+            <input type='text' name='footerNote' value={footerNote} onChange={handleFooterNoteChange} placeholder="Note en bas du Bon..." className={InputFieldStyle} />
             <br />
             <br />
             <br />
