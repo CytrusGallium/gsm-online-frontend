@@ -2,21 +2,16 @@ import React from 'react';
 import { useState } from 'react';
 import { GetBackEndUrl } from '../const';
 import axios from 'axios';
-import FileSelectAndDrop from './FileSelectAndDrop';
+import FileSelectAndDrop from '../components/FileSelectAndDrop';
 import { AwesomeButton } from 'react-awesome-button';
-// import { FileUploadWithPreview } from 'file-upload-with-preview';
-// import 'file-upload-with-preview/dist/file-upload-with-preview.min.css';
-
 
 const inputFieldStyle = 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 mt-2';
 const buttonStyle = "bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded mt-2";
 
-const ProductEditor = () => {
+const CategoryEditor = () => {
     
-    // const upload = new FileUploadWithPreview('myFirstImage');
-
     const [selectedFile, setSelectedFile] = useState("");
-    const [productInfo, setProductInfo] = useState({ name: "", description: "", price: 0 });
+    const [productInfo, setProductInfo] = useState({ name: "", description: "" });
     const [imageURL, setImageURL] = useState();
     const [imageAvailable, setImageAvailable] = useState(false);
     const [changesAvailable, setChangesAvailable] = useState(false);
@@ -51,7 +46,6 @@ const ProductEditor = () => {
             const formData = new FormData();
             formData.append("name", productInfo.name);
             formData.append("description", productInfo.description);
-            formData.append("price", productInfo.price);
             formData.append("picture", selectedFile);
 
             // Add token
@@ -63,7 +57,7 @@ const ProductEditor = () => {
             // Build Req/Res
             const response = await axios({
                 method: "post",
-                url: GetBackEndUrl() + "/api/new-product",
+                url: GetBackEndUrl() + "/api/new-category",
                 data: formData,
                 headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${token}` }
             }, {}, () => console.log("CALLBACK"));
@@ -87,15 +81,6 @@ const ProductEditor = () => {
                     <textarea name="description" className={inputFieldStyle} value={productInfo.description} rows="2" placeholder="Description du produit..." onChange={handleChange} />
                 </div>
                 <br />
-                <div>
-                    <label className="block text-sm font-medium text-gray-900 dark:text-white">Prix :</label>
-                    <input type="number" step="0.01" name="price" className={inputFieldStyle} value={productInfo.price} placeholder="Prix du produit..." onChange={handleChange} />
-                </div>
-                {/* <br />
-                <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Image :</label>
-                    <input type="file" id="picture" name="picture" className='text-lg text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400' onChange={handleFileSelect} required />
-                </div> */}
                 <br />
                 <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Image :</label>
                 {!imageAvailable && <FileSelectAndDrop name="picture" onChange={handleFileSelect} />}
@@ -109,4 +94,4 @@ const ProductEditor = () => {
     )
 }
 
-export default ProductEditor
+export default CategoryEditor
