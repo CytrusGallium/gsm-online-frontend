@@ -1,0 +1,18 @@
+.vfx-gradient-anim {
+	background: linear-gradient(90deg, #181d28, #1a2849, #1f3e86, #073141);
+	background-size: 400% 400%;
+	animation: gradient 0.5s ease infinite;
+	/* height: 100vh; */
+}
+
+@keyframes gradient {
+	0% {
+		background-position: 0% 50%;
+	}
+	50% {
+		background-position: 100% 50%;
+	}
+	100% {
+		background-position: 0% 50%;
+	}
+}

@@ -1,29 +1,73 @@
 import { React, useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { FaRegPaperPlane, FaTrash, FaCheckCircle, FaDownload } from 'react-icons/fa';
 import NetImage from '../components/NetImage';
 import { GetBackEndUrl, GetPrintServerAddress, GetPrinterName } from '../const';
 import axios from 'axios';
-import { FaRegPaperPlane, FaTrash, FaCheckCircle, FaDownload } from 'react-icons/fa';
 import autoTable from 'jspdf-autotable';
 import logo from '../Logo-Dar-Mima-Black.png'; // relative path to image
 import { GetShortDate, GetTimeHM2Digits } from '../Reaknotron/Libs/RknTimeTools';
+import '../VFX.css';
+import { AwesomeButton } from 'react-awesome-button';
+import { MontserratArabicRegular_GetBinaryString } from "../Reaknotron/Fonts/Montserrat-Arabic-Regular";
+import { NotoSansBold_GetBinaryString } from "../Reaknotron/Fonts/Noto-Sans-Bold";
+import { SamimBold_GetBinaryString } from "../Reaknotron/Fonts/SamimBold";
 const jspdf = require('jspdf');
 
 const CateringSalesPoint = () => {
 
+    // Effect
     useEffect(() => {
+
+        console.log("BASE URL = " + GetBaseUrl());
+
+        if (searchParams.get("id")) {
+            GetCateringOrderFromDB(searchParams.get("id"));
+        }
+        else {
+            GenerateNewCateringOrder();
+        }
+
+        GetCustomerSittingTablesListFromDb();
         GetProductListFromDb();
+
+        updateCSTInterval = setInterval(GetCustomerSittingTablesListFromDb, 30000);
+
     }, []);
 
+    const GetBaseUrl = () => {
+        var baseUrl = '' + window.location;
+        var pathArray = baseUrl.split('/');
+        var protocol = pathArray[0];
+        var host = pathArray[2];
+        var url = protocol + '//' + host;
+
+        return url;
+    }
+
+    // Navigation
+    const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    // State
     const [productList, setProductList] = useState([]);
     const [consumedProductsList, setConsumedProductsList] = useState([]);
     const [totalPrice, setTotalPrice] = useState(0);
     const [productCounter, setProductCounter] = useState(1);
-    const [selectedTable, setSelectedTable] = useState(1);
+    const [customerSittingTables, setCustomerSittingTables] = useState([]);
+    const [selectedTable, setSelectedTable] = useState(0);
+    const [cateringOrderIDinDB, setCateringOrderIDinDB] = useState("");
+    const [COID, setCOID] = useState(0);
+    const [kitchenOrderIssued, setKitchenOrderIssued] = useState(false);
+    const [finalized, setFinalized] = useState(false);
 
     const gridStyle = { display: 'grid', gridTemplateRows: '320px 256px' };
-    const tables = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
     const tableStyle = 'inline m-1 p-1 text-gray-900 rounded-lg cursor-pointer select-none bg-gray-500 text-sm font-bold';
     const selectedTableStyle = 'inline m-1 p-1 text-gray-900 rounded-lg cursor-pointer select-none bg-gray-100 text-sm font-bold';
+    const occupiedTableStyle = 'inline m-1 p-1 text-gray-100 rounded-lg cursor-pointer select-none bg-gray-100 text-sm font-bold vfx-gradient-anim';
+    const hiddenTableStyle = 'inline m-1 p-1 text-gray-900 rounded-lg select-none bg-gray-500 text-sm font-bold opacity-20';
+
+    var updateCSTInterval;
 
     const GetProductListFromDb = async () => {
         let res;
@@ -53,12 +97,104 @@ const CateringSalesPoint = () => {
         }
     }
 
+    const GetCateringOrderFromDB = async (ParamID) => {
+        let res;
+
+        try {
+
+            // Build Req/Res
+            var url = GetBackEndUrl() + "/api/get-catering-order?id=" + ParamID;
+
+            console.log("GET : " + url);
+            res = await axios.get(url);
+
+            if (res) {
+                console.log("CO RESULT = " + JSON.stringify(res.data));
+                setConsumedProductsList(res.data.consumedProducts);
+                setCateringOrderIDinDB(res.data._id);
+                setCOID(res.data.coid);
+                setSelectedTable(res.data.customerSittingTableID);
+                setKitchenOrderIssued(res.data.kitchenOrderIssued);
+                setFinalized(res.data.finalized);
+
+                // var customerSittingTable = customerSittingTables.filter(t => {
+                //     return t._id === res.data.customerSittingTableID;
+                // })
+            }
+
+        } catch (error) {
+            console.log("ERROR : " + error);
+
+            if (error.response && error.response.status >= 400 && error.response.status <= 500) {
+
+                console.log(error.response.data);
+
+            }
+        }
+    }
+
+    const GetCustomerSittingTablesListFromDb = async () => {
+        let res;
+
+        try {
+
+            // Build Req/Res
+            var url = GetBackEndUrl() + "/api/get-customer-sitting-tables-list";
+
+            console.log("GET : " + url);
+            res = await axios.get(url);
+
+            if (res) {
+                // console.log("RESULT = " + JSON.stringify(res));
+                setCustomerSittingTables(res.data);
+                // this.setState({ isBusy: false });
+            }
+
+        } catch (error) {
+            console.log("ERROR : " + error);
+
+            if (error.response && error.response.status >= 400 && error.response.status <= 500) {
+
+                console.log(error.response.data);
+
+            }
+        }
+    }
+
+    const GenerateNewCateringOrder = async () => {
+        let res;
+
+        try {
+
+            // Build Req/Res
+            var url = GetBackEndUrl() + "/api/generate-empty-catering-order";
+
+            console.log("GET : " + url);
+            res = await axios.get(url);
+
+            if (res) {
+                setCOID(res.data.coid);
+                setCateringOrderIDinDB(res.data._id);
+                navigate('/sales-point?id=' + res.data._id);
+            }
+
+        } catch (error) {
+            console.log("ERROR : " + error);
+
+            if (error.response && error.response.status >= 400 && error.response.status <= 500) {
+
+                console.log(error.response.data);
+
+            }
+        }
+    }
+
     const handleProductOnClick = (ParamProduct) => {
 
         setProductCounter(productCounter + 1);
 
-        console.log(JSON.stringify(ParamProduct));
-        let productInfo = { key: productCounter, id: ParamProduct._id, name: ParamProduct.name, price: ParamProduct.price };
+        // console.log(JSON.stringify(ParamProduct));
+        let productInfo = { key: productCounter, id: ParamProduct._id, name: ParamProduct.name, price: ParamProduct.price, altLangName: ParamProduct.altLangName };
         setConsumedProductsList(consumedProductsList => [...consumedProductsList, productInfo]);
     }
 
@@ -71,6 +207,10 @@ const CateringSalesPoint = () => {
     }
 
     const GetTotalPrice = () => {
+
+        if (!consumedProductsList)
+            return 0;
+
         var total = 0;
         consumedProductsList.forEach(p => {
             total += p.price;
@@ -79,7 +219,30 @@ const CateringSalesPoint = () => {
     }
 
     const handleClearAllOnClick = () => {
+        if (finalized)
+            return;
+
         setConsumedProductsList([]);
+    }
+
+    const IssueCateringOrder = async () => {
+
+        if (finalized)
+            return;
+
+        // Update in DB
+        UpdateCateringOrderInDB(cateringOrderIDinDB, consumedProductsList, true, selectedTable);
+
+        // TODO : Mark table occupied
+        if (selectedTable)
+            MarkCustomerSittingTableOccupiedInDB(selectedTable, cateringOrderIDinDB);
+
+        // ...
+        setKitchenOrderIssued(true);
+
+        // Print in kitchen
+        const doc = await BuildKitchenPDF();
+        await PrintKitchenPDF(doc);
     }
 
     const buildBatchedConsumedProductsArray = () => {
@@ -90,9 +253,9 @@ const CateringSalesPoint = () => {
 
             if (result[p.id]) {
                 let me = result[p.id];
-                result[p.id] = { name: me.name, amount: me.amount + 1, price: me.price };
+                result[p.id] = { name: me.name, amount: me.amount + 1, price: me.price, altLangName: me.altLangName };
             } else {
-                result[p.id] = { name: p.name, amount: 1, price: p.price };
+                result[p.id] = { name: p.name, amount: 1, price: p.price, altLangName: p.altLangName };
                 arrayOfIDs.push(p.id);
             }
 
@@ -109,191 +272,294 @@ const CateringSalesPoint = () => {
         return finalResult;
     }
 
-    const buildConsumedProductsTableDataForPDF = (ParamBatchedConsumedProducts) => {
+    const buildConsumedProductsTableDataForPDF = (ParamBatchedConsumedProducts, ParamKitchenMode) => {
+
         // let head = [['Panne', 'Prix Estimé']];
-        let head = ['Designation', 'Qte', 'P.U', 'Montant'];
+        // ParamKitchenMode : in kitchen mode don't send price and total price
+        var head = ['Designation', 'Qte', 'P.U', 'Montant'];
+        if (ParamKitchenMode)
+            head = ['Designation', 'Qte', 'الإسم'];
 
         let body = [];
-        ParamBatchedConsumedProducts.forEach(p => {
-            let tableLine = [];
-            tableLine.push(p.name);
-            tableLine.push(p.amount);
-            tableLine.push(p.price);
-            tableLine.push(p.price * p.amount);
-            body.push(tableLine);
-        });
+
+        if (ParamKitchenMode) {
+            ParamBatchedConsumedProducts.forEach(p => {
+                let tableLine = [];
+                tableLine.push(p.name);
+                tableLine.push(p.amount);
+                tableLine.push(p.altLangName);
+                body.push(tableLine);
+            });
+        }
+        else {
+            ParamBatchedConsumedProducts.forEach(p => {
+                let tableLine = [];
+                tableLine.push(p.name);
+                tableLine.push(p.amount);
+                tableLine.push(p.price);
+                tableLine.push(p.price * p.amount);
+                body.push(tableLine);
+            });
+        }
 
         let result = { head: head, body: body };
-
-        // console.log("TABLE RESULT = " + JSON.stringify(result));
-
         return result;
+    }
+
+    /**
+     * Draws a dotted line on a jsPDF doc between two points.
+     * Note that the segment length is adjusted a little so
+     * that we end the line with a drawn segment and don't
+     * overflow.
+     */
+    function dottedLine(ParamPDF, xFrom, yFrom, xTo, yTo, segmentLength) {
+        // Calculate line length (c)
+        var a = Math.abs(xTo - xFrom);
+        var b = Math.abs(yTo - yFrom);
+        var c = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
+
+        // Make sure we have an odd number of line segments (drawn or blank)
+        // to fit it nicely
+        var fractions = c / segmentLength;
+        var adjustedSegmentLength = (Math.floor(fractions) % 2 === 0) ? (c / Math.ceil(fractions)) : (c / Math.floor(fractions));
+
+        // Calculate x, y deltas per segment
+        var deltaX = adjustedSegmentLength * (a / c);
+        var deltaY = adjustedSegmentLength * (b / c);
+
+        var curX = xFrom, curY = yFrom;
+        while (curX <= xTo && curY <= yTo) {
+            ParamPDF.setLineWidth(0.25);
+            ParamPDF.line(curX, curY, curX + deltaX, curY + deltaY);
+            curX += 2 * deltaX;
+            curY += 2 * deltaY;
+        }
     }
 
     const BuildPDF = async () => {
 
-        const doc = new jspdf.jsPDF('p', 'mm', [160, 60]); // Portrait, Milimeter, Height, Width
+        var receiptWidth = 60;
+        if (localStorage.getItem("receiptWidth")) {
+            receiptWidth = Number(localStorage.getItem("receiptWidth"));
+            console.log("RECEIPT WIDTH = " + receiptWidth);
+        }
+
+        const halfReceiptWidth = receiptWidth / 2;
+
+        const doc = new jspdf.jsPDF('p', 'mm', [160, receiptWidth]); // Portrait, Milimeter, Height, Width
         var cursorY = 40;
-        // var barcodeImg;
-        // var html2CanvasResult = await html2canvas(document.querySelector("#barcode"));
-        // var barcodeImg = html2CanvasResult.toDataURL('image/bmp');
 
         var logoImg = new Image();
         logoImg.src = logo;
-        doc.addImage(logoImg, 'png', 20, 2, 24, 30);
+        doc.addImage(logoImg, 'png', (receiptWidth - 24) / 2, 2, 24, 30);
 
         // N°
         doc.setFont(undefined, 'bold');
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(14);
-        doc.text("N° 23-000001", 30, cursorY, 'center');
+        doc.text("Commande N° " + COID, halfReceiptWidth, cursorY, 'center');
         cursorY += 4;
         doc.setFont(undefined, 'normal');
 
         // SItting Table
+        const tableLabel = GetCustomerSittingTableLabelInPrint();
+        if (tableLabel && tableLabel != "") {
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(10);
+            doc.text(tableLabel, halfReceiptWidth, cursorY, 'center');
+            cursorY += 9;
+            doc.setFont(undefined, 'normal');
+        }
+        else {
+            cursorY += 5;
+        }
+
+        // Date
         doc.setTextColor(0, 0, 0);
-        doc.setFontSize(10);
-        doc.text("Table " + selectedTable, 30, cursorY, 'center');
-        cursorY += 9;
-        doc.setFont(undefined, 'normal');
+        doc.setFontSize(8);
+        doc.text(GetShortDate(), 3, cursorY, 'left');
+
+        // Time
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(8);
+        doc.text(GetTimeHM2Digits(), receiptWidth - 3, cursorY, 'right');
+        cursorY += 1;
 
         // Consumption table
         const products = buildBatchedConsumedProductsArray();
         const tableData = buildConsumedProductsTableDataForPDF(products);
 
-        let fontSize = 8;
+        let cellTextFontSize = 10;
         autoTable(doc, {
             head: [tableData.head],
             body: tableData.body,
             startY: cursorY,
             margin: 2,
             theme: 'grid',
-            tableWidth: 56,
+            tableWidth: receiptWidth - 4,
             styles: {
-                fontSize: fontSize,
-                cellPadding: 1, fontStyle:'bold'
+                fontSize: cellTextFontSize,
+                cellPadding: 1,
+                fontStyle: 'bold',
+                textColor: 'black'
             },
-            headStyles: { fillColor: [24, 24, 24] }
+            headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255] },
+            didDrawPage: (d) => { cursorY = d.cursor.y },
         });
-        cursorY += (fontSize + (fontSize*consumedProductsList.length))/2;
-
-        // Total
-        doc.setTextColor(0, 0, 0);
-        doc.setFontSize(10);
-        doc.text("Total : " + GetTotalPrice() + " DA", 30, cursorY, 'center');
         cursorY += 9;
 
-        // // GSM Online BG
-        // doc.setDrawColor(0, 0, 0);
-        // doc.setFillColor(0, 0, 0);
-        // doc.setLineWidth(1);
-        // doc.rect(0, 0, 150, 15, 'DF');
+        // Total
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(14);
+        doc.text("Total : " + GetTotalPrice() + " DA", halfReceiptWidth, cursorY, 'center');
+        cursorY += 5;
+        doc.setFont(undefined, 'normal');
 
-        // // GSM Online Text
-        // doc.setFont(undefined, 'bold');
-        // doc.setTextColor(255, 255, 255);
-        // doc.setFontSize(26);
-        // doc.text("GSM Online", 30, cursorY, 'center');
-        // cursorY += 9;
+        dottedLine(doc, 1, cursorY, receiptWidth - 1, cursorY, 1);
+        cursorY += 3;
 
-        // // Reset font weight
-        // doc.setFont(undefined, 'normal');
+        doc.setFont(undefined, 'bold');
+        doc.setFontSize(7);
+        doc.text("Adresse : En face Center de formation, Imama", halfReceiptWidth, cursorY, 'center');
+        cursorY += 3;
+        doc.text("Téléphone : 05 40 95 13 17", halfReceiptWidth, cursorY, 'center');
+        cursorY += 1;
+        doc.setFont(undefined, 'normal');
 
-        // // Date
-        // doc.setTextColor(0, 0, 0);
-        // doc.setFontSize(8);
-        // doc.text(GetShortDate(), 1, cursorY, 'left');
+        dottedLine(doc, 1, cursorY, receiptWidth - 1, cursorY, 1);
+        cursorY += 7;
 
-        // // Time
-        // doc.setTextColor(0, 0, 0);
-        // doc.setFontSize(8);
-        // doc.text(GetTimeHM2Digits(), 59, cursorY, 'right');
-        // cursorY += 3;
-
-        // doc.addImage(barcodeImg, 'bmp', 10, cursorY, 50, 15);
-        // cursorY += 20;
-
-        // doc.setTextColor(0, 0, 0);
-        // doc.setFontSize(10);
-        // doc.text("Client : " + repairOrder.customer, 30, cursorY, 'center');
-        // cursorY += 4;
-
-        // doc.setTextColor(0, 0, 0);
-        // doc.setFontSize(10);
-        // doc.text("Tel : " + repairOrder.phone, 30, cursorY, 'center');
-        // cursorY += 8;
-
-        // // Line 1
-        // dottedLine(doc, 5, cursorY, 55, cursorY, 2);
-        // cursorY += 8;
-
-        // doc.setTextColor(0, 0, 0);
-        // doc.setFontSize(10);
-        // doc.text("Model : " + items[0].ref, 30, cursorY, 'center');
-        // cursorY += 4;
-
-        // doc.setTextColor(0, 0, 0);
-        // doc.setFontSize(10);
-        // doc.text("IMEI/NS : " + items[0].imei, 30, cursorY, 'center');
-        // cursorY += 4;
-
-        // if (items[0].problems && items[0].problems[0]) {
-
-        //     if (items[0].problems.length == 1) {
-        //         doc.setTextColor(0, 0, 0);
-        //         doc.setFontSize(10);
-        //         doc.text("Panne/Motif : " + items[0].problems[0].name, 30, cursorY, 'center');
-        //         cursorY += 4;
-        //     }
-        //     else {
-        //         autoTable(doc, {
-        //             head: [['Panne', 'Prix Estimé']],
-        //             body: [
-        //                 ['Ecran', '12000'],
-        //                 ['HP', '600'],
-        //             ],
-        //             startY: cursorY,
-        //             margin: 2,
-        //             theme: 'grid',
-        //             tableWidth: 56,
-        //             styles: {
-        //                 fontSize: 6,
-        //                 cellPadding: 1
-        //             },
-        //             headStyles: { fillColor: [24, 24, 24] }
-        //         });
-        //         cursorY += 12;
-        //     }
-
-        //     // doc.setTextColor(0, 0, 0);
-        //     // doc.setFontSize(10);
-        //     // doc.text("Prix Estimé : " + items[0].problems[0].price, 30, cursorY, 'center');
-        //     // cursorY += 8;
-
-        // }
-        // else {
-        //     doc.setTextColor(0, 0, 0);
-        //     doc.setFontSize(10);
-        //     doc.text("Panne/Motif : Aucun", 30, cursorY, 'center');
-        //     cursorY += 4;
-        // }
-
-        // // Line 2
-        // dottedLine(doc, 5, cursorY, 55, cursorY, 2);
-        // cursorY += 10;
-
-        // doc.setTextColor(0, 0, 0);
-        // doc.setFontSize(12);
-        // doc.text("Prix Estimé Total : " + totalEstPrice + " DA", 30, cursorY, 'center');
-        // cursorY += 8;
+        if (localStorage.getItem("footerNote")) {
+            doc.setFontSize(10);
+            doc.text(localStorage.getItem("footerNote"), halfReceiptWidth, cursorY, 'center');
+            cursorY += 9;
+        }
 
         return doc;
     }
 
-    // const DownloadPDF = async () => {
-    //     const doc = await BuildPDF();
-    //     doc.save("Bon-Dar-Mima.pdf");
-    // }
+    const BuildKitchenPDF = async () => {
+
+        var receiptWidth = 60;
+        if (localStorage.getItem("receiptWidth")) {
+            receiptWidth = Number(localStorage.getItem("receiptWidth"));
+            // console.log("RECEIPT WIDTH = " + receiptWidth);
+        }
+
+        const halfReceiptWidth = receiptWidth / 2;
+
+        const doc = new jspdf.jsPDF('p', 'mm', [160, receiptWidth]); // Portrait, Milimeter, Height, Width
+        // var cursorY = 40;
+        var cursorY = 4;
+
+        // N°
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(14);
+        doc.text("Commande N° " + COID, halfReceiptWidth, cursorY, 'center');
+        cursorY += 4;
+        doc.setFont(undefined, 'normal');
+
+        // Sitting Table
+        const tableLabel = GetCustomerSittingTableLabelInPrint();
+        if (tableLabel && tableLabel != "") {
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(10);
+            doc.text(tableLabel, halfReceiptWidth, cursorY, 'center');
+            cursorY += 9;
+            doc.setFont(undefined, 'normal');
+        }
+        else {
+            cursorY += 5;
+        }
+
+        // Date
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(8);
+        doc.text(GetShortDate(), 1, cursorY, 'left');
+
+        // Time
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(8);
+        doc.text(GetTimeHM2Digits(), receiptWidth - 1, cursorY, 'right');
+        cursorY += 1;
+
+        // Consumption table
+        // const products = buildBatchedConsumedProductsArray();
+        const products = buildBatchedConsumedProductsArray();
+        const tableData = buildConsumedProductsTableDataForPDF(products, true);
+
+        // const marBinary = MontserratArabicRegular_GetBinaryString();
+        // const notoBinary = NotoSansBold_GetBinaryString();
+        const samimBinary = SamimBold_GetBinaryString();
+        doc.addFileToVFS('samim', samimBinary);
+        doc.addFont('samim', 'samim', 'normal');
+        // let fontID = doc.addFont('Montserrat-Arabic-Regular-normal.ttf', 'Montserrat-Arabic-Regular', 'normal');
+        // console.log("FONT ID = " + fontID);
+
+        // doc.setFont('Montserrat-Arabic-Regular');
+        // doc.setTextColor(0, 0, 0);
+        // doc.setFontSize(14);
+        // doc.text(" حساء السمك ", halfReceiptWidth, cursorY, 'center');
+        // cursorY += 4;
+
+        autoTable(doc, {
+            head: [tableData.head],
+            body: tableData.body,
+            startY: cursorY,
+            margin: 1,
+            theme: 'grid',
+            tableWidth: receiptWidth - 2,
+            styles: {
+                fontSize: 12,
+                cellPadding: 1,
+                fontStyle: 'bold',
+                textColor: 'black',
+                font: 'samim'
+            },
+            // headStyles: [{ fillColor: [224, 224, 224] }, { fillColor: [160, 160, 160] }, { fillColor: [16, 16, 16] }],
+            headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255], halign: "center" },
+            columnStyles: {
+                2: { halign: "right" }
+            },
+            didDrawPage: (d) => { cursorY = d.cursor.y },
+            tableLineWidth: 0.4,
+            tableLineColor: [0, 0, 0],
+            bodyStyles: { lineColor: [0, 0, 0] }
+        });
+        cursorY += 9;
+
+        return doc;
+    }
+
+    const BuildKitchenOrderText = () => {
+        var result = "";
+
+        result += "Commande N° " + COID + "\n";
+        result += GetCustomerSittingTableLabelInPrint() + "\n";
+        result += "---------------------------" + "\n";
+        consumedProductsList.forEach(p => {
+            result += p.name + " X " + p.amount + "\n";
+        });
+        result += "---------------------------";
+    }
+
+    const FinalizeCateringOrder = async () => {
+
+        if (finalized)
+            return;
+
+        // Print receipt
+        PrintPDF();
+
+        // Update in database
+        MarkCustomerSittingTableFreeInDB(selectedTable);
+        FinalizeCateringOrderInDB(cateringOrderIDinDB);
+
+        // ...
+        setFinalized(true);
+    }
 
     const PrintPDF = async () => {
 
@@ -318,19 +584,160 @@ const CateringSalesPoint = () => {
         }, {}, () => console.log("CALLBACK"));
     }
 
+    const PrintKitchenPDF = async (ParamPDF) => {
+
+        // Build PDF
+        // const doc = await BuildKitchenPDF();
+
+        const doc = ParamPDF;
+
+        // Build form
+        const formData = new FormData();
+        formData.append("pdf", doc.output('blob'));
+
+        // Add token
+        const token = localStorage.getItem("token");
+        const config = {
+            headers: { Authorization: `Bearer ${token}` }
+        };
+
+        const url = GetPrintServerAddress() + "?printer=Kitchen"; // TODO : Config
+        console.log("POST : " + url);
+
+        // Build Req/Res
+        const response = await axios({
+            method: "post",
+            // url: GetPrintServerAddress() + "?printer=" + GetPrinterName(),
+            url: url,
+            data: formData
+        }, {}, () => console.log("CALLBACK"));
+    }
+
+    const UpdateCateringOrderInDB = async (ParamID, ParamConsumedProducts, ParamKitchenOrderIssued, ParamTableID) => {
+
+        let cateringOrderToPost = { id: ParamID, consumedProducts: ParamConsumedProducts, kitchenOrderIssued: ParamKitchenOrderIssued, customerSittingTableID: ParamTableID };
+
+        // Add token
+        // const token = localStorage.getItem("token");
+        // const config = {
+        //     headers: { Authorization: `Bearer ${token}` }
+        // };
+
+        const url = GetBackEndUrl() + "/api/update-catering-order";
+        console.log("POST : " + url);
+
+        let res = await axios.post(url, cateringOrderToPost);
+    }
+
+    const MarkCustomerSittingTableOccupiedInDB = async (ParamID, ParamCateringOrderID) => {
+
+        let cstToPost = { id: ParamID, cateringOrder: ParamCateringOrderID, occupied: true };
+
+        // Add token
+        // const token = localStorage.getItem("token");
+        // const config = {
+        //     headers: { Authorization: `Bearer ${token}` }
+        // };
+
+        const url = GetBackEndUrl() + "/api/update-customer-sitting-table";
+        console.log("POST : " + url);
+
+        let res = await axios.post(url, cstToPost);
+        GetCustomerSittingTablesListFromDb();
+    }
+
+    const MarkCustomerSittingTableFreeInDB = async (ParamID) => {
+
+        let cstToPost = { id: ParamID, cateringOrder: "", occupied: false };
+
+        // Add token
+        // const token = localStorage.getItem("token");
+        // const config = {
+        //     headers: { Authorization: `Bearer ${token}` }
+        // };
+
+        const url = GetBackEndUrl() + "/api/update-customer-sitting-table";
+        console.log("POST : " + url);
+
+        let res = await axios.post(url, cstToPost);
+        GetCustomerSittingTablesListFromDb();
+    }
+
+    const FinalizeCateringOrderInDB = async (ParamID) => {
+
+        let cateringOrderToPost = { id: ParamID, finalized: true };
+
+        // Add token
+        // const token = localStorage.getItem("token");
+        // const config = {
+        //     headers: { Authorization: `Bearer ${token}` }
+        // };
+
+        const url = GetBackEndUrl() + "/api/update-catering-order";
+        console.log("POST : " + url);
+
+        let res = await axios.post(url, cateringOrderToPost);
+        GetCustomerSittingTablesListFromDb();
+    }
+
     const downloadPDFOnClick = async () => {
-        const doc = await BuildPDF();
-        doc.save("Bon-Dar-Mima.pdf");
+        const docCheckout = await BuildPDF();
+        docCheckout.save("Bon-Dar-Mima.pdf");
+
+        const docKitchen = await BuildKitchenPDF();
+        docKitchen.save("Bon-Dar-Mima-Cuisine.pdf");
+    }
+
+    const getCustomerSittingTableStyle = (ParamIsOccupied, ParamTableID) => {
+        if (ParamIsOccupied)
+            return occupiedTableStyle;
+        else {
+            if (kitchenOrderIssued)
+                return hiddenTableStyle;
+            else if (ParamTableID == selectedTable)
+                return selectedTableStyle;
+            else
+                return tableStyle;
+        }
+    }
+
+    const handleCSTonClick = (ParamTable) => {
+        if (ParamTable.occupied) {
+            // window.open("http://localhost:3000/sales-point?id=" + ParamTable.cateringOrder, '_blank').focus();
+            window.open(GetBaseUrl() + "/sales-point?id=" + ParamTable.cateringOrder, '_blank').focus();
+        } else if (!kitchenOrderIssued) {
+            setSelectedTable(ParamTable._id);
+        }
+    }
+
+    const GetCustomerSittingTableLabelInPrint = () => {
+        if (selectedTable) {
+            var result = customerSittingTables.find(t => {
+                return t._id == selectedTable;
+            });
+
+
+            if (result) {
+                return "Table " + result.name;
+            }
+        }
+
+        return "";
     }
 
     return (
         <div className='m-auto'>
-            <div className='fixed right-4 top-16 mt-2 w-40 h-12 cursor-pointer bg-gray-300 hover:bg-gray-100 p-1 text-gray-900 font-bold rounded-xl'><div className='mt-2'><FaRegPaperPlane color='#111111' size={24} className="inline mr-2" />Commande</div></div>
-            <div className='fixed right-4 top-32 mt-2 w-40 h-12 cursor-pointer bg-gray-300 hover:bg-gray-100 p-1 text-gray-900 font-bold rounded-xl' onClick={PrintPDF}><div className='mt-2'><FaCheckCircle color='#111111' size={24} className="inline mr-2" />Paiment</div></div>
-            <div className='fixed right-4 top-48 mt-2 w-40 h-12 cursor-pointer bg-gray-300 hover:bg-gray-100 p-1 text-gray-900 font-bold rounded-xl' onClick={handleClearAllOnClick}><div className='mt-2'><FaTrash color='#111111' size={24} className="inline mr-2" />Effacer</div></div>
-            <div className='fixed right-4 top-64 mt-2 w-40 h-12 cursor-pointer bg-gray-300 hover:bg-gray-100 p-1 text-gray-900 font-bold rounded-xl' onClick={downloadPDFOnClick}><div className='mt-2'><FaDownload color='#111111' size={24} className="inline mr-2" />Télécharger</div></div>
+            {/* <div className='fixed right-4 top-16 mt-2 w-40 h-12 cursor-pointer bg-gray-300 hover:bg-gray-100 p-1 text-gray-900 font-bold rounded-xl' onClick={IssueCateringOrder} ><div className='mt-2'><FaRegPaperPlane color='#111111' size={24} className="inline mr-2" />Commande</div></div> */}
+            {/* <div className='fixed right-4 top-32 mt-2 w-40 h-12 cursor-pointer bg-gray-300 hover:bg-gray-100 p-1 text-gray-900 font-bold rounded-xl' onClick={FinalizeCateringOrder}><div className='mt-2'><FaCheckCircle color='#111111' size={24} className="inline mr-2" />Paiment</div></div> */}
+            {/* <div className='fixed right-4 top-48 mt-2 w-40 h-12 cursor-pointer bg-gray-300 hover:bg-gray-100 p-1 text-gray-900 font-bold rounded-xl' onClick={handleClearAllOnClick}><div className='mt-2'><FaTrash color='#111111' size={24} className="inline mr-2" />Effacer</div></div> */}
+            {/* <div className='fixed right-4 top-64 mt-2 w-40 h-12 cursor-pointer bg-gray-300 hover:bg-gray-100 p-1 text-gray-900 font-bold rounded-xl' onClick={downloadPDFOnClick}><div className='mt-2'><FaDownload color='#111111' size={24} className="inline mr-2" />Télécharger</div></div> */}
+            <div className='fixed right-4 top-16 mt-2 w-40 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton type={finalized ? 'disabled' : kitchenOrderIssued ? 'danger' : 'primary'} onPress={IssueCateringOrder} before={<FaRegPaperPlane size={24} />}>Commande</AwesomeButton></div></div>
+            <div className='fixed right-4 top-32 mt-2 w-40 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton type={finalized ? 'disabled' : kitchenOrderIssued ? 'primary' : 'disabled'} onPress={FinalizeCateringOrder} before={<FaCheckCircle size={24} />}>Paiment</AwesomeButton></div></div>
+            <div className='fixed right-4 top-48 mt-2 w-40 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton type={finalized ? 'disabled' : 'primary'} onPress={handleClearAllOnClick} before={<FaTrash size={24} />}>Effacer</AwesomeButton></div></div>
+            <div className='fixed right-4 top-64 mt-2 w-40 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton type='primary' onPress={downloadPDFOnClick} before={<FaDownload size={24} />}>Télécharger</AwesomeButton></div></div>
             <div className='flex flex-wrap bg-gray-900 rounded-xl ml-4 text-gray-100 py-4 border-2 border-gray-100 mr-48'>
-                {tables.map(t => <p key={t} className={t == selectedTable ? selectedTableStyle : tableStyle} onClick={() => setSelectedTable(t)}>Table {t}</p>)}
+                {/* {customerSittingTables.map(t => <p key={t._id} className={t._id == selectedTable ? selectedTableStyle : tableStyle} onClick={() => setSelectedTable(t._id)}>Table {t.name}</p>)} */}
+                {customerSittingTables.map(t => <p key={t._id} className={getCustomerSittingTableStyle(t.occupied, t._id)} onClick={() => handleCSTonClick(t)}>Table {t.name}</p>)}
             </div>
             <br />
             <div className='flex flex-wrap bg-gray-800 pb-8 ml-4 rounded-3xl mr-48'>
@@ -339,10 +746,10 @@ const CateringSalesPoint = () => {
             <br />
             <br />
             <div className='bg-gray-900 rounded-xl ml-4 text-gray-100 py-4 border-2 border-gray-100 mr-48'>
-                <p>La commande du client :</p>
+                <p>Commande N° : {COID}</p>
                 <br />
                 <div className='flex flex-wrap'>
-                    {consumedProductsList.map(p => <p className='inline m-1 bg-gray-700 rounded-xl px-2 py-1 text-sm cursor-pointer select-none hover:bg-gray-500' key={p.key} onClick={() => handleProductRemove(p)}>{p.name}</p>)}
+                    {consumedProductsList && consumedProductsList.map(p => <p className='inline m-1 bg-gray-700 rounded-xl px-2 py-1 text-sm cursor-pointer select-none hover:bg-gray-500' key={p.key} onClick={() => handleProductRemove(p)}>{p.name}</p>)}
                 </div>
                 <br />
                 <div className='text-gray-500'>---------------------------------------------------------------</div>

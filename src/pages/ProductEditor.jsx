@@ -5,13 +5,13 @@ import axios from 'axios';
 import FileSelectAndDrop from '../components/FileSelectAndDrop';
 import { AwesomeButton } from 'react-awesome-button';
 
-const inputFieldStyle = 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 mt-2';
+const inputFieldStyle = 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 mt-2 w-4/5';
 const buttonStyle = "bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded mt-2";
 
 const ProductEditor = () => {
-    
+
     const [selectedFile, setSelectedFile] = useState("");
-    const [productInfo, setProductInfo] = useState({ name: "", description: "", price: 0 });
+    const [productInfo, setProductInfo] = useState({ name: "", description: "", price: 0, altLangName: "" });
     const [imageURL, setImageURL] = useState();
     const [imageAvailable, setImageAvailable] = useState(false);
     const [changesAvailable, setChangesAvailable] = useState(false);
@@ -20,7 +20,7 @@ const ProductEditor = () => {
         setProductInfo({ ...productInfo, [input.name]: input.value });
         setChangesAvailable(true);
     }
-    
+
     // var imageAvailable = false;
     const handleFileSelect = (event) => {
         console.log("SELECTED FILE = " + event.target.files[0].name);
@@ -29,7 +29,7 @@ const ProductEditor = () => {
         setImageAvailable(true);
         setChangesAvailable(true);
     }
-    
+
     const handleImageClear = () => {
         setSelectedFile("");
         setImageAvailable(false);
@@ -48,6 +48,7 @@ const ProductEditor = () => {
             formData.append("description", productInfo.description);
             formData.append("price", productInfo.price);
             formData.append("picture", selectedFile);
+            formData.append("altLangName", productInfo.altLangName);
 
             // Add token
             const token = localStorage.getItem("token");
@@ -76,6 +77,10 @@ const ProductEditor = () => {
             <form onSubmit={OnSubmit} className='flex flex-col'>
                 <div>
                     <input type="text" name="name" className={inputFieldStyle} placeholder="Nom du produit..." value={productInfo.name} onChange={handleChange} required />
+                </div>
+                <br />
+                <div>
+                    <input type="text" name="altLangName" className={inputFieldStyle} placeholder="Nom alternatif..." value={productInfo.altLangName} onChange={handleChange} required />
                 </div>
                 <br />
                 <div>
