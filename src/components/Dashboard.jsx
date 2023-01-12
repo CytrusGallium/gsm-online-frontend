@@ -14,7 +14,9 @@ const Dashboard = () => {
         <br/>
         <h3 className={buttonStyling}><a href='/repair-orders-list' className='text-xl'><FaList className='inline' size={24}/> Liste des Ordres de Répartion</a></h3>
         <br/> */}
-        <h3 className={buttonStyling}><a href='/new-product' className='text-xl'><FaBox className='inline' size={24}/> Ajouter un Produit</a></h3>
+        <h3 className={buttonStyling}><a href='/product-editor' className='text-xl'><FaBox className='inline' size={24}/> Ajouter un Produit</a></h3>
+        <br/>
+        <h3 className={buttonStyling}><a href='/product-list' className='text-xl'><FaList className='inline' size={24}/> Liste des produits</a></h3>
         <br/>
         <h3 className={buttonStyling}><a href='/new-category' className='text-xl'><FaTag className='inline' size={24}/> Ajouter une Categorie</a></h3>
         <br/>

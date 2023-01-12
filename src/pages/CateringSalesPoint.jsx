@@ -1,13 +1,15 @@
 import { React, useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { FaRegPaperPlane, FaTrash, FaCheckCircle, FaDownload } from 'react-icons/fa';
+import { FaRegPaperPlane, FaTrash, FaCheckCircle, FaDownload, FaPlus } from 'react-icons/fa';
 import NetImage from '../components/NetImage';
 import { GetBackEndUrl, GetPrintServerAddress, GetPrinterName } from '../const';
 import axios from 'axios';
 import autoTable from 'jspdf-autotable';
 import logo from '../Logo-Dar-Mima-Black.png'; // relative path to image
+import logoTypo from '../Logo-Dar-Mima-Black-Typo.png'; // relative path to image
 import { GetShortDate, GetTimeHM2Digits } from '../Reaknotron/Libs/RknTimeTools';
 import '../VFX.css';
+import '../ScrollBar.css';
 import { AwesomeButton } from 'react-awesome-button';
 import { MontserratArabicRegular_GetBinaryString } from "../Reaknotron/Fonts/Montserrat-Arabic-Regular";
 import { NotoSansBold_GetBinaryString } from "../Reaknotron/Fonts/Noto-Sans-Bold";
@@ -60,12 +62,13 @@ const CateringSalesPoint = () => {
     const [COID, setCOID] = useState(0);
     const [kitchenOrderIssued, setKitchenOrderIssued] = useState(false);
     const [finalized, setFinalized] = useState(false);
+    const [categories, setCategories] = useState([]);
 
     const gridStyle = { display: 'grid', gridTemplateRows: '320px 256px' };
-    const tableStyle = 'inline m-1 p-1 text-gray-900 rounded-lg cursor-pointer select-none bg-gray-500 text-sm font-bold';
-    const selectedTableStyle = 'inline m-1 p-1 text-gray-900 rounded-lg cursor-pointer select-none bg-gray-100 text-sm font-bold';
-    const occupiedTableStyle = 'inline m-1 p-1 text-gray-100 rounded-lg cursor-pointer select-none bg-gray-100 text-sm font-bold vfx-gradient-anim';
-    const hiddenTableStyle = 'inline m-1 p-1 text-gray-900 rounded-lg select-none bg-gray-500 text-sm font-bold opacity-20';
+    const tableStyle = 'inline m-1 p-1 text-gray-900 rounded-lg cursor-pointer select-none bg-gray-500 text-lg font-bold flex flex-col justify-center items-center';
+    const selectedTableStyle = 'inline m-1 p-1 text-gray-900 rounded-lg cursor-pointer select-none bg-gray-100 text-lg font-bold flex flex-col justify-center items-center';
+    const occupiedTableStyle = 'inline m-1 p-1 text-gray-100 rounded-lg cursor-pointer select-none bg-gray-100 text-lg font-bold vfx-gradient-anim flex flex-col justify-center items-center';
+    const hiddenTableStyle = 'inline m-1 p-1 text-gray-900 rounded-lg select-none bg-gray-500 text-lg font-bold opacity-20 flex flex-col justify-center items-center';
 
     var updateCSTInterval;
 
@@ -83,6 +86,35 @@ const CateringSalesPoint = () => {
             if (res) {
                 // console.log("RESULT = " + JSON.stringify(res));
                 setProductList(res.data);
+                // this.setState({ isBusy: false });
+                getCategoryListFromDB();
+            }
+
+        } catch (error) {
+            console.log("ERROR : " + error);
+
+            if (error.response && error.response.status >= 400 && error.response.status <= 500) {
+
+                console.log(error.response.data);
+
+            }
+        }
+    }
+
+    const getCategoryListFromDB = async () => {
+        let res;
+
+        try {
+
+            // Build Req/Res
+            var url = GetBackEndUrl() + "/api/get-category-list";
+
+            console.log("GET : " + url);
+            res = await axios.get(url);
+
+            if (res) {
+                console.log("CAT RESULT = " + JSON.stringify(res.data));
+                setCategories(res.data);
                 // this.setState({ isBusy: false });
             }
 
@@ -231,7 +263,7 @@ const CateringSalesPoint = () => {
             return;
 
         // Update in DB
-        UpdateCateringOrderInDB(cateringOrderIDinDB, consumedProductsList, true, selectedTable);
+        UpdateCateringOrderInDB(cateringOrderIDinDB, consumedProductsList, true, selectedTable, GetTotalPrice());
 
         // TODO : Mark table occupied
         if (selectedTable)
@@ -339,6 +371,7 @@ const CateringSalesPoint = () => {
     const BuildPDF = async () => {
 
         var receiptWidth = 60;
+
         if (localStorage.getItem("receiptWidth")) {
             receiptWidth = Number(localStorage.getItem("receiptWidth"));
             console.log("RECEIPT WIDTH = " + receiptWidth);
@@ -346,12 +379,16 @@ const CateringSalesPoint = () => {
 
         const halfReceiptWidth = receiptWidth / 2;
 
-        const doc = new jspdf.jsPDF('p', 'mm', [160, receiptWidth]); // Portrait, Milimeter, Height, Width
-        var cursorY = 40;
+        const doc = new jspdf.jsPDF('p', 'mm', [192, receiptWidth]); // Portrait, Milimeter, Height, Width
+        var cursorY = 20;
+
+        // var logoImg = new Image();
+        // logoImg.src = logo;
+        // doc.addImage(logoImg, 'png', (receiptWidth - 24) / 2, -20, 24, 30);
 
         var logoImg = new Image();
-        logoImg.src = logo;
-        doc.addImage(logoImg, 'png', (receiptWidth - 24) / 2, 2, 24, 30);
+        logoImg.src = logoTypo;
+        doc.addImage(logoImg, 'png', (receiptWidth - 47) / 2, 0, 48, 16);
 
         // N°
         doc.setFont(undefined, 'bold');
@@ -435,6 +472,8 @@ const CateringSalesPoint = () => {
             doc.text(localStorage.getItem("footerNote"), halfReceiptWidth, cursorY, 'center');
             cursorY += 9;
         }
+
+        // console.log("H = " + doc.internal.pageSize.getHeight() + " C " + cursorY);
 
         return doc;
     }
@@ -613,9 +652,9 @@ const CateringSalesPoint = () => {
         }, {}, () => console.log("CALLBACK"));
     }
 
-    const UpdateCateringOrderInDB = async (ParamID, ParamConsumedProducts, ParamKitchenOrderIssued, ParamTableID) => {
+    const UpdateCateringOrderInDB = async (ParamID, ParamConsumedProducts, ParamKitchenOrderIssued, ParamTableID, ParamTotalPrice) => {
 
-        let cateringOrderToPost = { id: ParamID, consumedProducts: ParamConsumedProducts, kitchenOrderIssued: ParamKitchenOrderIssued, customerSittingTableID: ParamTableID };
+        let cateringOrderToPost = { id: ParamID, consumedProducts: ParamConsumedProducts, kitchenOrderIssued: ParamKitchenOrderIssued, customerSittingTableID: ParamTableID, totalPrice: ParamTotalPrice };
 
         // Add token
         // const token = localStorage.getItem("token");
@@ -665,7 +704,7 @@ const CateringSalesPoint = () => {
 
     const FinalizeCateringOrderInDB = async (ParamID) => {
 
-        let cateringOrderToPost = { id: ParamID, finalized: true };
+        let cateringOrderToPost = { id: ParamID, finalized: true, fulfilledPaiement: GetTotalPrice() };
 
         // Add token
         // const token = localStorage.getItem("token");
@@ -704,7 +743,9 @@ const CateringSalesPoint = () => {
     const handleCSTonClick = (ParamTable) => {
         if (ParamTable.occupied) {
             // window.open("http://localhost:3000/sales-point?id=" + ParamTable.cateringOrder, '_blank').focus();
-            window.open(GetBaseUrl() + "/sales-point?id=" + ParamTable.cateringOrder, '_blank').focus();
+            // window.open(GetBaseUrl() + "/sales-point?id=" + ParamTable.cateringOrder, '_blank').focus();
+            navigate("/sales-point?id=" + ParamTable.cateringOrder);
+            navigate(0);
         } else if (!kitchenOrderIssued) {
             setSelectedTable(ParamTable._id);
         }
@@ -726,36 +767,61 @@ const CateringSalesPoint = () => {
     }
 
     return (
-        <div className='m-auto'>
-            {/* <div className='fixed right-4 top-16 mt-2 w-40 h-12 cursor-pointer bg-gray-300 hover:bg-gray-100 p-1 text-gray-900 font-bold rounded-xl' onClick={IssueCateringOrder} ><div className='mt-2'><FaRegPaperPlane color='#111111' size={24} className="inline mr-2" />Commande</div></div> */}
-            {/* <div className='fixed right-4 top-32 mt-2 w-40 h-12 cursor-pointer bg-gray-300 hover:bg-gray-100 p-1 text-gray-900 font-bold rounded-xl' onClick={FinalizeCateringOrder}><div className='mt-2'><FaCheckCircle color='#111111' size={24} className="inline mr-2" />Paiment</div></div> */}
-            {/* <div className='fixed right-4 top-48 mt-2 w-40 h-12 cursor-pointer bg-gray-300 hover:bg-gray-100 p-1 text-gray-900 font-bold rounded-xl' onClick={handleClearAllOnClick}><div className='mt-2'><FaTrash color='#111111' size={24} className="inline mr-2" />Effacer</div></div> */}
-            {/* <div className='fixed right-4 top-64 mt-2 w-40 h-12 cursor-pointer bg-gray-300 hover:bg-gray-100 p-1 text-gray-900 font-bold rounded-xl' onClick={downloadPDFOnClick}><div className='mt-2'><FaDownload color='#111111' size={24} className="inline mr-2" />Télécharger</div></div> */}
+        <div>
             <div className='fixed right-4 top-16 mt-2 w-40 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton type={finalized ? 'disabled' : kitchenOrderIssued ? 'danger' : 'primary'} onPress={IssueCateringOrder} before={<FaRegPaperPlane size={24} />}>Commande</AwesomeButton></div></div>
-            <div className='fixed right-4 top-32 mt-2 w-40 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton type={finalized ? 'disabled' : kitchenOrderIssued ? 'primary' : 'disabled'} onPress={FinalizeCateringOrder} before={<FaCheckCircle size={24} />}>Paiment</AwesomeButton></div></div>
+            <div className='fixed right-4 top-32 mt-2 w-40 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton type={finalized ? 'disabled' : 'primary'} onPress={FinalizeCateringOrder} before={<FaCheckCircle size={24} />}>Paiment</AwesomeButton></div></div>
             <div className='fixed right-4 top-48 mt-2 w-40 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton type={finalized ? 'disabled' : 'primary'} onPress={handleClearAllOnClick} before={<FaTrash size={24} />}>Effacer</AwesomeButton></div></div>
             <div className='fixed right-4 top-64 mt-2 w-40 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton type='primary' onPress={downloadPDFOnClick} before={<FaDownload size={24} />}>Télécharger</AwesomeButton></div></div>
-            <div className='flex flex-wrap bg-gray-900 rounded-xl ml-4 text-gray-100 py-4 border-2 border-gray-100 mr-48'>
-                {/* {customerSittingTables.map(t => <p key={t._id} className={t._id == selectedTable ? selectedTableStyle : tableStyle} onClick={() => setSelectedTable(t._id)}>Table {t.name}</p>)} */}
-                {customerSittingTables.map(t => <p key={t._id} className={getCustomerSittingTableStyle(t.occupied, t._id)} onClick={() => handleCSTonClick(t)}>Table {t.name}</p>)}
-            </div>
-            <br />
-            <div className='flex flex-wrap bg-gray-800 pb-8 ml-4 rounded-3xl mr-48'>
-                {productList.map(p => <NetImage value={p} key={p._id} onClick={() => handleProductOnClick(p)} />)}
-            </div>
-            <br />
-            <br />
-            <div className='bg-gray-900 rounded-xl ml-4 text-gray-100 py-4 border-2 border-gray-100 mr-48'>
-                <p>Commande N° : {COID}</p>
-                <br />
-                <div className='flex flex-wrap'>
-                    {consumedProductsList && consumedProductsList.map(p => <p className='inline m-1 bg-gray-700 rounded-xl px-2 py-1 text-sm cursor-pointer select-none hover:bg-gray-500' key={p.key} onClick={() => handleProductRemove(p)}>{p.name}</p>)}
+            <div className='fixed right-4 top-80 mt-2 w-40 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton type='primary' before={<FaPlus size={24} />}><a href={GetBaseUrl()+"/sales-point"}>Nouveau</a></AwesomeButton></div></div>
+
+            {/* CST */}
+            <div className='fixed h-28 bg-gray-900 rounded-xl left-2 text-gray-100 border-2 border-gray-100 right-48 z-10 top-16'>
+                <div className='flex flex-wrap overflow-auto scrollbar h-24 m-1'>
+                    {customerSittingTables.map(t => <p key={t._id} className={getCustomerSittingTableStyle(t.occupied, t._id)} onClick={() => handleCSTonClick(t)}>Table {t.name}</p>)}
                 </div>
-                <br />
-                <div className='text-gray-500'>---------------------------------------------------------------</div>
-                <p className='my-4 text-3xl font-bold'>Prix Total : {GetTotalPrice()} DA</p>
             </div>
+
+            <div className='fixed h-12 bg-gray-900 rounded-xl left-2 text-gray-100 border-2 border-gray-100 right-48 top-44 z-10 grid grid-cols-3'>
+                <div className='bg-gray-700 rounded-xl m-1 mr-0 text-lg font-bold pt-0.5'>Commande N° : {COID}</div>
+                <div className='bg-gray-700 rounded-xl m-1 text-lg font-bold pt-0.5'>{selectedTable ? GetCustomerSittingTableLabelInPrint() : "Aucune Table"}</div>
+                <div className='bg-gray-700 rounded-xl m-1 ml-0 text-lg font-bold pt-0.5'>Prix Total : {GetTotalPrice()} DA</div>
+            </div>
+
+            {/* Consumed Products */}
+            <div className='fixed h-28 bg-gray-900 rounded-xl text-gray-100 py-2 border-2 border-gray-100 right-48 left-2 z-10 top-56 overflow-auto scrollbar'>
+                <div className='flex flex-wrap'>
+                    {consumedProductsList.length >= 1 ? consumedProductsList.map(p => <p className='inline m-1 bg-gray-700 rounded-xl px-2 py-1 text-sm cursor-pointer select-none hover:bg-gray-500' key={p.key} onClick={() => handleProductRemove(p)}>{p.name}</p>) : <p className='flex items-center justify-center text-gray-300 h-20 w-full'>Aucun produit séléctionner...</p>}
+                </div>
+            </div>
+
+            <div className='mt-72'>
+                {/* Categorized Products */}
+                {
+                    categories.map(cat =>
+                        <div className='flex flex-wrap bg-gray-800 pb-16 ml-4 rounded-3xl mr-48 my-2' key={cat._id}>
+                            <p className='w-full text-xl font-bold text-gray-100 bg-gray-700'>{cat.name}</p><br />
+                            <div className='flex flex-wrap bg-gray-800 pb-16 ml-4 rounded-3xl mr-48'>
+                                {productList.map(p => p.category == cat._id && <NetImage value={p} key={p._id} onClick={() => handleProductOnClick(p)} />)}
+                            </div>
+                            <br />
+                            <br />
+                        </div>
+                    )
+                }
+
+                {/* Non-Categorized Products */}
+                <div className='flex flex-wrap bg-gray-800 pb-16 ml-4 rounded-3xl mr-48 my-2'>
+                    <p className='w-full text-xl font-bold text-gray-100 bg-gray-700'>Divers</p><br />
+                    {productList.map(p => p.category == "NULL" && <NetImage value={p} key={p._id} onClick={() => handleProductOnClick(p)} />)}
+                    <br />
+                    <br />
+                </div>
+
+            </div>
+
         </div>
+
+
     )
 }
 

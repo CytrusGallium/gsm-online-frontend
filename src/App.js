@@ -14,6 +14,7 @@ import CateringSalesPoint from './pages/CateringSalesPoint';
 import logo from './Logo.png'; // relative path to image 
 import Config from './pages/Config';
 import CategoryEditor from './pages/CategoryEditor';
+import ProductList from './pages/ProductList';
 
 function App() {
   return (
@@ -37,7 +38,8 @@ function App() {
             <Route path='/dashboard' element={IsLoggedIn() ? <Dashboard /> : <PleaseLogin />} />
             <Route path='/add-repair-order' element={IsLoggedIn() ? <NewRepairOrderForm /> : <PleaseLogin />} />
             <Route path='/repair-orders-list' element={IsLoggedIn() ? <RepairOrdersList /> : <PleaseLogin />} />
-            <Route path='/new-product' element={IsLoggedIn() ? <ProductEditor /> : <PleaseLogin />} />
+            <Route path='/product-editor' element={IsLoggedIn() ? <ProductEditor /> : <PleaseLogin />} />
+            <Route path='/product-list' element={IsLoggedIn() ? <ProductList /> : <PleaseLogin />} />
             <Route path='/new-category' element={IsLoggedIn() ? <CategoryEditor /> : <PleaseLogin />} />
             <Route path='/sales-point' element={IsLoggedIn() ? <CateringSalesPoint /> : <PleaseLogin />} />
             <Route path='/config' element={IsLoggedIn() ? <Config /> : <PleaseLogin />} />

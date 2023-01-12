@@ -74,11 +74,11 @@ const CategoryEditor = () => {
         <div>
             <form onSubmit={OnSubmit} className='flex flex-col'>
                 <div>
-                    <input type="text" name="name" className={inputFieldStyle} placeholder="Nom du produit..." value={productInfo.name} onChange={handleChange} required />
+                    <input type="text" name="name" className={inputFieldStyle} placeholder="Nom de la catégorie..." value={productInfo.name} onChange={handleChange} required />
                 </div>
                 <br />
                 <div>
-                    <textarea name="description" className={inputFieldStyle} value={productInfo.description} rows="2" placeholder="Description du produit..." onChange={handleChange} />
+                    <textarea name="description" className={inputFieldStyle} value={productInfo.description} rows="2" placeholder="Description de la catégorie..." onChange={handleChange} />
                 </div>
                 <br />
                 <br />
