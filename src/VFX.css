@@ -16,3 +16,22 @@
 		background-position: 0% 50%;
 	}
 }
+
+.vfx-fadeout-2s {
+	animation: fadeout 1s ease-out;
+}
+
+@keyframes fadeout {
+	0% {
+		opacity: 1;
+		transform: translateY(0px);
+	}
+	50% {
+		opacity: 0.9;
+		transform: translateY(-16px);
+	}
+	100% {
+		opacity: 0;
+		transform: translateY(-16px);
+	}
+}
