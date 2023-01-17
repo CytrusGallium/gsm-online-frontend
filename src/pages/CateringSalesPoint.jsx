@@ -1,6 +1,6 @@
 import { React, useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { FaRegPaperPlane, FaTrash, FaCheckCircle, FaDownload, FaPlus, FaChair, FaSave, FaRegObjectUngroup } from 'react-icons/fa';
+import { FaRegPaperPlane, FaTrash, FaCheckCircle, FaDownload, FaPlus, FaChair, FaSave, FaPizzaSlice } from 'react-icons/fa';
 import NetImage from '../components/NetImage';
 import { GetBackEndUrl, GetPrintServerAddress, GetPrinterName } from '../const';
 import axios from 'axios';
@@ -11,12 +11,12 @@ import { GetShortDate, GetTimeHM2Digits } from '../Reaknotron/Libs/RknTimeTools'
 import '../VFX.css';
 import '../ScrollBar.css';
 import { AwesomeButton } from 'react-awesome-button';
-import { AwesomeButtonProgress } from 'react-awesome-button';
-// import { MontserratArabicRegular_GetBinaryString } from "../Reaknotron/Fonts/Montserrat-Arabic-Regular";
-// import { NotoSansBold_GetBinaryString } from "../Reaknotron/Fonts/Noto-Sans-Bold";
 import { SamimBold_GetBinaryString } from "../Reaknotron/Fonts/SamimBold";
 import { GetBaseUrl } from '../Reaknotron/Libs/RknRouterUtils';
 import ConsumedProductTag from '../components/ConsumedProductTag';
+import CateringSalesPointPaymentPopup from '../components/CateringSalesPointPaymentPopup';
+import AddMiscProductPopup from '../components/AddMiscProductPopup';
+import CustomAmountPopup from '../components/CustomAmountPopup';
 const jspdf = require('jspdf');
 
 const CateringSalesPoint = () => {
@@ -38,11 +38,16 @@ const CateringSalesPoint = () => {
 
         // updateCSTInterval = setInterval(GetCustomerSittingTablesListFromDb, 30000);
 
+        // document.addEventListener("contextmenu", (event) => {
+        //     event.preventDefault();
+        //     console.log("RIGHT CLICK");
+        // });
+
     }, []);
 
     useEffect(() => {
 
-        console.log("Registering mouse move event...");
+        // console.log("Registering mouse move event...");
 
         const handleMouseMove = (event) => {
             setMousePos({ x: event.clientX, y: event.clientY });
@@ -79,6 +84,10 @@ const CateringSalesPoint = () => {
     const [finalized, setFinalized] = useState(false);
     const [categories, setCategories] = useState([]);
     const [changesAvailable, setChangesAvailable] = useState(false);
+    const [paymentValidationWindowOpen, setPaymentValidationWindowOpen] = useState(false);
+    const [addMiscProductPopupOpen, setAddMiscProductPopupOpen] = useState(false);
+    const [customAmountPopupOpen, setCustomAmountPopupOpen] = useState(false);
+    const [currentCustomAmountPopupTargetProduct, setCurrentCustomAmountPopupTargetProduct] = useState(null);
 
     // Normal
     const cstStyle = 'inline m-1 p-1 text-gray-900 rounded-lg cursor-pointer select-none bg-gray-500 text-lg font-bold flex flex-col justify-center items-center';
@@ -135,7 +144,7 @@ const CateringSalesPoint = () => {
             res = await axios.get(url);
 
             if (res) {
-                console.log("CAT RESULT = " + JSON.stringify(res.data));
+                // console.log("CAT RESULT = " + JSON.stringify(res.data));
                 setCategories(res.data);
                 // this.setState({ isBusy: false });
             }
@@ -245,12 +254,22 @@ const CateringSalesPoint = () => {
         }
     }
 
-    const handleProductOnClick = (ParamProduct) => {
+    const handleProductOnClick = (e, ParamProduct) => {
+
+        e.preventDefault();
 
         if (finalized)
             return;
 
-        // console.log("MOUSE = " + JSON.stringify(mousePos));
+        if (e.type === 'click') {
+            // console.log('1 : Left click');
+        } else if (e.type === 'contextmenu') {
+            // console.log('1 : Right click');
+            setCurrentCustomAmountPopupTargetProduct(ParamProduct);
+            setCustomAmountPopupOpen(true);
+            return;
+        }
+
         let bubble = { key: productCounter, x: mousePos.x, y: mousePos.y, price: ParamProduct.price };
         setPriceBubbles(priceBubbles => [...priceBubbles, bubble]);
 
@@ -272,11 +291,8 @@ const CateringSalesPoint = () => {
     }
 
     const handleBubbleExpire = (ParamProductKey) => {
-        // console.log("Expired = " + ParamProductKey);
         let bubble = priceBubbles.filter(b => b.key == ParamProductKey);
-        // console.log("Bubble = " + JSON.stringify(bubble));
         setPriceBubbles(priceBubbles => priceBubbles.filter(b => b.key !== ParamProductKey));
-        // setTimeout(() => dc{ ; setPriceBubbles(priceBubbles => priceBubbles.filter(b => b.price !== ParamProductKey))}, 2000);
     }
 
     const handleProductRemove = (ParamProduct) => {
@@ -285,7 +301,7 @@ const CateringSalesPoint = () => {
             return;
 
         // console.log(ParamProduct.key);
-        let tmpKeys = Object.keys(consumedProductsList_V2).filter( (k) => {
+        let tmpKeys = Object.keys(consumedProductsList_V2).filter((k) => {
             return k !== ParamProduct.key;
         });
         let result = {};
@@ -685,10 +701,12 @@ const CateringSalesPoint = () => {
         return doc;
     }
 
-    const FinalizeCateringOrder = async () => {
+    const FinalizeCateringOrder = async (ParamPaymentAmount) => {
 
         if (finalized)
             return;
+
+        console.log("Finalizing catering order, Payment = " + ParamPaymentAmount);
 
         // Print receipt
         PrintPDF();
@@ -698,7 +716,7 @@ const CateringSalesPoint = () => {
             MarkCustomerSittingTableFreeInDB(selectedCSTinDB);
 
         // Update in database
-        FinalizeCateringOrderInDB(cateringOrderIDinDB);
+        FinalizeCateringOrderInDB(cateringOrderIDinDB, ParamPaymentAmount);
 
         // ...
         setFinalized(true);
@@ -817,10 +835,10 @@ const CateringSalesPoint = () => {
         GetCustomerSittingTablesListFromDb();
     }
 
-    const FinalizeCateringOrderInDB = async (ParamID) => {
+    const FinalizeCateringOrderInDB = async (ParamID, ParamPaymentAmount) => {
 
-        let totalPriceCache = GetTotalPrice();
-        let cateringOrderToPost = { id: ParamID, finalized: true, totalPrice: totalPriceCache, fulfilledPaiement: totalPriceCache, consumedProducts: consumedProductsList_V2 };
+        // let totalPriceCache = GetTotalPrice();
+        let cateringOrderToPost = { id: ParamID, finalized: true, totalPrice: GetTotalPrice(), fulfilledPaiement: ParamPaymentAmount, consumedProducts: consumedProductsList_V2 };
 
         // Add token
         // const token = localStorage.getItem("token");
@@ -880,14 +898,60 @@ const CateringSalesPoint = () => {
         return "";
     }
 
+    const paymentValidationWindowOnClose = () => {
+        setPaymentValidationWindowOpen(false);
+    }
+
+    const addMiscProductPopupOnClose = () => {
+        setAddMiscProductPopupOpen(false);
+    }
+
+    const AddMiscProduct = (ParamDesignation, ParamPrice, ParamAmout) => {
+        let productInfo;
+        if (consumedProductsList_V2[ParamDesignation])
+            productInfo = { key: ParamDesignation, id: ParamDesignation, name: ParamDesignation, price: ParamPrice, altLangName: "", amount: consumedProductsList_V2[ParamDesignation].amount + ParamAmout };
+        else
+            productInfo = { key: ParamDesignation, id: ParamDesignation, name: ParamDesignation, price: ParamPrice, altLangName: "", amount: ParamAmout };
+
+        let tmpObj_V2 = consumedProductsList_V2;
+        tmpObj_V2[ParamDesignation] = productInfo;
+        setConsumedProductsList_V2(tmpObj_V2);
+
+        setChangesAvailable(true);
+
+        setProductCounter(productCounter + 1);
+    }
+
+    const onCustomAmountPopupConfirm = (ParamAmout) => {
+        let p = currentCustomAmountPopupTargetProduct;
+
+        if (p == null)
+            return;
+
+        let productInfo;
+        if (consumedProductsList_V2[p._id])
+            productInfo = { key: p._id, id: p._id, name: p.name, price: p.price, altLangName: p.altLangName, amount: consumedProductsList_V2[p._id].amount + ParamAmout };
+        else
+            productInfo = { key: p._id, id: p._id, name: p.name, price: p.price, altLangName: p.altLangName, amount: ParamAmout };
+
+        let tmpObj_V2 = consumedProductsList_V2;
+        tmpObj_V2[p._id] = productInfo;
+        setConsumedProductsList_V2(tmpObj_V2);
+
+        setChangesAvailable(true);
+
+        setProductCounter(productCounter + 1);
+    }
+
     return (
         <div>
             <div className='fixed right-4 top-16 w-40 flex flex-col'>
                 <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type={finalized || !changesAvailable ? 'disabled' : 'primary'} onPress={SaveOnClick} before={<FaSave size={24} />}>Enregistrer</AwesomeButton></div></div>
                 <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type={finalized ? 'disabled' : selectedCSTinDB ? 'disabled' : selectedCSTinUI ? 'primary' : 'disabled'} before={<FaChair size={24} />} onPress={OccupyCST}>Reserver</AwesomeButton></div></div>
                 <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type={finalized ? 'disabled' : kitchenOrderIssued ? 'secondary' : 'primary'} onPress={IssueCateringOrder} before={<FaRegPaperPlane size={24} />}>Commande</AwesomeButton></div></div>
-                <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type={finalized ? 'disabled' : 'primary'} onPress={FinalizeCateringOrder} before={<FaCheckCircle size={24} />}>Paiment</AwesomeButton></div></div>
+                <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type={finalized ? 'disabled' : 'primary'} onPress={() => setPaymentValidationWindowOpen(true)} before={<FaCheckCircle size={24} />}>Paiement</AwesomeButton></div></div>
                 <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type={finalized ? 'disabled' : 'danger'} onPress={handleClearAllOnClick} before={<FaTrash size={24} />}>Effacer</AwesomeButton></div></div>
+                <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type={finalized ? 'disabled' : 'primary'} onPress={() => setAddMiscProductPopupOpen(true)} before={<FaPizzaSlice size={24} />}>Divers</AwesomeButton></div></div>
                 <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type='primary' onPress={downloadPDFOnClick} before={<FaDownload size={24} />}>Télécharger</AwesomeButton></div></div>
                 <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type='primary' before={<FaPlus size={24} />}><a href={GetBaseUrl() + "/sales-point"}>Nouveau</a></AwesomeButton></div></div>
             </div>
@@ -915,6 +979,10 @@ const CateringSalesPoint = () => {
                     </div>
                 )}
             </div>
+
+            <CateringSalesPointPaymentPopup value={GetTotalPrice()} isOpen={paymentValidationWindowOpen} onClose={paymentValidationWindowOnClose} onConfirm={FinalizeCateringOrder} />
+            <AddMiscProductPopup isOpen={addMiscProductPopupOpen} onClose={addMiscProductPopupOnClose} onConfirm={AddMiscProduct} />
+            <CustomAmountPopup isOpen={customAmountPopupOpen} onClose={() => setCustomAmountPopupOpen(false)} onConfirm={onCustomAmountPopupConfirm} />
 
             {/* CST */}
             <div className='fixed h-28 bg-gray-900 rounded-xl left-2 text-gray-100 border-2 border-gray-100 right-48 z-10 top-16'>
@@ -946,7 +1014,7 @@ const CateringSalesPoint = () => {
                         <div className='flex flex-wrap bg-gray-800 pb-16 ml-4 rounded-3xl mr-48 my-2' key={cat._id}>
                             <p className='w-full text-xl font-bold text-gray-100 bg-gray-700'>{cat.name}</p><br />
                             <div className='flex flex-wrap bg-gray-800 pb-16 ml-4 rounded-3xl mr-48'>
-                                {productList.map(p => p.category == cat._id && <NetImage value={p} key={p._id} onClick={() => handleProductOnClick(p)} />)}
+                                {productList.map(p => p.category == cat._id && <NetImage value={p} key={p._id} size={32} onClick={(e) => handleProductOnClick(e, p)} onContextMenu={(e) => handleProductOnClick(e, p)} />)}
                             </div>
                             <br />
                             <br />
@@ -957,7 +1025,7 @@ const CateringSalesPoint = () => {
                 {/* Non-Categorized Products */}
                 <div className='flex flex-wrap bg-gray-800 pb-16 ml-4 rounded-3xl mr-48 my-2'>
                     <p className='w-full text-xl font-bold text-gray-100 bg-gray-700'>Divers</p><br />
-                    {productList.map(p => p.category == "NULL" && <NetImage value={p} key={p._id} onClick={() => handleProductOnClick(p)} />)}
+                    {productList.map(p => p.category == "NULL" && <NetImage value={p} key={p._id} size={32} onClick={(e) => handleProductOnClick(e, p)} onContextMenu={(e) => handleProductOnClick(e, p)} />)}
                     <br />
                     <br />
                 </div>

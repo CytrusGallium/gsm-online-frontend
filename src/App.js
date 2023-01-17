@@ -15,6 +15,7 @@ import logo from './Logo.png'; // relative path to image
 import Config from './pages/Config';
 import CategoryEditor from './pages/CategoryEditor';
 import ProductList from './pages/ProductList';
+import CateringSalesList from './pages/CateringSalesList';
 
 function App() {
   return (
@@ -43,6 +44,7 @@ function App() {
             <Route path='/new-category' element={IsLoggedIn() ? <CategoryEditor /> : <PleaseLogin />} />
             <Route path='/sales-point' element={IsLoggedIn() ? <CateringSalesPoint /> : <PleaseLogin />} />
             <Route path='/config' element={IsLoggedIn() ? <Config /> : <PleaseLogin />} />
+            <Route path='/sales-list' element={IsLoggedIn() ? <CateringSalesList /> : <PleaseLogin />} />
           </Routes>
         </BrowserRouter>
       </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaUserFriends, FaClipboardList, FaList, FaBox, FaShoppingCart, FaCog, FaTag } from 'react-icons/fa';
+import { FaUserFriends, FaClipboardList, FaList, FaBox, FaShoppingCart, FaCog, FaTag, FaUtensils } from 'react-icons/fa';
 
 const Dashboard = () => {
   
@@ -21,6 +21,8 @@ const Dashboard = () => {
         <h3 className={buttonStyling}><a href='/new-category' className='text-xl'><FaTag className='inline' size={24}/> Ajouter une Categorie</a></h3>
         <br/>
         <h3 className={buttonStyling}><a href='/sales-point' className='text-xl'><FaShoppingCart className='inline' size={24}/> Point de Vente</a></h3>
+        <br/>
+        <h3 className={buttonStyling}><a href='/sales-list' className='text-xl'><FaUtensils className='inline' size={24}/> Liste des Ventes</a></h3>
         <br/>
         <h3 className={buttonStyling}><a href='/user-manager' className='text-xl'><FaUserFriends className='inline' size={24}/> Gestion des Utilisateurs</a></h3>
         <br/>
