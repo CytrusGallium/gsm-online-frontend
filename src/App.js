@@ -37,14 +37,14 @@ function App() {
             <Route path='/' element={<LoginForm />} />
             <Route path='/connexion-settings' element={<ConnexionSettings />} />
             <Route path='/dashboard' element={IsLoggedIn() ? <Dashboard /> : <PleaseLogin />} />
-            <Route path='/add-repair-order' element={IsLoggedIn() ? <NewRepairOrderForm /> : <PleaseLogin />} />
-            <Route path='/repair-orders-list' element={IsLoggedIn() ? <RepairOrdersList /> : <PleaseLogin />} />
+            {AppData.DEVICE_MAINTENANCE_FLAG && <Route path='/add-repair-order' element={IsLoggedIn() ? <NewRepairOrderForm /> : <PleaseLogin />} />}
+            {AppData.DEVICE_MAINTENANCE_FLAG && <Route path='/repair-orders-list' element={IsLoggedIn() ? <RepairOrdersList /> : <PleaseLogin />} />}
             <Route path='/product-editor' element={IsLoggedIn() ? <ProductEditor /> : <PleaseLogin />} />
             <Route path='/product-list' element={IsLoggedIn() ? <ProductList /> : <PleaseLogin />} />
             <Route path='/new-category' element={IsLoggedIn() ? <CategoryEditor /> : <PleaseLogin />} />
-            <Route path='/sales-point' element={IsLoggedIn() ? <CateringSalesPoint /> : <PleaseLogin />} />
+            {AppData.CATERING_FLAG && <Route path='/catering-sales-point' element={IsLoggedIn() ? <CateringSalesPoint /> : <PleaseLogin />} />}
+            {AppData.CATERING_FLAG && <Route path='/catering-sales-list' element={IsLoggedIn() ? <CateringSalesList /> : <PleaseLogin />} />}
             <Route path='/config' element={IsLoggedIn() ? <Config /> : <PleaseLogin />} />
-            <Route path='/sales-list' element={IsLoggedIn() ? <CateringSalesList /> : <PleaseLogin />} />
           </Routes>
         </BrowserRouter>
       </div>

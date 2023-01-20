@@ -90,7 +90,7 @@ export default class RepairOrderID extends Component {
     }
 
     popupOnClose() {
-        console.log("popupOnClose()");
+        // console.log("popupOnClose()");
         this.setState({ validationWindowOpen: false });
     }
 
@@ -103,9 +103,10 @@ export default class RepairOrderID extends Component {
                 <br />
                 <div>
                     <FaSearch className='inline' size={24} />
-                    <span className='mx-1'> </span>
-                    <input type="text" value={this.state.inputValue} className='inline rounded p-2 text-black' onChange={e => this.SearchFieldOnChange(e)} placeholder="Identifiant du bon..." />
-                    <span className='mx-1'> </span>
+                    <input type="text" value={this.state.roidInputValue} className='inline rounded p-2 text-black mx-2' onChange={e => this.RoidSearchFieldOnChange(e)} placeholder="Identifiant du bon..." />
+                    <input type="text" value={this.state.customerInputValue} className='inline rounded p-2 text-black mx-2' onChange={e => this.CustomerSearchFieldOnChange(e)} placeholder="Nom du client..." />
+                    <input type="text" value={this.state.phoneInputValue} className='inline rounded p-2 text-black mx-2' onChange={e => this.PhoneSearchFieldOnChange(e)} placeholder="N° de Téléphone..." />
+                    <input type="text" value={this.state.imeiInputValue} className='inline rounded p-2 text-black mx-2' onChange={e => this.IMEISearchFieldOnChange(e)} placeholder="IMEI/NS..." />
                 </div>
                 <br />
                 <br />
@@ -114,7 +115,7 @@ export default class RepairOrderID extends Component {
         )
     }
 
-    async GetRepairOrdersListFromDB(ParamROID) {
+    async GetRepairOrdersListFromDB(ParamSearchProperty, ParamSearchProbe) {
 
         this.setState({ isBusy: true });
         let res;
@@ -124,14 +125,47 @@ export default class RepairOrderID extends Component {
             // Build Req/Res
             var url = GetBackEndUrl() + "/api/get-repair-orders-list";
 
-            if (ParamROID && ParamROID.length > 1)
-                url += "?roid=" + ParamROID;
+            if (ParamSearchProbe && ParamSearchProbe.length > 1)
+                url += `?${ParamSearchProperty}=` + ParamSearchProbe;
 
             console.log("GET : " + url);
             res = await axios.get(url);
 
             if (res) {
                 this.UpdateTableData(res.data);
+                this.setState({ isBusy: false });
+            }
+
+        } catch (error) {
+            console.log("ERROR : " + error);
+
+            if (error.response && error.response.status >= 400 && error.response.status <= 500) {
+
+                console.log(error.response.data);
+
+            }
+        }
+    }
+
+    async DeleteRepairOrderFromDB(ParamROID) {
+
+        this.setState({ isBusy: true });
+        let res;
+
+        try {
+
+            // Build Req/Res
+            var url = GetBackEndUrl() + "/api/delete-repair-order?roid=" + ParamROID;
+
+            // if (ParamSearchProbe && ParamSearchProbe.length > 1)
+            //     url += `?${ParamSearchProperty}=` + ParamSearchProbe;
+
+            console.log("GET : " + url);
+            res = await axios.get(url);
+
+            if (res) {
+                // this.UpdateTableData(res.data);
+                this.GetRepairOrdersListFromDB("", "");
                 this.setState({ isBusy: false });
             }
 
@@ -153,12 +187,36 @@ export default class RepairOrderID extends Component {
 
     searchTimeOut = null;
 
-    SearchFieldOnChange(ParamEvent) {
+    RoidSearchFieldOnChange(ParamEvent) {
 
         if (this.searchTimeOut != null)
             clearTimeout(this.searchTimeOut);
 
-        this.searchTimeOut = setTimeout(() => { this.GetRepairOrdersListFromDB(ParamEvent.target.value) }, 500);
+        this.searchTimeOut = setTimeout(() => { this.GetRepairOrdersListFromDB("roid", ParamEvent.target.value) }, 500);
+    }
+
+    CustomerSearchFieldOnChange(ParamEvent) {
+
+        if (this.searchTimeOut != null)
+            clearTimeout(this.searchTimeOut);
+
+        this.searchTimeOut = setTimeout(() => { this.GetRepairOrdersListFromDB("customer", ParamEvent.target.value) }, 500);
+    }
+
+    PhoneSearchFieldOnChange(ParamEvent) {
+
+        if (this.searchTimeOut != null)
+            clearTimeout(this.searchTimeOut);
+
+        this.searchTimeOut = setTimeout(() => { this.GetRepairOrdersListFromDB("phone", ParamEvent.target.value) }, 500);
+    }
+
+    IMEISearchFieldOnChange(ParamEvent) {
+
+        if (this.searchTimeOut != null)
+            clearTimeout(this.searchTimeOut);
+
+        this.searchTimeOut = setTimeout(() => { this.GetRepairOrdersListFromDB("imei", ParamEvent.target.value) }, 500);
     }
 
     GenerateOperationButtons(ParamRepairOrder) {
@@ -173,8 +231,8 @@ export default class RepairOrderID extends Component {
                 return (
                     <div className='flex flex-row'>
                         <button className={buttonStyle} onClick={() => { this.setState({ validationWindowOpen: true, currentValidationRepairOrder: ParamRepairOrder }); }}> <FaCheck size={20} /> </button>
-                        <button className={buttonStyle} onClick={() => { console.log("EDIT"); }}> <FaEdit size={20} /> </button>
-                        <button className={buttonStyle} onClick={() => { console.log("DELETE"); }}> <FaTrash size={20} /> </button>
+                        {/* <button className={buttonStyle} onClick={() => { console.log("EDIT"); }}> <FaEdit size={20} /> </button> */}
+                        <button className={buttonStyle} onClick={() => { console.log("DELETE"); this.DeleteRepairOrderFromDB(ParamRepairOrder.roid) }}> <FaTrash size={20} /> </button>
                     </div>
                 )
             }

@@ -1,6 +1,9 @@
 {
     "engine": "Nukode Reaknotron",
     "customer": "Fayssal Mahboub",
-    "company": "Dar Mima",
-    "company_label": "Dar Mima"
+    "company": "GSM Online",
+    "company_label": "GSM Online",
+    "CATERING_FLAG" : false,
+    "DEVICE_MAINTENANCE_FLAG" : true,
+    "PRODUCT_MANAGEMENT_FLAG" : false
 }

@@ -88,6 +88,7 @@ const CateringSalesPoint = () => {
     const [addMiscProductPopupOpen, setAddMiscProductPopupOpen] = useState(false);
     const [customAmountPopupOpen, setCustomAmountPopupOpen] = useState(false);
     const [currentCustomAmountPopupTargetProduct, setCurrentCustomAmountPopupTargetProduct] = useState(null);
+    const [priceDiffInfo, setpriceDiffInfo] = useState(null);
 
     // Normal
     const cstStyle = 'inline m-1 p-1 text-gray-900 rounded-lg cursor-pointer select-none bg-gray-500 text-lg font-bold flex flex-col justify-center items-center';
@@ -240,7 +241,7 @@ const CateringSalesPoint = () => {
             if (res) {
                 setCOID(res.data.coid);
                 setCateringOrderIDinDB(res.data._id);
-                navigate('/sales-point?id=' + res.data._id);
+                navigate('/catering-sales-point?id=' + res.data._id);
             }
 
         } catch (error) {
@@ -322,12 +323,11 @@ const CateringSalesPoint = () => {
             return 0;
 
         var total = 0;
-        // consumedProductsList_V2.forEach(p => {
-        //     total += p.price;
-        // });
+
         for (const k in consumedProductsList_V2) {
             total += (consumedProductsList_V2[k].price * consumedProductsList_V2[k].amount);
         };
+
         return total;
     }
 
@@ -335,7 +335,6 @@ const CateringSalesPoint = () => {
         if (finalized)
             return;
 
-        // setConsumedProductsList([]);
         setConsumedProductsList_V2({});
         setChangesAvailable(true);
     }
@@ -511,10 +510,6 @@ const CateringSalesPoint = () => {
         const doc = new jspdf.jsPDF('p', 'mm', [192, receiptWidth]); // Portrait, Milimeter, Height, Width
         var cursorY = 20;
 
-        // var logoImg = new Image();
-        // logoImg.src = logo;
-        // doc.addImage(logoImg, 'png', (receiptWidth - 24) / 2, -20, 24, 30);
-
         var logoImg = new Image();
         logoImg.src = logoTypo;
         doc.addImage(logoImg, 'png', (receiptWidth - 47) / 2, 0, 48, 16);
@@ -574,14 +569,29 @@ const CateringSalesPoint = () => {
         });
         cursorY += 9;
 
+        // Discount / Extra Fees
+        if (priceDiffInfo && priceDiffInfo.isDiff && priceDiffInfo.show) {
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(10);
+            doc.text(priceDiffInfo.label + " " + priceDiffInfo.amountLabel + " DA", halfReceiptWidth, cursorY, 'center');
+            cursorY += 5;
+            doc.setFont(undefined, 'normal');
+        }
+
         // Total
         doc.setFont(undefined, 'bold');
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(14);
-        doc.text("Total : " + GetTotalPrice() + " DA", halfReceiptWidth, cursorY, 'center');
+
+        if (priceDiffInfo && priceDiffInfo.isDiff)
+            doc.text("Total à Payer : " + (GetTotalPrice()+priceDiffInfo.diff) + " DA", halfReceiptWidth, cursorY, 'center');
+        else
+            doc.text("Total à Payer : " + GetTotalPrice() + " DA", halfReceiptWidth, cursorY, 'center');
+
         cursorY += 5;
         doc.setFont(undefined, 'normal');
 
+        // Line
         dottedLine(doc, 1, cursorY, receiptWidth - 1, cursorY, 1);
         cursorY += 3;
 
@@ -654,23 +664,11 @@ const CateringSalesPoint = () => {
         cursorY += 1;
 
         // Consumption table
-        // const products = buildBatchedConsumedProductsArray();
-        // const products = buildBatchedConsumedProductsArray();
         const tableData = buildConsumedProductsTableDataForPDF(true);
 
-        // const marBinary = MontserratArabicRegular_GetBinaryString();
-        // const notoBinary = NotoSansBold_GetBinaryString();
         const samimBinary = SamimBold_GetBinaryString();
         doc.addFileToVFS('samim', samimBinary);
         doc.addFont('samim', 'samim', 'normal');
-        // let fontID = doc.addFont('Montserrat-Arabic-Regular-normal.ttf', 'Montserrat-Arabic-Regular', 'normal');
-        // console.log("FONT ID = " + fontID);
-
-        // doc.setFont('Montserrat-Arabic-Regular');
-        // doc.setTextColor(0, 0, 0);
-        // doc.setFontSize(14);
-        // doc.text(" حساء السمك ", halfReceiptWidth, cursorY, 'center');
-        // cursorY += 4;
 
         autoTable(doc, {
             head: [tableData.head],
@@ -686,7 +684,6 @@ const CateringSalesPoint = () => {
                 textColor: 'black',
                 font: 'samim'
             },
-            // headStyles: [{ fillColor: [224, 224, 224] }, { fillColor: [160, 160, 160] }, { fillColor: [16, 16, 16] }],
             headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255], halign: "center" },
             columnStyles: {
                 2: { halign: "right" }
@@ -701,12 +698,14 @@ const CateringSalesPoint = () => {
         return doc;
     }
 
-    const FinalizeCateringOrder = async (ParamPaymentAmount) => {
+    const FinalizeCateringOrder = async (ParamPaymentAmount, ParamPriceDiffInfo) => {
 
         if (finalized)
             return;
 
         console.log("Finalizing catering order, Payment = " + ParamPaymentAmount);
+
+        setpriceDiffInfo(ParamPriceDiffInfo);
 
         // Print receipt
         PrintPDF();
@@ -876,7 +875,7 @@ const CateringSalesPoint = () => {
 
     const handleCSTonClick = (ParamTable) => {
         if (ParamTable.occupied) {
-            navigate("/sales-point?id=" + ParamTable.cateringOrder);
+            navigate("/catering-sales-point?id=" + ParamTable.cateringOrder);
             navigate(0);
         } else if (!selectedCSTinDB) {
             setSelectedCSTinUI(ParamTable._id);
@@ -953,7 +952,7 @@ const CateringSalesPoint = () => {
                 <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type={finalized ? 'disabled' : 'danger'} onPress={handleClearAllOnClick} before={<FaTrash size={24} />}>Effacer</AwesomeButton></div></div>
                 <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type={finalized ? 'disabled' : 'primary'} onPress={() => setAddMiscProductPopupOpen(true)} before={<FaPizzaSlice size={24} />}>Divers</AwesomeButton></div></div>
                 <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type='primary' onPress={downloadPDFOnClick} before={<FaDownload size={24} />}>Télécharger</AwesomeButton></div></div>
-                <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type='primary' before={<FaPlus size={24} />}><a href={GetBaseUrl() + "/sales-point"}>Nouveau</a></AwesomeButton></div></div>
+                <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type='primary' before={<FaPlus size={24} />}><a href={GetBaseUrl() + "/catering-sales-point"}>Nouveau</a></AwesomeButton></div></div>
             </div>
 
             <div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { FaUserFriends, FaClipboardList, FaList, FaBox, FaShoppingCart, FaCog, FaTag, FaUtensils } from 'react-icons/fa';
+import AppData from '../App.json';
 
 const Dashboard = () => {
   
@@ -10,20 +11,16 @@ const Dashboard = () => {
   return (
     <div>
       <div className='flex flex-col'>
-        {/* <h3 className={buttonStyling}><a href='/add-repair-order' className='text-xl'><FaClipboardList className='inline' size={24}/> Ajouter un Ordre de Réparation</a></h3>
-        <br/>
-        <h3 className={buttonStyling}><a href='/repair-orders-list' className='text-xl'><FaList className='inline' size={24}/> Liste des Ordres de Répartion</a></h3>
-        <br/> */}
-        <h3 className={buttonStyling}><a href='/product-editor' className='text-xl'><FaBox className='inline' size={24}/> Ajouter un Produit</a></h3>
-        <br/>
-        <h3 className={buttonStyling}><a href='/product-list' className='text-xl'><FaList className='inline' size={24}/> Liste des produits</a></h3>
-        <br/>
-        <h3 className={buttonStyling}><a href='/new-category' className='text-xl'><FaTag className='inline' size={24}/> Ajouter une Categorie</a></h3>
-        <br/>
-        <h3 className={buttonStyling}><a href='/sales-point' className='text-xl'><FaShoppingCart className='inline' size={24}/> Point de Vente</a></h3>
-        <br/>
-        <h3 className={buttonStyling}><a href='/sales-list' className='text-xl'><FaUtensils className='inline' size={24}/> Liste des Ventes</a></h3>
-        <br/>
+        {AppData.DEVICE_MAINTENANCE_FLAG && <div><h3 className={buttonStyling}><a href='/add-repair-order' className='text-xl'><FaClipboardList className='inline' size={24}/> Ajouter un Ordre de Réparation</a></h3><br/></div>}
+        {AppData.DEVICE_MAINTENANCE_FLAG && <div><h3 className={buttonStyling}><a href='/repair-orders-list' className='text-xl'><FaList className='inline' size={24}/> Liste des Ordres de Répartion</a></h3><br/></div>}
+        
+        {AppData.PRODUCT_MANAGEMENT_FLAG && <div><h3 className={buttonStyling}><a href='/product-editor' className='text-xl'><FaBox className='inline' size={24}/> Ajouter un Produit</a></h3><br/></div>}
+        {AppData.PRODUCT_MANAGEMENT_FLAG && <div><h3 className={buttonStyling}><a href='/product-list' className='text-xl'><FaList className='inline' size={24}/> Liste des produits</a></h3><br/></div>}
+        {AppData.PRODUCT_MANAGEMENT_FLAG && <div><h3 className={buttonStyling}><a href='/new-category' className='text-xl'><FaTag className='inline' size={24}/> Ajouter une Categorie</a></h3><br/></div>}
+        
+        {AppData.CATERING_FLAG && <div><h3 className={buttonStyling}><a href='/catering-sales-point' className='text-xl'><FaShoppingCart className='inline' size={24}/> Point de Vente</a></h3><br/></div>}
+        {AppData.CATERING_FLAG && <div><h3 className={buttonStyling}><a href='/catering-sales-list' className='text-xl'><FaUtensils className='inline' size={24}/> Liste des Ventes</a></h3><br/></div>}
+
         <h3 className={buttonStyling}><a href='/user-manager' className='text-xl'><FaUserFriends className='inline' size={24}/> Gestion des Utilisateurs</a></h3>
         <br/>
         <h3 className={buttonStyling}><a href='/config' className='text-xl'><FaCog className='inline' size={24}/> Configuration</a></h3>

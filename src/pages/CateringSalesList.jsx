@@ -17,6 +17,8 @@ const CateringSalesList = () => {
     const [coList, setCoList] = useState();
     const [tableData, setTableData] = useState();
     const [showEmpty, setShowEmpty] = useState(false);
+    const [totalConsumptionPrice, setTotalConsumptionPrice] = useState(0);
+    const [totalFulfilledPaiement, setTotalFulfilledPaiement] = useState(0);
 
     const columns = [
         {
@@ -54,11 +56,6 @@ const CateringSalesList = () => {
             key: 'consumedProducts',
             width: 512,
             className: 'border border-gray-500 p-2',
-            // render: i => <p>{i.consumedProducts && i.consumedProducts.length}</p>
-            // render: i => <p>{i ? (i.consumedProducts ? "YES2" : "NO2") : "NO"}</p>
-            // render: i => <p>{i ? Object.keys(i).length : "N/A"}</p>
-            // render: i => <p>{i ? Object.keys(i).map((keyName, i) => (<ConsumedProductTag key={keyName} value={i[keyName]} />)) : "N/A"}</p>
-            // render: i => <p>{i ? Object.keys(i).map((keyName, index) => <p key={keyName}>{i[keyName].name}</p>) : "N/A"}</p>
             render: i => i ? Object.keys(i).map((keyName, index) => <ConsumedProductTag key={keyName} value={i[keyName]} />) : <FaEyeSlash className='inline' />
         },
         {
@@ -96,9 +93,11 @@ const CateringSalesList = () => {
             res = await axios.get(url);
 
             if (res) {
-                console.log("RESULT = " + JSON.stringify(res));
+                // console.log("RESULT = " + JSON.stringify(res));
                 setCoList(res.data);
                 UpdateTableData(res.data);
+                setTotalConsumptionPrice(GetTotalConsumptionPrice(res.data));
+                setTotalFulfilledPaiement(GetTotalFulfilledPaiement(res.data));
                 // this.setState({ isBusy: false });
             }
 
@@ -115,6 +114,8 @@ const CateringSalesList = () => {
 
     const UpdateTableData = (ParamCoList) => {
 
+        // console.log("ParamCoList = " + JSON.stringify(ParamCoList));
+
         let result = [];
 
         ParamCoList.forEach(co => {
@@ -125,6 +126,9 @@ const CateringSalesList = () => {
     }
 
     const GetTableData = (ParamCoList, ParamShowEmpty) => {
+
+        if (!ParamCoList)
+            return [];
 
         let result = [];
 
@@ -138,12 +142,42 @@ const CateringSalesList = () => {
         return result;
     }
 
+    const GetTotalConsumptionPrice = (ParamCoList) => {
+        let result = 0;
+
+        ParamCoList.forEach(co => {
+            result += co.totalPrice;
+        });
+
+        return result;
+    }
+
+    const GetTotalFulfilledPaiement = (ParamCoList) => {
+        let result = 0;
+
+        ParamCoList.forEach(co => {
+            result += co.fulfilledPaiement;
+        });
+
+        return result;
+    }
+
     return (
         <div className='text-gray-100'>
             <h3 className='text-xl font-bold'>Liste des Ventes / Liste des Ordres de Restauration</h3>
             <br />
             <br />
             <Table columns={columns} data={showEmpty ? GetTableData(coList, true) : GetTableData(coList, false)} rowKey="id" className='ml-16' />
+            <br />
+            <br />
+            <div className='text-gray-100 text-xl font-bold bg-gray-900 rounded-xl w-full m-auto p-4'>
+                <p>Total des Consommations : {totalConsumptionPrice} DA</p>
+                <p>Total des Paiements : {totalFulfilledPaiement} DA</p>
+                <p>Différence : {totalConsumptionPrice - totalFulfilledPaiement} DA</p>
+                <p>Pourcentage Remise : {((totalConsumptionPrice - totalFulfilledPaiement) / totalConsumptionPrice * 100).toFixed(2)} %</p>
+            </div>
+            <br />
+            <br />
         </div>
     )
 }

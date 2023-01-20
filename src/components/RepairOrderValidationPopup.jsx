@@ -6,6 +6,7 @@ import { AwesomeButtonProgress } from 'react-awesome-button';
 import { FaTimesCircle } from 'react-icons/fa';
 import Popup from 'reactjs-popup';
 import { GetBackEndUrl } from '../const';
+import ProblemListValidator from './ProblemListValidator';
 
 const RepairOrderValidationPopup = (props) => {
 
@@ -16,6 +17,7 @@ const RepairOrderValidationPopup = (props) => {
     const [note, setNote] = useState("");
     // const [totalEstPrice, setTotalEstPrice] = useState(0);
     const [paiment, setPaiment] = useState(0);
+    const [items, setItems] = useState(null);
 
     const handleChange = () => {
         setChecked(!checked);
@@ -25,13 +27,13 @@ const RepairOrderValidationPopup = (props) => {
         props.onClose();
     }
 
-    const ValidateRepairOrderInDB = async (ParamROID, ParamState, ParamPaiement, ParamLock, ParamNote) => {
+    const ValidateRepairOrderInDB = async (ParamROID, ParamState, ParamPaiement, ParamLock, ParamNote, ParamItems) => {
 
         console.log("ROID = " + ParamROID);
 
         try {
 
-            let validationToPost = { roid: ParamROID, state: ParamState, fulfilledPaiement: ParamPaiement, locked: ParamLock, note: ParamNote };
+            let validationToPost = { roid: ParamROID, state: ParamState, fulfilledPaiement: ParamPaiement, locked: ParamLock, note: ParamNote, items:ParamItems };
             let url = GetBackEndUrl() + "/api/validate-repair-order";
             let res = await axios.post(url, validationToPost);
 
@@ -64,6 +66,23 @@ const RepairOrderValidationPopup = (props) => {
         return total;
     }
 
+    const handleProblemListValidatorOnChange = (ParamItemKey, ParamValue) => {
+        // console.log("K = " + JSON.stringify(ParamItemKey) + " ||| " + "V = " + JSON.stringify(ParamValue));
+
+        // console.log("ITEMS = " + JSON.stringify(items));
+        let target = props.value.items.filter(i => i.key == ParamItemKey);
+        target[0].problems = ParamValue;
+        // console.log("TARGET = " + JSON.stringify(target));
+        
+        let others = props.value.items.filter((i) => {
+            return i.key !== ParamItemKey;
+        });
+        // console.log("OTHERS = " + JSON.stringify(others));
+        others.push(target);
+        console.log("RESULT AFTER CHANGE = " + JSON.stringify(others));
+        setItems(others);
+    }
+
     return (
         <div>
             <Popup
@@ -71,6 +90,7 @@ const RepairOrderValidationPopup = (props) => {
                 modal
                 closeOnDocumentClick
                 onClose={() => { CloseModal(); }}
+                // onOpen={() => setItems(props.value.items)}
             >
                 <div className="modal bg-gray-900 text-gray-100 p-2">
                     <button className="close" onClick={() => { CloseModal(); }}>
@@ -85,7 +105,9 @@ const RepairOrderValidationPopup = (props) => {
                         <br />
                         <p className='text-3xl font-bold'>Prix Total Estimé : {GetTotalPrice(props.value)} DA</p>
                         <br />
-                        <DeviceStateSelector onChange={handleRoStateOnChange} />
+                        {/* {props.value.items && props.value.items.map((item,index) => <div key={index}><p>{JSON.stringify(item)} : </p><DeviceStateSelector onChange={handleRoStateOnChange} /></div>)} */}
+                        {props.value.items && props.value.items.map((item) => <div key={item.key} className='m-2'><div className='mb-1 mr-1 p-2 bg-gray-800 rounded-xl font-bold text-lg'>{item.ref}</div><ProblemListValidator key={item.key} value={item.problems} onChange={(v) => {handleProblemListValidatorOnChange(item.key, v);} } /></div>)}
+                        {/* <DeviceStateSelector onChange={handleRoStateOnChange} /> */}
                         <br />
                         <input type="text" name='price' placeholder='Montant payer...' className={inputFieldStyle} onChange={handlePriceChange} />
                         <br />
@@ -98,7 +120,7 @@ const RepairOrderValidationPopup = (props) => {
                         <br />
                         <AwesomeButtonProgress type="primary" onPress={async (element, next) => {
                             // await for something then call next()
-                            await ValidateRepairOrderInDB(props.value.roid, roState, paiment, checked, note);
+                            await ValidateRepairOrderInDB(props.value.roid, roState, paiment, checked, note, items);
                             next();
                         }}><div className='text-xl'>Valider</div></AwesomeButtonProgress>
                     </div>

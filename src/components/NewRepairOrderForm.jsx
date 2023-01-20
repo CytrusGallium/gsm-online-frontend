@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ProblemPriceGrid from './ProblemPriceGrid';
 import RepairOrderItem from './RepairOrderItem';
 import ReactTooltip from 'react-tooltip';
@@ -22,9 +22,12 @@ var changesAvailable = false;
 const NewRepairOrderForm = () => {
 
     useEffect(() => {
-        console.log("EFFECT-ONCE");
+        // console.log("EFFECT-ONCE");
         // generatePDF();
     }, []);
+
+    const customerRef = useRef(null);
+    const phoneRef = useRef(null);
 
     const inputFieldStyle = 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 mt-2';
     const buttonStyle = "bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded mt-2";
@@ -32,7 +35,6 @@ const NewRepairOrderForm = () => {
     let displayDate = GetDateTimeDMYHM(new Date());
 
     const itemOnChange = (ParamItemState, ParamID) => {
-        // console.log("MARK 4 : " + JSON.stringify(ParamItemState));
         let tmpItems = items;
         tmpItems[ParamID] = ParamItemState;
         setItems(tmpItems);
@@ -59,10 +61,9 @@ const NewRepairOrderForm = () => {
 
     const [repairOrder, setRepairOrder] = useState({ location: "Tlemcen", customer: "", phone: "" });
     var [items, setItems] = useState([{ key: 0, deviceType: "SMART_PHONE", ref: "", imei: "", problems: [{ key: 0, name: "", price: 0 }], estPrice: "0", price: "0", state: "PENDING" }]);
-    // const [counter, setCounter] = useState(2);
     const [dummy, setDummy] = useState(0);
     const [totalEstPrice, setTotalEstPrice] = useState(0);
-    const [ROID, setROID] = useState("YY-MM-XXXXXXXX");
+    const [ROID, setROID] = useState("YYMMXXXXXXXX");
 
     const handleChange = ({ currentTarget: input }) => {
         setRepairOrder({ ...repairOrder, [input.name]: input.value });
@@ -71,6 +72,18 @@ const NewRepairOrderForm = () => {
 
     const ConfirmOnClick = async (event) => {
         event.preventDefault();
+
+        if (repairOrder.customer == "")
+        {
+            customerRef.current.focus();
+            return;
+        }
+        else if (repairOrder.phone == "")
+        {
+            phoneRef.current.focus();
+            return;
+        }
+
         let itemToPost = { location: repairOrder.location, customer: repairOrder.customer, phone: repairOrder.phone, items: items, roid: ROID };
         // console.log(JSON.stringify(itemToPost));
 
@@ -147,7 +160,16 @@ const NewRepairOrderForm = () => {
 
     const BuildPDF = async () => {
 
-        const doc = new jspdf.jsPDF('p', 'mm', [160, 60]); // Portrait, Milimeter, Height, Width
+        var receiptWidth = 60;
+
+        if (localStorage.getItem("receiptWidth")) {
+            receiptWidth = Number(localStorage.getItem("receiptWidth"));
+            console.log("RECEIPT WIDTH = " + receiptWidth);
+        }
+
+        const halfReceiptWidth = receiptWidth / 2;
+        
+        const doc = new jspdf.jsPDF('p', 'mm', [160, receiptWidth]); // Portrait, Milimeter, Height, Width
         var cursorY = 11;
         var barcodeImg;
         var html2CanvasResult = await html2canvas(document.querySelector("#barcode"));
@@ -163,11 +185,9 @@ const NewRepairOrderForm = () => {
         doc.setFont(undefined, 'bold');
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(26);
-        doc.text("GSM Online", 30, cursorY, 'center');
-        cursorY += 9;
-
-        // Reset font weight
+        doc.text("GSM Online", halfReceiptWidth, cursorY, 'center');
         doc.setFont(undefined, 'normal');
+        cursorY += 8;
 
         // Date
         doc.setTextColor(0, 0, 0);
@@ -177,87 +197,104 @@ const NewRepairOrderForm = () => {
         // Time
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(8);
-        doc.text(GetTimeHM2Digits(), 59, cursorY, 'right');
+        doc.text(GetTimeHM2Digits(), receiptWidth-1, cursorY, 'right');
         cursorY += 3;
 
-        doc.addImage(barcodeImg, 'bmp', 10, cursorY, 50, 15);
+        // Barcode
+        doc.addImage(barcodeImg, 'bmp', halfReceiptWidth-17, cursorY, 50, 15);
         cursorY += 20;
 
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(10);
-        doc.text("Client : " + repairOrder.customer, 30, cursorY, 'center');
+        doc.text("Client : " + repairOrder.customer, halfReceiptWidth, cursorY, 'center');
         cursorY += 4;
 
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(10);
-        doc.text("Tel : " + repairOrder.phone, 30, cursorY, 'center');
+        doc.text("Tel : " + repairOrder.phone, halfReceiptWidth, cursorY, 'center');
         cursorY += 8;
 
-        // Line 1
-        dottedLine(doc, 5, cursorY, 55, cursorY, 2);
-        cursorY += 8;
+        items.forEach(item => {
 
-        doc.setTextColor(0, 0, 0);
-        doc.setFontSize(10);
-        doc.text("Model : " + items[0].ref, 30, cursorY, 'center');
-        cursorY += 4;
+            // Line 1
+            dottedLine(doc, 5, cursorY, receiptWidth-5, cursorY, 2);
+            cursorY += 6;
 
-        doc.setTextColor(0, 0, 0);
-        doc.setFontSize(10);
-        doc.text("IMEI/NS : " + items[0].imei, 30, cursorY, 'center');
-        cursorY += 4;
-
-        if (items[0].problems && items[0].problems[0]) {
-
-            if (items[0].problems.length == 1) {
-                doc.setTextColor(0, 0, 0);
-                doc.setFontSize(10);
-                doc.text("Panne/Motif : " + items[0].problems[0].name, 30, cursorY, 'center');
-                cursorY += 4;
-            }
-            else {
-                autoTable(doc, {
-                    head: [['Panne', 'Prix Estimé']],
-                    body: [
-                        ['Ecran', '12000'],
-                        ['HP', '600'],
-                    ],
-                    startY: cursorY,
-                    margin: 2,
-                    theme: 'grid',
-                    tableWidth: 56,
-                    styles: {
-                        fontSize: 6,
-                        cellPadding: 1
-                    },
-                    headStyles: { fillColor: [24, 24, 24] }
-                });
-                cursorY += 12;
-            }
-
-            // doc.setTextColor(0, 0, 0);
-            // doc.setFontSize(10);
-            // doc.text("Prix Estimé : " + items[0].problems[0].price, 30, cursorY, 'center');
-            // cursorY += 8;
-
-        }
-        else {
+            // Device model name
             doc.setTextColor(0, 0, 0);
             doc.setFontSize(10);
-            doc.text("Panne/Motif : Aucun", 30, cursorY, 'center');
+            doc.text("Model : " + item.ref, halfReceiptWidth, cursorY, 'center');
             cursorY += 4;
-        }
 
-        // Line 2
-        dottedLine(doc, 5, cursorY, 55, cursorY, 2);
-        cursorY += 10;
+            // IMEI / Serial number
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(10);
+            doc.text("IMEI/NS : " + item.imei, halfReceiptWidth, cursorY, 'center');
+            cursorY += 4;
 
+            // Problems Table
+            if (item.problems && item.problems[0]) {
+
+                if (item.problems.length == 1) {
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(10);
+                    doc.text("Panne/Motif : " + item.problems[0].name, halfReceiptWidth, cursorY, 'center');
+                    cursorY += 4;
+                }
+                else {
+                    let bodyArray = [];
+
+                    item.problems.forEach(p => {
+                        bodyArray.push([p.name, p.price]);
+                    });
+
+                    autoTable(doc, {
+                        head: [['Panne', 'Prix Estimé']],
+                        body: bodyArray,
+                        startY: cursorY,
+                        margin: 2,
+                        theme: 'grid',
+                        tableWidth: receiptWidth-4,
+                        styles: {
+                            fontSize: 8,
+                            cellPadding: 0
+                        },
+                        headStyles: { fillColor: [24, 24, 24] },
+                        didDrawPage: (d) => { cursorY = d.cursor.y }
+                    });
+                    cursorY += 2;
+                }
+            }
+            else {
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(10);
+                doc.text("Panne/Motif : Aucun", halfReceiptWidth, cursorY, 'center');
+                cursorY += 4;
+            }
+        });
+
+        // Final Line
+        dottedLine(doc, 5, cursorY, receiptWidth-5, cursorY, 2);
+        cursorY += 6;
+
+        // Total estimated price
+        doc.setFont(undefined, 'bold');
         doc.setTextColor(0, 0, 0);
-        doc.setFontSize(12);
-        doc.text("Prix Estimé Total : " + totalEstPrice + " DA", 30, cursorY, 'center');
-        cursorY += 8;
+        doc.setFontSize(11);
+        doc.text("Prix Estimé Total : " + totalEstPrice + " DA", halfReceiptWidth, cursorY, 'center');
+        cursorY += 2;
+        doc.setFont(undefined, 'normal');
 
+        // Footer line
+        dottedLine(doc, 5, cursorY, receiptWidth-5, cursorY, 2);
+        cursorY += 4;
 
+        // Footer note
+        if (localStorage.getItem("footerNote")) {
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(8);
+            doc.text(localStorage.getItem("footerNote"), halfReceiptWidth, cursorY, 'center');
+        }
 
         return doc;
     }
@@ -294,11 +331,11 @@ const NewRepairOrderForm = () => {
         <div className='grid h-screen place-items-center'>
             <p className='text-gray-100 font-bold mb-4'>Ajouter Un Ordre de Réparation</p>
             <form>
-                <input type="text" name="location" placeholder="Emplacement..." value={repairOrder.location} onChange={handleChange} required className={inputFieldStyle} require />
+                <input type="text" name="location" placeholder="Emplacement..." value={repairOrder.location} onChange={handleChange} required className={inputFieldStyle} />
                 <br />
-                <input type="text" name="customer" placeholder="Nom du Client..." value={repairOrder.customer} onChange={handleChange} required className={inputFieldStyle} require />
+                <input type="text" ref={customerRef} name="customer" placeholder="Nom du Client..." value={repairOrder.customer} onChange={handleChange} required className={inputFieldStyle} />
                 <br />
-                <input type="text" name="phone" placeholder="Téléphone du Client..." value={repairOrder.phone} onChange={handleChange} required className={inputFieldStyle} require />
+                <input type="text" ref={phoneRef} name="phone" placeholder="Téléphone du Client..." value={repairOrder.phone} onChange={handleChange} required className={inputFieldStyle} />
                 <br />
                 <RepairOrderID OnChange={RepairOrderIDOnChange} />
                 <br />
@@ -317,11 +354,8 @@ const NewRepairOrderForm = () => {
                 {changesAvailable && <button type="button" name='submit' className={buttonStyle} onClick={ConfirmOnClick}>Enregistrer Tout</button>}
                 {/* <AwesomeButton onClick={ConfirmOnClick}>Enregistrer Tout</AwesomeButton> */}
             </form>
-            <br />
-            <br />
-            <br />
 
-            <h1 className='text-gray-100 text-3xl font-bold'>Aperçu Du Bon</h1>
+            {/* <h1 className='text-gray-100 text-3xl font-bold'>Aperçu Du Bon</h1>
             <br />
             <div className='bg-white text-black border border-gray-900 w-128 p-2 m-2' id='printable'>
                 <h1 className='text-3xl font-bold text-white bg-black pb-3'>GSM Online</h1>
@@ -343,7 +377,7 @@ const NewRepairOrderForm = () => {
                 )}
                 {items.length > 1 && <div><br /><p className='font-bold' data-tip="...">Prix Estimé Total : {totalEstPrice} DA</p><ReactTooltip /><br /></div>}
                 <br />
-            </div>
+            </div> */}
             <br />
             <br />
             <AwesomeButton type='primary' onPress={PrintPDF} before={<FaPrint />}>Imprimer le Bon</AwesomeButton>

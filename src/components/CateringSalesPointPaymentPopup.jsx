@@ -16,8 +16,9 @@ const CateringSalesPointPaymentPopup = (props) => {
     // }, []);
 
     const ref = useRef(null);
-    
+
     const [payment, setPayment] = useState(0);
+    const [showDiscountOrFee, setShowDiscountOrFee] = useState(true);
 
     const CloseModal = () => {
         props.onClose();
@@ -27,20 +28,19 @@ const CateringSalesPointPaymentPopup = (props) => {
         setPayment(Number(event.target.value));
     }
 
-    // const GetTotalPrice = (ParamRepairOrder) => {
+    const handleShowDiscountOrFeeChange = (event) => {
+        setShowDiscountOrFee(!showDiscountOrFee);
+    }
 
-    //     if (!ParamRepairOrder || !ParamRepairOrder.items)
-    //         return 0;
+    const buildPriceDiffInfo = (ParamOriginalAmount, ParamPayedAmount) => {
 
-    //     let total = Number(0);
-    //     ParamRepairOrder.items.forEach(i => {
-    //         i.problems.forEach(p => {
-    //             total += Number(p.price);
-    //         });
-    //     });
-
-    //     return total;
-    // }
+        if (Number(ParamOriginalAmount) == Number(ParamPayedAmount))
+            return { show: showDiscountOrFee, isDiff: false };
+        else if (Number(ParamOriginalAmount) > Number(ParamPayedAmount))
+            return { show: showDiscountOrFee, isDiff: true, diff: Number(ParamPayedAmount) - Number(ParamOriginalAmount), amountLabel: Number(ParamOriginalAmount) - Number(ParamPayedAmount), label: "Remise : " };
+        else if (Number(ParamOriginalAmount) < Number(ParamPayedAmount))
+            return { show: showDiscountOrFee, isDiff: true, diff: Number(ParamPayedAmount) - Number(ParamOriginalAmount), amountLabel: Number(ParamPayedAmount) - Number(ParamOriginalAmount), label: "Frais supplémentaire : " };
+    }
 
     return (
         <div>
@@ -49,7 +49,7 @@ const CateringSalesPointPaymentPopup = (props) => {
                 modal
                 closeOnDocumentClick
                 onClose={() => { CloseModal(); }}
-                onOpen={() => {setPayment(props.value); ref.current.select(); }}
+                onOpen={() => { setPayment(props.value); ref.current.select(); }}
             >
                 <div className="modal bg-gray-900 text-gray-100 p-2">
                     <button className="close" onClick={() => { CloseModal(); }}>
@@ -63,11 +63,11 @@ const CateringSalesPointPaymentPopup = (props) => {
                         <label className='text-sm'>Montant payer :</label>
                         <input ref={ref} type="number" name='price' placeholder='Montant payer...' value={payment} className={inputFieldStyle} onChange={handlePriceChange} />
                         <br />
+                        {Number(payment) > Number(props.value) && <p className='mb-4'>Frais supplémentaire : {Number(payment) - Number(props.value)} DA</p>}
+                        {Number(payment) < Number(props.value) && <p className='mb-4'>Remise : {Number(props.value) - Number(payment)} DA</p>}
+                        {Number(payment) != Number(props.value) && <label className='mb-4'><input type="checkbox" checked={showDiscountOrFee} onChange={handleShowDiscountOrFeeChange} className='mx-1' />Afficher Remise/Frais sur le bon</label>}
                         <AwesomeButtonProgress type="primary" onPress={async (element, next) => {
-                            // await for something then call next()
-                            console.log("PAYMENT = " + payment);
-                            await props.onConfirm(payment);
-                            // next();
+                            await props.onConfirm(payment, buildPriceDiffInfo(props.value, payment));
                             CloseModal();
                         }}><div className='text-xl'>Valider</div></AwesomeButtonProgress>
                     </div>
