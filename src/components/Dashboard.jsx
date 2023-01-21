@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaUserFriends, FaClipboardList, FaList, FaBox, FaShoppingCart, FaCog, FaTag, FaUtensils } from 'react-icons/fa';
+import { FaUserFriends, FaClipboardList, FaList, FaBox, FaShoppingCart, FaCog, FaTag, FaUtensils, FaChartLine } from 'react-icons/fa';
 import AppData from '../App.json';
 
 const Dashboard = () => {
@@ -21,10 +21,9 @@ const Dashboard = () => {
         {AppData.CATERING_FLAG && <div><h3 className={buttonStyling}><a href='/catering-sales-point' className='text-xl'><FaShoppingCart className='inline' size={24}/> Point de Vente</a></h3><br/></div>}
         {AppData.CATERING_FLAG && <div><h3 className={buttonStyling}><a href='/catering-sales-list' className='text-xl'><FaUtensils className='inline' size={24}/> Liste des Ventes</a></h3><br/></div>}
 
-        <h3 className={buttonStyling}><a href='/user-manager' className='text-xl'><FaUserFriends className='inline' size={24}/> Gestion des Utilisateurs</a></h3>
-        <br/>
-        <h3 className={buttonStyling}><a href='/config' className='text-xl'><FaCog className='inline' size={24}/> Configuration</a></h3>
-        <br/>
+        <div><h3 className={buttonStyling}><a href='/statistics' className='text-xl'><FaChartLine className='inline' size={24}/> Statistiques</a></h3><br/></div>
+        <div><h3 className={buttonStyling}><a href='/user-manager' className='text-xl'><FaUserFriends className='inline' size={24}/> Gestion des Utilisateurs</a></h3><br/></div>
+        <div><h3 className={buttonStyling}><a href='/config' className='text-xl'><FaCog className='inline' size={24}/> Configuration</a></h3><br/></div>
       </div>
     </div>
   )

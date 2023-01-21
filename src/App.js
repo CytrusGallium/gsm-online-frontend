@@ -16,6 +16,8 @@ import Config from './pages/Config';
 import CategoryEditor from './pages/CategoryEditor';
 import ProductList from './pages/ProductList';
 import CateringSalesList from './pages/CateringSalesList';
+import Statistics from './pages/Statistics';
+import UserManager from './pages/UserManager';
 
 function App() {
   return (
@@ -39,11 +41,16 @@ function App() {
             <Route path='/dashboard' element={IsLoggedIn() ? <Dashboard /> : <PleaseLogin />} />
             {AppData.DEVICE_MAINTENANCE_FLAG && <Route path='/add-repair-order' element={IsLoggedIn() ? <NewRepairOrderForm /> : <PleaseLogin />} />}
             {AppData.DEVICE_MAINTENANCE_FLAG && <Route path='/repair-orders-list' element={IsLoggedIn() ? <RepairOrdersList /> : <PleaseLogin />} />}
-            <Route path='/product-editor' element={IsLoggedIn() ? <ProductEditor /> : <PleaseLogin />} />
-            <Route path='/product-list' element={IsLoggedIn() ? <ProductList /> : <PleaseLogin />} />
-            <Route path='/new-category' element={IsLoggedIn() ? <CategoryEditor /> : <PleaseLogin />} />
+
+            {AppData.PRODUCT_MANAGEMENT_FLAG && <Route path='/product-editor' element={IsLoggedIn() ? <ProductEditor /> : <PleaseLogin />} />}
+            {AppData.PRODUCT_MANAGEMENT_FLAG && <Route path='/product-list' element={IsLoggedIn() ? <ProductList /> : <PleaseLogin />} />}
+            {AppData.PRODUCT_MANAGEMENT_FLAG && <Route path='/new-category' element={IsLoggedIn() ? <CategoryEditor /> : <PleaseLogin />} />}
+
             {AppData.CATERING_FLAG && <Route path='/catering-sales-point' element={IsLoggedIn() ? <CateringSalesPoint /> : <PleaseLogin />} />}
             {AppData.CATERING_FLAG && <Route path='/catering-sales-list' element={IsLoggedIn() ? <CateringSalesList /> : <PleaseLogin />} />}
+            
+            <Route path='/statistics' element={IsLoggedIn() ? <Statistics /> : <PleaseLogin />} />
+            <Route path='/user-manager' element={IsLoggedIn() ? <UserManager /> : <PleaseLogin />} />
             <Route path='/config' element={IsLoggedIn() ? <Config /> : <PleaseLogin />} />
           </Routes>
         </BrowserRouter>

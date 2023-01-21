@@ -496,7 +496,7 @@ const CateringSalesPoint = () => {
         }
     }
 
-    const BuildPDF = async () => {
+    const BuildPDF = async (ParamPriceDiffInfo = null) => {
 
         var receiptWidth = 60;
 
@@ -569,8 +569,21 @@ const CateringSalesPoint = () => {
         });
         cursorY += 9;
 
+        console.log("Param Price Diff Info = " + JSON.stringify(ParamPriceDiffInfo));
+        let diff = 0;
         // Discount / Extra Fees
-        if (priceDiffInfo && priceDiffInfo.isDiff && priceDiffInfo.show) {
+        if (ParamPriceDiffInfo) {
+            console.log("Param Price Diff Info FOUND");
+            diff = ParamPriceDiffInfo.diff;
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(10);
+            doc.text(ParamPriceDiffInfo.label + " " + ParamPriceDiffInfo.amountLabel + " DA", halfReceiptWidth, cursorY, 'center');
+            cursorY += 5;
+            doc.setFont(undefined, 'normal');
+        }
+        else if (priceDiffInfo && priceDiffInfo.isDiff && priceDiffInfo.show) {
+            diff = priceDiffInfo.diff;
+            console.log("Price Diff Info FOUND");
             doc.setTextColor(0, 0, 0);
             doc.setFontSize(10);
             doc.text(priceDiffInfo.label + " " + priceDiffInfo.amountLabel + " DA", halfReceiptWidth, cursorY, 'center');
@@ -583,10 +596,12 @@ const CateringSalesPoint = () => {
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(14);
 
-        if (priceDiffInfo && priceDiffInfo.isDiff)
-            doc.text("Total à Payer : " + (GetTotalPrice()+priceDiffInfo.diff) + " DA", halfReceiptWidth, cursorY, 'center');
-        else
-            doc.text("Total à Payer : " + GetTotalPrice() + " DA", halfReceiptWidth, cursorY, 'center');
+        // if (priceDiffInfo && priceDiffInfo.isDiff)
+        //     doc.text("Total à Payer : " + (GetTotalPrice() + priceDiffInfo.diff) + " DA", halfReceiptWidth, cursorY, 'center');
+        // else
+        //     doc.text("Total à Payer : " + GetTotalPrice() + " DA", halfReceiptWidth, cursorY, 'center');
+
+        doc.text("Total à Payer : " + (GetTotalPrice() + diff) + " DA", halfReceiptWidth, cursorY, 'center');
 
         cursorY += 5;
         doc.setFont(undefined, 'normal');
@@ -708,7 +723,7 @@ const CateringSalesPoint = () => {
         setpriceDiffInfo(ParamPriceDiffInfo);
 
         // Print receipt
-        PrintPDF();
+        PrintPDF(ParamPriceDiffInfo);
 
         // Update in database
         if (selectedCSTinDB)
@@ -721,10 +736,10 @@ const CateringSalesPoint = () => {
         setFinalized(true);
     }
 
-    const PrintPDF = async () => {
+    const PrintPDF = async (ParamPriceDiffInfo = null) => {
 
         // Build PDF
-        const doc = await BuildPDF();
+        const doc = await BuildPDF(ParamPriceDiffInfo);
 
         // Build form
         const formData = new FormData();

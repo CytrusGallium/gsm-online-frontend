@@ -34,6 +34,7 @@ const CateringSalesPointPaymentPopup = (props) => {
 
     const buildPriceDiffInfo = (ParamOriginalAmount, ParamPayedAmount) => {
 
+        console.log("Building price diff info...");
         if (Number(ParamOriginalAmount) == Number(ParamPayedAmount))
             return { show: showDiscountOrFee, isDiff: false };
         else if (Number(ParamOriginalAmount) > Number(ParamPayedAmount))

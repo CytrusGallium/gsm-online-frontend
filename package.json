@@ -18,6 +18,7 @@
     "react": "^18.2.0",
     "react-awesome-button": "^7.0.5",
     "react-barcode": "^1.4.6",
+    "react-calendar": "^4.0.0",
     "react-datalist-input": "^3.2.1",
     "react-dom": "^18.2.0",
     "react-hot-keys": "^2.7.2",
@@ -27,6 +28,7 @@
     "react-spinners": "^0.13.7",
     "react-tooltip": "^4.5.1",
     "reactjs-popup": "^2.0.5",
+    "reaviz": "^13.3.2",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
