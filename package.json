@@ -12,6 +12,7 @@
     "jsbarcode": "^3.11.5",
     "jspdf": "^2.5.1",
     "jspdf-autotable": "^3.5.28",
+    "jspdf-barcode": "^0.0.6",
     "jsprintmanager": "^5.0.2",
     "print-js": "^1.6.0",
     "rc-table": "^7.28.1",

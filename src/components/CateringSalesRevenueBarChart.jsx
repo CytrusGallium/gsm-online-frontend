@@ -13,9 +13,6 @@ const CateringSalesRevenueBarChart = () => {
     }, []);
 
     // States
-    // const [coList, setCoList] = useState([]);
-    // const [totalConsumptionPrice, setTotalConsumptionPrice] = useState(0);
-    // const [totalFulfilledPaiement, setTotalFulfilledPaiement] = useState(0);
     const [salesInfo, setSalesInfo] = useState({ salesCount: 0, salesTotal: 0, salesTotalPayment: 0, salesDiff: 0, salesDiffPercentage: 0 });
     const [chartData, setChartData] = useState(null);
 
@@ -34,10 +31,6 @@ const CateringSalesRevenueBarChart = () => {
             res = await axios.get(url);
 
             if (res) {
-                // console.log("RESULT = " + JSON.stringify(res));
-                // setCoList(res.data);
-                // setTotalConsumptionPrice(GetTotalConsumptionPrice(res.data));
-                // setTotalFulfilledPaiement(GetTotalFulfilledPaiement(res.data));
                 // this.setState({ isBusy: false });
 
                 let total = GetTotalConsumptionPrice(res.data);

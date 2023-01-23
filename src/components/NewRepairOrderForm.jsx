@@ -9,11 +9,14 @@ import axios from "axios";
 import { AwesomeButton } from 'react-awesome-button';
 import { FaPrint, FaDownload } from 'react-icons/fa';
 import { GetDateTimeDMYHM, GetShortDate, GetTimeHM2Digits } from '../Reaknotron/Libs/RknTimeTools';
+
+// JS PDF
+import "jspdf-barcode";
 import autoTable from 'jspdf-autotable';
+const jspdf = require('jspdf');
 
 const printJS = require('print-js');
 const html2canvas = require('html2canvas');
-const jspdf = require('jspdf');
 const ReactDOM = require('react-dom');
 const Barcode = require('react-barcode');
 
@@ -73,13 +76,11 @@ const NewRepairOrderForm = () => {
     const ConfirmOnClick = async (event) => {
         event.preventDefault();
 
-        if (repairOrder.customer == "")
-        {
+        if (repairOrder.customer == "") {
             customerRef.current.focus();
             return;
         }
-        else if (repairOrder.phone == "")
-        {
+        else if (repairOrder.phone == "") {
             phoneRef.current.focus();
             return;
         }
@@ -168,12 +169,12 @@ const NewRepairOrderForm = () => {
         }
 
         const halfReceiptWidth = receiptWidth / 2;
-        
+
         const doc = new jspdf.jsPDF('p', 'mm', [160, receiptWidth]); // Portrait, Milimeter, Height, Width
         var cursorY = 11;
-        var barcodeImg;
-        var html2CanvasResult = await html2canvas(document.querySelector("#barcode"));
-        var barcodeImg = html2CanvasResult.toDataURL('image/bmp');
+        // var barcodeImg;
+        // var html2CanvasResult = await html2canvas(document.querySelector("#barcode"));
+        // var barcodeImg = html2CanvasResult.toDataURL('image/bmp');
 
         // GSM Online BG
         doc.setDrawColor(0, 0, 0);
@@ -188,7 +189,7 @@ const NewRepairOrderForm = () => {
         doc.text("GSM Online", halfReceiptWidth, cursorY, 'center');
         doc.setFont(undefined, 'normal');
         cursorY += 8;
-
+        
         // Date
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(8);
@@ -197,18 +198,32 @@ const NewRepairOrderForm = () => {
         // Time
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(8);
-        doc.text(GetTimeHM2Digits(), receiptWidth-1, cursorY, 'right');
-        cursorY += 3;
+        doc.text(GetTimeHM2Digits(), receiptWidth - 1, cursorY, 'right');
+        cursorY += 14;
+        
+        // ROID Barcode
+        doc.barcode(ROID, {
+            fontSize: 32,
+            textColor: "#000000",
+            x: halfReceiptWidth-17,
+            y: cursorY
+        });
+        cursorY += 4;
+        
+        // ROID
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(8);
+        doc.text(ROID, halfReceiptWidth, cursorY, 'center');
+        cursorY += 8;
 
-        // Barcode
-        doc.addImage(barcodeImg, 'bmp', halfReceiptWidth-17, cursorY, 50, 15);
-        cursorY += 20;
-
+        // Customer name
+        doc.setFont(undefined, 'normal');
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(10);
         doc.text("Client : " + repairOrder.customer, halfReceiptWidth, cursorY, 'center');
         cursorY += 4;
-
+        
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(10);
         doc.text("Tel : " + repairOrder.phone, halfReceiptWidth, cursorY, 'center');
@@ -217,7 +232,7 @@ const NewRepairOrderForm = () => {
         items.forEach(item => {
 
             // Line 1
-            dottedLine(doc, 5, cursorY, receiptWidth-5, cursorY, 2);
+            dottedLine(doc, 5, cursorY, receiptWidth - 5, cursorY, 2);
             cursorY += 6;
 
             // Device model name
@@ -254,7 +269,7 @@ const NewRepairOrderForm = () => {
                         startY: cursorY,
                         margin: 2,
                         theme: 'grid',
-                        tableWidth: receiptWidth-4,
+                        tableWidth: receiptWidth - 4,
                         styles: {
                             fontSize: 8,
                             cellPadding: 0
@@ -274,7 +289,7 @@ const NewRepairOrderForm = () => {
         });
 
         // Final Line
-        dottedLine(doc, 5, cursorY, receiptWidth-5, cursorY, 2);
+        dottedLine(doc, 5, cursorY, receiptWidth - 5, cursorY, 2);
         cursorY += 6;
 
         // Total estimated price
@@ -286,7 +301,7 @@ const NewRepairOrderForm = () => {
         doc.setFont(undefined, 'normal');
 
         // Footer line
-        dottedLine(doc, 5, cursorY, receiptWidth-5, cursorY, 2);
+        dottedLine(doc, 5, cursorY, receiptWidth - 5, cursorY, 2);
         cursorY += 4;
 
         // Footer note
@@ -354,30 +369,6 @@ const NewRepairOrderForm = () => {
                 {changesAvailable && <button type="button" name='submit' className={buttonStyle} onClick={ConfirmOnClick}>Enregistrer Tout</button>}
                 {/* <AwesomeButton onClick={ConfirmOnClick}>Enregistrer Tout</AwesomeButton> */}
             </form>
-
-            {/* <h1 className='text-gray-100 text-3xl font-bold'>Aperçu Du Bon</h1>
-            <br />
-            <div className='bg-white text-black border border-gray-900 w-128 p-2 m-2' id='printable'>
-                <h1 className='text-3xl font-bold text-white bg-black pb-3'>GSM Online</h1>
-                <h5>{displayDate}</h5>
-                <br />
-                <Barcode value={ROID} format="CODE128" width={1} height={24} />
-                <br />
-                <p>Client : {repairOrder.customer}</p>
-                <p>Tel : {repairOrder.phone}</p>
-                <br />
-                {items.length > 1 && <p className='mb-3'>Liste des réparations : </p>}
-                {items.map(item =>
-                    <div className='text-xs border-dashed border-2 border-gray-500 mb-3 pb-3' key={item.key}>
-                        <p>Model : {item.ref}</p>
-                        <p className='pb-1'>IMEI/NS : {item.imei}</p>
-                        {((item.problems && item.problems.length > 1) ? <ProblemPriceGrid problems={item.problems} /> : <p>Panne/Motif : {(item.problems) ? item.problems[0].name : ""}</p>)}
-                        <p>Prix Estimé : {item.estPrice} DA</p>
-                    </div>
-                )}
-                {items.length > 1 && <div><br /><p className='font-bold' data-tip="...">Prix Estimé Total : {totalEstPrice} DA</p><ReactTooltip /><br /></div>}
-                <br />
-            </div> */}
             <br />
             <br />
             <AwesomeButton type='primary' onPress={PrintPDF} before={<FaPrint />}>Imprimer le Bon</AwesomeButton>

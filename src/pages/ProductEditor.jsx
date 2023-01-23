@@ -45,7 +45,7 @@ const ProductEditor = () => {
 
     // State
     const [selectedFile, setSelectedFile] = useState("");
-    const [productInfo, setProductInfo] = useState({ name: "", description: "", price: 0, altLangName: "", category: "" });
+    const [productInfo, setProductInfo] = useState({ name: "", description: "", price: 0, altLangName: "", category: "", sellable: true, buyable: false });
     const [imageURL, setImageURL] = useState();
     const [imageAvailable, setImageAvailable] = useState(false);
     const [changesAvailable, setChangesAvailable] = useState(false);
@@ -122,13 +122,13 @@ const ProductEditor = () => {
 
             console.log("TARGET ID STATE = " + targetID);
 
-            let productToPost = { 
-                id: targetID, 
-                name: productInfo.name, 
-                description: productInfo.description, 
-                price: productInfo.price, 
+            let productToPost = {
+                id: targetID,
+                name: productInfo.name,
+                description: productInfo.description,
+                price: productInfo.price,
                 altLangName: productInfo.altLangName,
-                category: productInfo.category 
+                category: productInfo.category
             };
 
             // Add token
@@ -260,6 +260,9 @@ const ProductEditor = () => {
                 <br />
                 <label className="block text-sm font-medium text-gray-900 dark:text-white">Prix :</label>
                 <input type="number" step="0.01" name="price" className={inputFieldStyle} value={productInfo.price} placeholder="Prix du produit..." onChange={handleChange} />
+                <br />
+                <label className='mb-4'><input type="checkbox" checked={productInfo.buyable} onChange={handleChange} className='mx-1' />Achetable</label>
+                <label className='mb-4'><input type="checkbox" checked={productInfo.sellable} onChange={handleChange} className='mx-1' />Vendable</label>
                 {/* <br />
                 <div>
                     <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Image :</label>

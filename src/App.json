@@ -1,9 +1,9 @@
 {
     "engine": "Nukode Reaknotron",
-    "customer": "Ilyes Ben Abadji",
-    "company": "Dar Mima",
-    "company_label": "Dar Mima",
-    "CATERING_FLAG" : true,
-    "DEVICE_MAINTENANCE_FLAG" : false,
-    "PRODUCT_MANAGEMENT_FLAG" : true
+    "customer": "Fayssal Mahboub",
+    "company": "GSM Online",
+    "company_label": "GSM Online",
+    "CATERING_FLAG" : false,
+    "DEVICE_MAINTENANCE_FLAG" : true,
+    "PRODUCT_MANAGEMENT_FLAG" : false
 }

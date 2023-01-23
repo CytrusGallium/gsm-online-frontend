@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import CateringSalesRevenueBarChart from '../components/CateringSalesRevenueBarChart';
 import CateringSalesProductCount from '../components/CateringSalesProductCount';
+import AppData from '../App.json';
 
 const Statistics = () => {
 
@@ -36,8 +37,8 @@ const Statistics = () => {
             <br/>
             <br/>
 
-            <CateringSalesRevenueBarChart />
-            <CateringSalesProductCount />
+            {AppData.CATERING_FLAG && <CateringSalesRevenueBarChart />}
+            {AppData.CATERING_FLAG && <CateringSalesProductCount />}
         </div>
     )
 }

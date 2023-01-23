@@ -168,14 +168,14 @@ const CateringSalesList = () => {
             <br />
             <br />
             <Table columns={columns} data={showEmpty ? GetTableData(coList, true) : GetTableData(coList, false)} rowKey="id" className='ml-16' />
-            <br />
+            {/* <br />
             <br />
             <div className='text-gray-100 text-xl font-bold bg-gray-900 rounded-xl w-full m-auto p-4'>
                 <p>Total des Consommations : {totalConsumptionPrice} DA</p>
                 <p>Total des Paiements : {totalFulfilledPaiement} DA</p>
                 <p>Différence : {totalConsumptionPrice - totalFulfilledPaiement} DA</p>
                 <p>Pourcentage Remise : {((totalConsumptionPrice - totalFulfilledPaiement) / totalConsumptionPrice * 100).toFixed(2)} %</p>
-            </div>
+            </div> */}
             <br />
             <br />
         </div>
