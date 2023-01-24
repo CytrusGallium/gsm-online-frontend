@@ -4,7 +4,7 @@ import axios from 'axios';
 import { GetBackEndUrl } from '../const';
 import { GetBaseUrl } from '../Reaknotron/Libs/RknRouterUtils';
 import ConsumedProductTag from '../components/ConsumedProductTag';
-import { FaEyeSlash } from 'react-icons/fa';
+import { FaEyeSlash, FaEdit, FaTrash } from 'react-icons/fa';
 
 const CateringSalesList = () => {
 
@@ -17,8 +17,8 @@ const CateringSalesList = () => {
     const [coList, setCoList] = useState();
     const [tableData, setTableData] = useState();
     const [showEmpty, setShowEmpty] = useState(false);
-    const [totalConsumptionPrice, setTotalConsumptionPrice] = useState(0);
-    const [totalFulfilledPaiement, setTotalFulfilledPaiement] = useState(0);
+    // const [totalConsumptionPrice, setTotalConsumptionPrice] = useState(0);
+    // const [totalFulfilledPaiement, setTotalFulfilledPaiement] = useState(0);
 
     const columns = [
         {
@@ -34,7 +34,15 @@ const CateringSalesList = () => {
             key: 'time',
             width: 128,
             className: 'border border-gray-500',
-            render: d => <p className='inline text-sm'>{(new Date(d)).toLocaleDateString('fr-FR', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</p>
+            render: d => <p className='inline text-sm'>{(new Date(d)).toLocaleDateString('fr-FR', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}</p>
+        },
+        {
+            title: 'Operations',
+            dataIndex: '',
+            key: 'operations',
+            width: 128,
+            className: 'border border-gray-500',
+            render: i => GenerateOperationButtons(i)
         },
         {
             title: 'Prix total',
@@ -96,8 +104,8 @@ const CateringSalesList = () => {
                 // console.log("RESULT = " + JSON.stringify(res));
                 setCoList(res.data);
                 UpdateTableData(res.data);
-                setTotalConsumptionPrice(GetTotalConsumptionPrice(res.data));
-                setTotalFulfilledPaiement(GetTotalFulfilledPaiement(res.data));
+                // setTotalConsumptionPrice(GetTotalConsumptionPrice(res.data));
+                // setTotalFulfilledPaiement(GetTotalFulfilledPaiement(res.data));
                 // this.setState({ isBusy: false });
             }
 
@@ -162,20 +170,58 @@ const CateringSalesList = () => {
         return result;
     }
 
+    const GenerateOperationButtons = (ParamCateringOrder) => {
+
+        const buttonStyle = 'bg-gray-900 text-gray-100 rounded-lg p-2 my-2 mx-1 text-sm hover:bg-gray-700 inline';
+
+        if (ParamCateringOrder) {
+            return (
+                <div className='flex flex-row ml-4'>
+                    <button className={buttonStyle}> <a href={GetBaseUrl() + "/catering-sales-point?id=" + ParamCateringOrder.id}><FaEdit size={20} /></a> </button>
+                    <button className={buttonStyle} onClick={() => { DeleteRepairOrderFromDB(ParamCateringOrder.id); }}> <FaTrash size={20} /> </button>
+                </div>
+            )
+        }
+
+        return "N/A";
+    }
+
+    const DeleteRepairOrderFromDB = async (ParamCOID) => {
+
+        // this.setState({ isBusy: true });
+        let res;
+
+        try {
+
+            // Build Req/Res
+            var url = GetBackEndUrl() + "/api/delete-catering-order?id=" + ParamCOID;
+
+            console.log("GET : " + url);
+            res = await axios.get(url);
+
+            if (res) {
+                // this.UpdateTableData(res.data);
+                // this.GetRepairOrdersListFromDB("", "");
+                // this.setState({ isBusy: false });
+            }
+
+        } catch (error) {
+            console.log("ERROR : " + error);
+
+            if (error.response && error.response.status >= 400 && error.response.status <= 500) {
+
+                console.log(error.response.data);
+
+            }
+        }
+    }
+
     return (
         <div className='text-gray-100'>
             <h3 className='text-xl font-bold'>Liste des Ventes / Liste des Ordres de Restauration</h3>
             <br />
             <br />
             <Table columns={columns} data={showEmpty ? GetTableData(coList, true) : GetTableData(coList, false)} rowKey="id" className='ml-16' />
-            {/* <br />
-            <br />
-            <div className='text-gray-100 text-xl font-bold bg-gray-900 rounded-xl w-full m-auto p-4'>
-                <p>Total des Consommations : {totalConsumptionPrice} DA</p>
-                <p>Total des Paiements : {totalFulfilledPaiement} DA</p>
-                <p>Différence : {totalConsumptionPrice - totalFulfilledPaiement} DA</p>
-                <p>Pourcentage Remise : {((totalConsumptionPrice - totalFulfilledPaiement) / totalConsumptionPrice * 100).toFixed(2)} %</p>
-            </div> */}
             <br />
             <br />
         </div>

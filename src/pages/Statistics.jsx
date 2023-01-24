@@ -3,6 +3,7 @@ import axios from 'axios';
 import CateringSalesRevenueBarChart from '../components/CateringSalesRevenueBarChart';
 import CateringSalesProductCount from '../components/CateringSalesProductCount';
 import AppData from '../App.json';
+import CateringSalesPaymentPerProduct from '../components/CateringSalesPaymentPerProduct';
 
 const Statistics = () => {
 
@@ -39,6 +40,7 @@ const Statistics = () => {
 
             {AppData.CATERING_FLAG && <CateringSalesRevenueBarChart />}
             {AppData.CATERING_FLAG && <CateringSalesProductCount />}
+            {AppData.CATERING_FLAG && <CateringSalesPaymentPerProduct />}
         </div>
     )
 }
