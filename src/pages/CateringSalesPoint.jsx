@@ -1,6 +1,6 @@
 import { React, useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { FaRegPaperPlane, FaTrash, FaCheckCircle, FaDownload, FaPlus, FaChair, FaSave, FaPizzaSlice } from 'react-icons/fa';
+import { FaRegPaperPlane, FaTrash, FaCheckCircle, FaDownload, FaPlus, FaChair, FaSave, FaPizzaSlice, FaShoppingBag } from 'react-icons/fa';
 import NetImage from '../components/NetImage';
 import { GetBackEndUrl, GetPrintServerAddress, GetPrinterName } from '../const';
 import axios from 'axios';
@@ -17,11 +17,14 @@ import ConsumedProductTag from '../components/ConsumedProductTag';
 import CateringSalesPointPaymentPopup from '../components/CateringSalesPointPaymentPopup';
 import AddMiscProductPopup from '../components/AddMiscProductPopup';
 import CustomAmountPopup from '../components/CustomAmountPopup';
+import { DottedLine } from '../Reaknotron/Libs/RknPdfLibs';
+import GenericMessagePopup from '../components/GenericMessagePopup';
+// import RknPopup from '../components/RknUI/RknPopup';
 const jspdf = require('jspdf');
 
 const CateringSalesPoint = () => {
 
-    // Effect
+    // Effect 1
     useEffect(() => {
 
         console.log("BASE URL = " + GetBaseUrl());
@@ -35,19 +38,12 @@ const CateringSalesPoint = () => {
 
         GetCustomerSittingTablesListFromDb();
         GetProductListFromDb();
-
-        // updateCSTInterval = setInterval(GetCustomerSittingTablesListFromDb, 30000);
-
-        // document.addEventListener("contextmenu", (event) => {
-        //     event.preventDefault();
-        //     console.log("RIGHT CLICK");
-        // });
+        GetTakeOutOrdersListFromDb();
 
     }, []);
 
+    // Effect 2
     useEffect(() => {
-
-        // console.log("Registering mouse move event...");
 
         const handleMouseMove = (event) => {
             setMousePos({ x: event.clientX, y: event.clientY });
@@ -70,12 +66,12 @@ const CateringSalesPoint = () => {
     // State
     const [mousePos, setMousePos] = useState({});
     const [productList, setProductList] = useState([]);
-    // const [consumedProductsList, setConsumedProductsList] = useState([]);
     const [consumedProductsList_V2, setConsumedProductsList_V2] = useState({});
     const [priceBubbles, setPriceBubbles] = useState([]);
     // const [totalPrice, setTotalPrice] = useState(0);
     const [productCounter, setProductCounter] = useState(1);
     const [customerSittingTables, setCustomerSittingTables] = useState([]);
+    const [takeoutOrders, setTakeoutOrders] = useState([]);
     const [selectedCSTinUI, setSelectedCSTinUI] = useState(null);
     const [selectedCSTinDB, setSelectedCSTinDB] = useState(null);
     const [cateringOrderIDinDB, setCateringOrderIDinDB] = useState("");
@@ -89,6 +85,8 @@ const CateringSalesPoint = () => {
     const [customAmountPopupOpen, setCustomAmountPopupOpen] = useState(false);
     const [currentCustomAmountPopupTargetProduct, setCurrentCustomAmountPopupTargetProduct] = useState(null);
     const [priceDiffInfo, setpriceDiffInfo] = useState(null);
+    const [errorPopupOpen, setErrorPopupOpen] = useState(false);
+    const [errorPopupMessage, setErrorPopupMessage] = useState("");
 
     // Normal
     const cstStyle = 'inline m-1 p-1 text-gray-900 rounded-lg cursor-pointer select-none bg-gray-500 text-lg font-bold flex flex-col justify-center items-center';
@@ -102,21 +100,18 @@ const CateringSalesPoint = () => {
     // Dim and disabled when another table is selected in DB
     const hiddenCstStyle = 'inline m-1 p-1 text-gray-900 rounded-lg select-none bg-gray-500 text-lg font-bold opacity-20 flex flex-col justify-center items-center';
 
-    // var updateCSTInterval;
-
     const GetProductListFromDb = async () => {
         let res;
 
         try {
 
             // Build Req/Res
-            var url = GetBackEndUrl() + "/api/get-product-list";
+            var url = GetBackEndUrl() + "/api/get-product-list?sellable=true";
 
             console.log("GET : " + url);
             res = await axios.get(url);
 
             if (res) {
-                // console.log("RESULT = " + JSON.stringify(res));
                 setProductList(res.data);
                 // this.setState({ isBusy: false });
                 getCategoryListFromDB();
@@ -173,9 +168,7 @@ const CateringSalesPoint = () => {
             res = await axios.get(url);
 
             if (res) {
-                // console.log("CO RESULT = " + JSON.stringify(res.data));
-                // setConsumedProductsList(res.data.consumedProducts);
-                // setConsumedProductsList_V2(res.data.consumedProducts);
+
                 setConsumedProductsList_V2(res.data.consumedProducts);
                 setCateringOrderIDinDB(res.data._id);
                 setCOID(res.data.coid);
@@ -183,9 +176,6 @@ const CateringSalesPoint = () => {
                 setKitchenOrderIssued(res.data.kitchenOrderIssued);
                 setFinalized(res.data.finalized);
 
-                // var customerSittingTable = customerSittingTables.filter(t => {
-                //     return t._id === res.data.customerSittingTableID;
-                // })
             }
 
         } catch (error) {
@@ -213,6 +203,34 @@ const CateringSalesPoint = () => {
             if (res) {
                 // console.log("RESULT = " + JSON.stringify(res));
                 setCustomerSittingTables(res.data);
+                // this.setState({ isBusy: false });
+            }
+
+        } catch (error) {
+            console.log("ERROR : " + error);
+
+            if (error.response && error.response.status >= 400 && error.response.status <= 500) {
+
+                console.log(error.response.data);
+
+            }
+        }
+    }
+
+    const GetTakeOutOrdersListFromDb = async () => {
+        let res;
+
+        try {
+
+            // Build Req/Res
+            var url = GetBackEndUrl() + "/api/get-active-takeout-order-list";
+
+            console.log("GET : " + url);
+            res = await axios.get(url);
+
+            if (res) {
+                // console.log("RESULT = " + JSON.stringify(res));
+                setTakeoutOrders(res.data);
                 // this.setState({ isBusy: false });
             }
 
@@ -265,7 +283,7 @@ const CateringSalesPoint = () => {
         if (e.type === 'click') {
             // console.log('1 : Left click');
         } else if (e.type === 'contextmenu') {
-            // console.log('1 : Right click');
+            // console.log('2 : Right click');
             setCurrentCustomAmountPopupTargetProduct(ParamProduct);
             setCustomAmountPopupOpen(true);
             return;
@@ -301,18 +319,15 @@ const CateringSalesPoint = () => {
         if (finalized)
             return;
 
-        // console.log(ParamProduct.key);
         let tmpKeys = Object.keys(consumedProductsList_V2).filter((k) => {
             return k !== ParamProduct.key;
         });
+
         let result = {};
         tmpKeys.forEach(k => {
             result[k] = consumedProductsList_V2[k];
         });
-        // var tmpArray = consumedProductsList_V2.filter(function (p) {
-        //     return p.key !== ParamProduct.key;
-        // });
-        // setConsumedProductsList_V2(tmpArray);
+
         setConsumedProductsList_V2(result);
         setChangesAvailable(true);
     }
@@ -349,7 +364,6 @@ const CateringSalesPoint = () => {
 
         // Mark table occupied
         if (selectedCSTinUI) {
-            // setOccupiedCST(true);
             MarkCustomerSittingTableOccupiedInDB(selectedCSTinUI, cateringOrderIDinDB);
         }
 
@@ -362,6 +376,10 @@ const CateringSalesPoint = () => {
     }
 
     const SaveOnClick = () => {
+
+        if (!changesAvailable)
+            return;
+
         // Update in DB
         UpdateCateringOrderInDB(cateringOrderIDinDB, consumedProductsList_V2, kitchenOrderIssued, selectedCSTinUI, GetTotalPrice());
     }
@@ -371,54 +389,18 @@ const CateringSalesPoint = () => {
         if (finalized || selectedCSTinDB)
             return;
 
-        // Update in DB
-        UpdateCateringOrderInDB(cateringOrderIDinDB, consumedProductsList_V2, false, selectedCSTinUI, GetTotalPrice());
-
-        // Mark table occupied
         if (selectedCSTinUI) {
-            // setOccupiedCST(true);
+            // Update in DB
+            UpdateCateringOrderInDB(cateringOrderIDinDB, consumedProductsList_V2, false, selectedCSTinUI, GetTotalPrice());
+            // Mark table occupied
             MarkCustomerSittingTableOccupiedInDB(selectedCSTinUI, cateringOrderIDinDB);
+            // Get up to date list of takeout orders
+            GetTakeOutOrdersListFromDb();
         }
-
-        // ...
-        // setKitchenOrderIssued(true);
-
-        // Print in kitchen
-        // const doc = await BuildKitchenPDF();
-        // await PrintKitchenPDF(doc);
     }
-
-    // const buildBatchedConsumedProductsArray = () => {
-    //     var result = [];
-    //     var arrayOfIDs = [];
-
-    //     setConsumedProductsList_V2.forEach(p => {
-
-    //         if (result[p.id]) {
-    //             let me = result[p.id];
-    //             result[p.id] = { name: me.name, amount: me.amount + 1, price: me.price, altLangName: me.altLangName };
-    //         } else {
-    //             result[p.id] = { name: p.name, amount: 1, price: p.price, altLangName: p.altLangName };
-    //             arrayOfIDs.push(p.id);
-    //         }
-
-    //     });
-
-    //     let finalResult = [];
-
-    //     arrayOfIDs.forEach(id => {
-    //         finalResult.push(result[id]);
-    //     });
-
-    //     // console.log("FINAL RESULT = " + JSON.stringify(finalResult));
-
-    //     return finalResult;
-    // }
 
     const buildConsumedProductsTableDataForPDF = (ParamKitchenMode) => {
 
-        // let head = [['Panne', 'Prix Estimé']];
-        // ParamKitchenMode : in kitchen mode don't send price and total price
         var head = ['Designation', 'Qte', 'P.U', 'Montant'];
         if (ParamKitchenMode)
             head = ['Designation', 'Qte', 'الإسم'];
@@ -426,13 +408,6 @@ const CateringSalesPoint = () => {
         let body = [];
 
         if (ParamKitchenMode) {
-            // ParamBatchedConsumedProducts.forEach(p => {
-            //     let tableLine = [];
-            //     tableLine.push(p.name);
-            //     tableLine.push(p.amount);
-            //     tableLine.push(p.altLangName);
-            //     body.push(tableLine);
-            // });
             for (const k in consumedProductsList_V2) {
                 let tableLine = [];
                 let p = consumedProductsList_V2[k];
@@ -443,14 +418,6 @@ const CateringSalesPoint = () => {
             };
         }
         else {
-            // ParamBatchedConsumedProducts.forEach(p => {
-            //     let tableLine = [];
-            //     tableLine.push(p.name);
-            //     tableLine.push(p.amount);
-            //     tableLine.push(p.price);
-            //     tableLine.push(p.price * p.amount);
-            //     body.push(tableLine);
-            // });
             for (const k in consumedProductsList_V2) {
                 let tableLine = [];
                 let p = consumedProductsList_V2[k];
@@ -464,36 +431,6 @@ const CateringSalesPoint = () => {
 
         let result = { head: head, body: body };
         return result;
-    }
-
-    /**
-     * Draws a dotted line on a jsPDF doc between two points.
-     * Note that the segment length is adjusted a little so
-     * that we end the line with a drawn segment and don't
-     * overflow.
-     */
-    function dottedLine(ParamPDF, xFrom, yFrom, xTo, yTo, segmentLength) {
-        // Calculate line length (c)
-        var a = Math.abs(xTo - xFrom);
-        var b = Math.abs(yTo - yFrom);
-        var c = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
-
-        // Make sure we have an odd number of line segments (drawn or blank)
-        // to fit it nicely
-        var fractions = c / segmentLength;
-        var adjustedSegmentLength = (Math.floor(fractions) % 2 === 0) ? (c / Math.ceil(fractions)) : (c / Math.floor(fractions));
-
-        // Calculate x, y deltas per segment
-        var deltaX = adjustedSegmentLength * (a / c);
-        var deltaY = adjustedSegmentLength * (b / c);
-
-        var curX = xFrom, curY = yFrom;
-        while (curX <= xTo && curY <= yTo) {
-            ParamPDF.setLineWidth(0.25);
-            ParamPDF.line(curX, curY, curX + deltaX, curY + deltaY);
-            curX += 2 * deltaX;
-            curY += 2 * deltaY;
-        }
     }
 
     const BuildPDF = async (ParamPriceDiffInfo = null) => {
@@ -522,7 +459,7 @@ const CateringSalesPoint = () => {
         cursorY += 4;
         doc.setFont(undefined, 'normal');
 
-        // SItting Table
+        // Sitting Table
         const tableLabel = GetCustomerSittingTableLabelInPrint();
         if (tableLabel && tableLabel != "") {
             doc.setTextColor(0, 0, 0);
@@ -547,7 +484,6 @@ const CateringSalesPoint = () => {
         cursorY += 1;
 
         // Consumption table
-        // const products = buildBatchedConsumedProductsArray();
         const tableData = buildConsumedProductsTableDataForPDF(false);
 
         let cellTextFontSize = 10;
@@ -574,12 +510,14 @@ const CateringSalesPoint = () => {
         // Discount / Extra Fees
         if (ParamPriceDiffInfo) {
             console.log("Param Price Diff Info FOUND");
-            diff = ParamPriceDiffInfo.diff;
-            doc.setTextColor(0, 0, 0);
-            doc.setFontSize(10);
-            doc.text(ParamPriceDiffInfo.label + " " + ParamPriceDiffInfo.amountLabel + " DA", halfReceiptWidth, cursorY, 'center');
-            cursorY += 5;
-            doc.setFont(undefined, 'normal');
+            if (ParamPriceDiffInfo.isDiff && ParamPriceDiffInfo.diff) {
+                diff = ParamPriceDiffInfo.diff;
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(10);
+                doc.text(ParamPriceDiffInfo.label + " " + ParamPriceDiffInfo.amountLabel + " DA", halfReceiptWidth, cursorY, 'center');
+                cursorY += 5;
+                doc.setFont(undefined, 'normal');
+            }
         }
         else if (priceDiffInfo && priceDiffInfo.isDiff && priceDiffInfo.show) {
             diff = priceDiffInfo.diff;
@@ -596,18 +534,16 @@ const CateringSalesPoint = () => {
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(14);
 
-        // if (priceDiffInfo && priceDiffInfo.isDiff)
-        //     doc.text("Total à Payer : " + (GetTotalPrice() + priceDiffInfo.diff) + " DA", halfReceiptWidth, cursorY, 'center');
-        // else
-        //     doc.text("Total à Payer : " + GetTotalPrice() + " DA", halfReceiptWidth, cursorY, 'center');
-
-        doc.text("Total à Payer : " + (GetTotalPrice() + diff) + " DA", halfReceiptWidth, cursorY, 'center');
+        if (diff)
+            doc.text("Total à Payer : " + (GetTotalPrice() + diff) + " DA", halfReceiptWidth, cursorY, 'center');
+        else
+            doc.text("Total à Payer : " + GetTotalPrice() + " DA", halfReceiptWidth, cursorY, 'center');
 
         cursorY += 5;
         doc.setFont(undefined, 'normal');
 
         // Line
-        dottedLine(doc, 1, cursorY, receiptWidth - 1, cursorY, 1);
+        DottedLine(doc, 1, cursorY, receiptWidth - 1, cursorY, 1);
         cursorY += 3;
 
         doc.setFont(undefined, 'bold');
@@ -618,7 +554,7 @@ const CateringSalesPoint = () => {
         cursorY += 1;
         doc.setFont(undefined, 'normal');
 
-        dottedLine(doc, 1, cursorY, receiptWidth - 1, cursorY, 1);
+        DottedLine(doc, 1, cursorY, receiptWidth - 1, cursorY, 1);
         cursorY += 7;
 
         if (localStorage.getItem("footerNote")) {
@@ -802,6 +738,7 @@ const CateringSalesPoint = () => {
 
         if (res) {
             setChangesAvailable(false);
+            GetTakeOutOrdersListFromDb();
         }
     }
 
@@ -821,7 +758,20 @@ const CateringSalesPoint = () => {
         let res = await axios.post(url, cstToPost);
 
         if (res) {
-            setSelectedCSTinDB(ParamID);
+
+            // console.log("OCST R = " + res.data);
+            if (res.data == "OK")
+                setSelectedCSTinDB(ParamID);
+            else if (res.data == "ALREADY_OCCUPIED") {
+                console.log("Table already occupied !");
+                setErrorPopupMessage("La Table est déja occupée...");
+                setErrorPopupOpen(true);
+            }
+            else {
+                console.log("Unknown error while trying to occupy table...");
+                setErrorPopupMessage("Unknown error while trying to occupy table...");
+                setErrorPopupOpen(true);
+            }
         }
 
         GetCustomerSittingTablesListFromDb();
@@ -844,6 +794,7 @@ const CateringSalesPoint = () => {
 
         if (res) {
             setSelectedCSTinDB(null);
+            GetTakeOutOrdersListFromDb();
         }
 
         GetCustomerSittingTablesListFromDb();
@@ -864,7 +815,12 @@ const CateringSalesPoint = () => {
         console.log("POST : " + url);
 
         let res = await axios.post(url, cateringOrderToPost);
-        GetCustomerSittingTablesListFromDb();
+
+        if (res)
+        {
+            GetCustomerSittingTablesListFromDb();
+            GetTakeOutOrdersListFromDb();
+        }
     }
 
     const downloadPDFOnClick = async () => {
@@ -959,17 +915,19 @@ const CateringSalesPoint = () => {
 
     return (
         <div>
+            {/* Fixed Control Buttons */}
             <div className='fixed right-4 top-16 w-40 flex flex-col'>
                 <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type={finalized || !changesAvailable ? 'disabled' : 'primary'} onPress={SaveOnClick} before={<FaSave size={24} />}>Enregistrer</AwesomeButton></div></div>
                 <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type={finalized ? 'disabled' : selectedCSTinDB ? 'disabled' : selectedCSTinUI ? 'primary' : 'disabled'} before={<FaChair size={24} />} onPress={OccupyCST}>Reserver</AwesomeButton></div></div>
                 <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type={finalized ? 'disabled' : kitchenOrderIssued ? 'secondary' : 'primary'} onPress={IssueCateringOrder} before={<FaRegPaperPlane size={24} />}>Commande</AwesomeButton></div></div>
-                <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type={finalized ? 'disabled' : 'primary'} onPress={() => setPaymentValidationWindowOpen(true)} before={<FaCheckCircle size={24} />}>Paiement</AwesomeButton></div></div>
+                <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type={finalized ? 'disabled' : 'primary'} onPress={() => !finalized && setPaymentValidationWindowOpen(true)} before={<FaCheckCircle size={24} />}>Paiement</AwesomeButton></div></div>
                 <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type={finalized ? 'disabled' : 'danger'} onPress={handleClearAllOnClick} before={<FaTrash size={24} />}>Effacer</AwesomeButton></div></div>
-                <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type={finalized ? 'disabled' : 'primary'} onPress={() => setAddMiscProductPopupOpen(true)} before={<FaPizzaSlice size={24} />}>Divers</AwesomeButton></div></div>
+                <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type={finalized ? 'disabled' : 'primary'} onPress={() => !finalized && setAddMiscProductPopupOpen(true)} before={<FaPizzaSlice size={24} />}>Divers</AwesomeButton></div></div>
                 <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type='primary' onPress={downloadPDFOnClick} before={<FaDownload size={24} />}>Télécharger</AwesomeButton></div></div>
                 <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type='primary' before={<FaPlus size={24} />}><a href={GetBaseUrl() + "/catering-sales-point"}>Nouveau</a></AwesomeButton></div></div>
             </div>
 
+            {/* Price Bubbles */}
             <div>
                 {priceBubbles.map(b =>
                     <div key={b.key} style={{
@@ -994,14 +952,17 @@ const CateringSalesPoint = () => {
                 )}
             </div>
 
+            {/* Popups */}
             <CateringSalesPointPaymentPopup value={GetTotalPrice()} isOpen={paymentValidationWindowOpen} onClose={paymentValidationWindowOnClose} onConfirm={FinalizeCateringOrder} />
             <AddMiscProductPopup isOpen={addMiscProductPopupOpen} onClose={addMiscProductPopupOnClose} onConfirm={AddMiscProduct} />
             <CustomAmountPopup isOpen={customAmountPopupOpen} onClose={() => setCustomAmountPopupOpen(false)} onConfirm={onCustomAmountPopupConfirm} />
+            <GenericMessagePopup isOpen={errorPopupOpen} onClose={() => setErrorPopupOpen(false)} message={errorPopupMessage} />
 
             {/* CST */}
             <div className='fixed h-28 bg-gray-900 rounded-xl left-2 text-gray-100 border-2 border-gray-100 right-48 z-10 top-16'>
                 <div className='flex flex-wrap overflow-auto scrollbar h-24 m-1'>
                     {customerSittingTables.map(t => <p key={t._id} className={getCustomerSittingTableStyle(t.occupied, t._id)} onClick={() => handleCSTonClick(t)}>Table {t.name}</p>)}
+                    {takeoutOrders.map(t => <a key={t._id} className={cstStyle} href={GetBaseUrl() + "/catering-sales-point?id=" + t._id}> <div className='flex flex-row'><FaShoppingBag className='inline mt-1 mx-1' /> <span>{t.coid}</span></div> </a>)}
                 </div>
             </div>
 
@@ -1021,7 +982,10 @@ const CateringSalesPoint = () => {
                 </div>
             </div>
 
-            <div className='mt-72'>
+            <div className='mt-80'>
+
+                <br />
+
                 {/* Categorized Products */}
                 {
                     categories.map(cat =>

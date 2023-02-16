@@ -31,4 +31,15 @@ const GetPrinterName = () => {
     return result;
 }
 
-module.exports = { GetBackEndUrl, GetPrintServerAddress, GetPrinterName };
+const GetIfReducedPerformance = () => {
+    let result = false;
+
+    const storedValue = localStorage.getItem("reducedPerformance");
+
+    if (storedValue && storedValue != "")
+        result = storedValue;
+
+    return result;
+}
+
+module.exports = { GetBackEndUrl, GetPrintServerAddress, GetPrinterName, GetIfReducedPerformance };

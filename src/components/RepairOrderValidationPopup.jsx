@@ -16,7 +16,7 @@ const RepairOrderValidationPopup = (props) => {
     const [roState, setRoState] = useState("DONE");
     const [note, setNote] = useState("");
     // const [totalEstPrice, setTotalEstPrice] = useState(0);
-    const [paiment, setPaiment] = useState(0);
+    const [paiement, setPaiement] = useState(0);
     const [items, setItems] = useState(null);
 
     const handleChange = () => {
@@ -48,7 +48,7 @@ const RepairOrderValidationPopup = (props) => {
     }
 
     const handlePriceChange = (event) => {
-        setPaiment(Number(event.target.value));
+        setPaiement(Number(event.target.value));
     }
 
     const GetTotalPrice = (ParamRepairOrder) => {
@@ -119,8 +119,7 @@ const RepairOrderValidationPopup = (props) => {
                         </label>
                         <br />
                         <AwesomeButtonProgress type="primary" onPress={async (element, next) => {
-                            // await for something then call next()
-                            await ValidateRepairOrderInDB(props.value.roid, roState, paiment, checked, note, items);
+                            await ValidateRepairOrderInDB(props.value.roid, roState, paiement, checked, note, items);
                             next();
                         }}><div className='text-xl'>Valider</div></AwesomeButtonProgress>
                     </div>

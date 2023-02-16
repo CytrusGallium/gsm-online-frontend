@@ -11,28 +11,12 @@ const buttonStyle = "bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-
 
 const ProductEditor = () => {
 
-    const GetBaseUrl = () => {
-        var baseUrl = '' + window.location;
-        var pathArray = baseUrl.split('/');
-        var protocol = pathArray[0];
-        var host = pathArray[2];
-        var url = protocol + '//' + host;
-
-        return url;
-    }
-
     // Effect
     useEffect(() => {
 
-        // console.log("BASE URL = " + GetBaseUrl());
-
         if (searchParams.get("id")) {
             GetProductFromDB(searchParams.get("id"));
-            console.log("SEARCH PARAM ID = " + searchParams.get("id"));
             setTargetID(searchParams.get("id"));
-        }
-        else {
-            // GenerateNewCateringOrder();
         }
 
         getCategoryListFromDB();
@@ -45,17 +29,29 @@ const ProductEditor = () => {
 
     // State
     const [selectedFile, setSelectedFile] = useState("");
-    const [productInfo, setProductInfo] = useState({ name: "", description: "", price: 0, altLangName: "", category: "", sellable: true, buyable: false });
+    const [productInfo, setProductInfo] = useState({ name: "", description: "", price: 0, altLangName: "", category: "" });
     const [imageURL, setImageURL] = useState();
     const [imageAvailable, setImageAvailable] = useState(false);
     const [changesAvailable, setChangesAvailable] = useState(false);
     const [categories, setCategories] = useState([]);
     const [targetID, setTargetID] = useState("");
+    const [sellable, setSellable] = useState(true);
+    const [buyable, setBuyable] = useState(true);
 
     const handleChange = ({ currentTarget: input }) => {
         setProductInfo({ ...productInfo, [input.name]: input.value });
         setChangesAvailable(true);
     }
+
+    const handleSellableChange = () => {
+        setSellable(!sellable);
+        setChangesAvailable(true);
+    };
+
+    const handleBuyableChange = () => {
+        setBuyable(!buyable);
+        setChangesAvailable(true);
+    };
 
     // var imageAvailable = false;
     const handleFileSelect = (event) => {
@@ -128,7 +124,9 @@ const ProductEditor = () => {
                 description: productInfo.description,
                 price: productInfo.price,
                 altLangName: productInfo.altLangName,
-                category: productInfo.category
+                category: productInfo.category,
+                buyable: buyable,
+                sellable: sellable
             };
 
             // Add token
@@ -141,31 +139,6 @@ const ProductEditor = () => {
             console.log("POST : " + url);
 
             let res = await axios.post(url, productToPost);
-
-            // Build form
-            // const formData = new FormData();
-            // formData.append("id", targetID);
-            // formData.append("name", productInfo.name);
-            // formData.append("description", productInfo.description);
-            // formData.append("price", productInfo.price);
-            // formData.append("altLangName", productInfo.altLangName);
-            // formData.append("category", productInfo.category);
-
-            // console.log("NAME = " + productInfo.name);
-
-            // // Add token
-            // const token = localStorage.getItem("token");
-            // const config = {
-            //     headers: { Authorization: `Bearer ${token}` }
-            // };
-
-            // // Build Req/Res
-            // const response = await axios({
-            //     method: "post",
-            //     url: GetBackEndUrl() + "/api/update-product",
-            //     data: formData,
-            //     headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${token}` }
-            // }, {}, () => console.log("CALLBACK"));
 
             setChangesAvailable(false);
 
@@ -214,18 +187,9 @@ const ProductEditor = () => {
             res = await axios.get(url);
 
             if (res) {
-                console.log("PROD RESULT = " + JSON.stringify(res.data));
                 setProductInfo({ name: res.data.name, description: res.data.description, altLangName: res.data.altLangName, price: res.data.price, category: res.data.category });
-                // setConsumedProductsList(res.data.consumedProducts);
-                // setCateringOrderIDinDB(res.data._id);
-                // setCOID(res.data.coid);
-                // setSelectedTable(res.data.customerSittingTableID);
-                // setKitchenOrderIssued(res.data.kitchenOrderIssued);
-                // setFinalized(res.data.finalized);
-
-                // var customerSittingTable = customerSittingTables.filter(t => {
-                //     return t._id === res.data.customerSittingTableID;
-                // })
+                setBuyable(res.data.buyable);
+                setSellable(res.data.sellable);
             }
 
         } catch (error) {
@@ -241,6 +205,9 @@ const ProductEditor = () => {
 
     return (
         <div>
+            <br />
+            <h1 className='text-gray-100 font-bold text-3xl'>{targetID == "" ? "Ajouter un nouveau produit" : "Editeur de produit"}</h1>
+            <br />
             <form onSubmit={OnSubmit} className='flex flex-col items-center'>
                 <input type="text" name="name" className={inputFieldStyle} placeholder="Nom du produit..." value={productInfo.name} onChange={handleChange} required />
                 <br />
@@ -261,13 +228,10 @@ const ProductEditor = () => {
                 <label className="block text-sm font-medium text-gray-900 dark:text-white">Prix :</label>
                 <input type="number" step="0.01" name="price" className={inputFieldStyle} value={productInfo.price} placeholder="Prix du produit..." onChange={handleChange} />
                 <br />
-                <label className='mb-4'><input type="checkbox" checked={productInfo.buyable} onChange={handleChange} className='mx-1' />Achetable</label>
-                <label className='mb-4'><input type="checkbox" checked={productInfo.sellable} onChange={handleChange} className='mx-1' />Vendable</label>
-                {/* <br />
-                <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Image :</label>
-                    <input type="file" id="picture" name="picture" className='text-lg text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400' onChange={handleFileSelect} required />
-                </div> */}
+                <div className='flex flex-row space-x-4 bg-gray-900 border border-gray-700 rounded-xl pb-1 pt-4 px-4'>
+                    <label className='mb-4 text-gray-100 text-xl font-bold'><input type="checkbox" checked={buyable} onChange={handleBuyableChange} className='mx-1 w-4 h-4' />Achetable</label>
+                    <label className='mb-4 text-gray-100 text-xl font-bold'><input type="checkbox" checked={sellable} onChange={handleSellableChange} className='mx-1 w-4 h-4' />Vendable</label>
+                </div>
                 <br />
                 <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Image :</label>
                 {!imageAvailable && <FileSelectAndDrop name="picture" onChange={handleFileSelect} />}
@@ -276,6 +240,8 @@ const ProductEditor = () => {
                 <div>
                     {changesAvailable && <button type="submit" className={buttonStyle}>Enregistrer</button>}
                 </div>
+                <br />
+                <br />
             </form>
         </div>
     )

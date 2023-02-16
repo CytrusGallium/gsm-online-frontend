@@ -4,7 +4,7 @@ import axios from 'axios';
 import { GetBackEndUrl } from '../const';
 import { GetBaseUrl } from '../Reaknotron/Libs/RknRouterUtils';
 import ConsumedProductTag from '../components/ConsumedProductTag';
-import { FaEyeSlash, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaEyeSlash, FaEdit, FaTrash, FaShoppingBag } from 'react-icons/fa';
 
 const CateringSalesList = () => {
 
@@ -13,6 +13,8 @@ const CateringSalesList = () => {
         GetCateringOrdersListFromDB();
 
     }, []);
+
+    // const navigate = useNavigate();
 
     const [coList, setCoList] = useState();
     const [tableData, setTableData] = useState();
@@ -29,6 +31,14 @@ const CateringSalesList = () => {
             className: 'border border-gray-500'
         },
         {
+            title: 'Operations',
+            dataIndex: '',
+            key: 'operations',
+            width: 128,
+            className: 'border border-gray-500',
+            render: i => GenerateOperationButtons(i)
+        },
+        {
             title: 'Date',
             dataIndex: 'time',
             key: 'time',
@@ -37,12 +47,12 @@ const CateringSalesList = () => {
             render: d => <p className='inline text-sm'>{(new Date(d)).toLocaleDateString('fr-FR', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}</p>
         },
         {
-            title: 'Operations',
-            dataIndex: '',
-            key: 'operations',
+            title: 'Table',
+            dataIndex: 'cst',
+            key: 'cst',
             width: 128,
             className: 'border border-gray-500',
-            render: i => GenerateOperationButtons(i)
+            render: t => <p className='inline text-sm'>{t ? "Table " + t.name : <FaShoppingBag size={32} className='inline'/>}</p>
         },
         {
             title: 'Prix total',
@@ -127,8 +137,16 @@ const CateringSalesList = () => {
         let result = [];
 
         ParamCoList.forEach(co => {
-            result.push({ id: co._id, coid: co.coid, totalPrice: co.totalPrice, fulfilledPaiement: co.fulfilledPaiement, consumedProducts: co.consumedProducts, empty: co.empty, finalized: co.finalized, time: co.time });
+            let row = { id: co._id, coid: co.coid, totalPrice: co.totalPrice, fulfilledPaiement: co.fulfilledPaiement, consumedProducts: co.consumedProducts, empty: co.empty, finalized: co.finalized, time: co.time };
+            if (co.table[0]) {
+                row.cst = co.table[0];
+                // console.log("TABLE = " + JSON.stringify(co.table[0]));
+            }
+            console.log("ROW = " + JSON.stringify(row));
+            result.push(row);
         });
+
+        // console.log("RESULT = " + JSON.stringify(result));
 
         setTableData(result);
     }
@@ -203,6 +221,7 @@ const CateringSalesList = () => {
                 // this.UpdateTableData(res.data);
                 // this.GetRepairOrdersListFromDB("", "");
                 // this.setState({ isBusy: false });
+                window.location.reload(false);
             }
 
         } catch (error) {
@@ -217,11 +236,12 @@ const CateringSalesList = () => {
     }
 
     return (
-        <div className='text-gray-100'>
+        <div className='text-gray-100 flex flex-col items-center'>
             <h3 className='text-xl font-bold'>Liste des Ventes / Liste des Ordres de Restauration</h3>
             <br />
             <br />
-            <Table columns={columns} data={showEmpty ? GetTableData(coList, true) : GetTableData(coList, false)} rowKey="id" className='ml-16' />
+            {/* <Table columns={columns} data={showEmpty ? GetTableData(coList, true) : GetTableData(coList, false)} rowKey="id" className='ml-16' /> */}
+            <Table columns={columns} data={tableData} rowKey="id" className='mx-4' />
             <br />
             <br />
         </div>

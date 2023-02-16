@@ -172,9 +172,6 @@ const NewRepairOrderForm = () => {
 
         const doc = new jspdf.jsPDF('p', 'mm', [160, receiptWidth]); // Portrait, Milimeter, Height, Width
         var cursorY = 11;
-        // var barcodeImg;
-        // var html2CanvasResult = await html2canvas(document.querySelector("#barcode"));
-        // var barcodeImg = html2CanvasResult.toDataURL('image/bmp');
 
         // GSM Online BG
         doc.setDrawColor(0, 0, 0);
@@ -199,13 +196,14 @@ const NewRepairOrderForm = () => {
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(8);
         doc.text(GetTimeHM2Digits(), receiptWidth - 1, cursorY, 'right');
-        cursorY += 14;
+        cursorY += 15;
         
         // ROID Barcode
         doc.barcode(ROID, {
-            fontSize: 32,
+            fontSize: 40,
             textColor: "#000000",
-            x: halfReceiptWidth-17,
+            x: halfReceiptWidth-(halfReceiptWidth/2)-3,
+            // x: halfReceiptWidth/2,
             y: cursorY
         });
         cursorY += 4;
@@ -213,7 +211,7 @@ const NewRepairOrderForm = () => {
         // ROID
         doc.setFont(undefined, 'bold');
         doc.setTextColor(0, 0, 0);
-        doc.setFontSize(8);
+        doc.setFontSize(9);
         doc.text(ROID, halfReceiptWidth, cursorY, 'center');
         cursorY += 8;
 
@@ -224,45 +222,46 @@ const NewRepairOrderForm = () => {
         doc.text("Client : " + repairOrder.customer, halfReceiptWidth, cursorY, 'center');
         cursorY += 4;
         
+        // Phone Number
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(10);
         doc.text("Tel : " + repairOrder.phone, halfReceiptWidth, cursorY, 'center');
-        cursorY += 8;
+        cursorY += 3;
 
         items.forEach(item => {
 
             // Line 1
             dottedLine(doc, 5, cursorY, receiptWidth - 5, cursorY, 2);
             cursorY += 6;
-
+            
             // Device model name
             doc.setTextColor(0, 0, 0);
             doc.setFontSize(10);
             doc.text("Model : " + item.ref, halfReceiptWidth, cursorY, 'center');
             cursorY += 4;
-
+            
             // IMEI / Serial number
             doc.setTextColor(0, 0, 0);
             doc.setFontSize(10);
             doc.text("IMEI/NS : " + item.imei, halfReceiptWidth, cursorY, 'center');
             cursorY += 4;
-
+            
             // Problems Table
             if (item.problems && item.problems[0]) {
-
+                
                 if (item.problems.length == 1) {
                     doc.setTextColor(0, 0, 0);
-                    doc.setFontSize(10);
+                    doc.setFontSize(11);
                     doc.text("Panne/Motif : " + item.problems[0].name, halfReceiptWidth, cursorY, 'center');
                     cursorY += 4;
                 }
                 else {
                     let bodyArray = [];
-
+                    
                     item.problems.forEach(p => {
                         bodyArray.push([p.name, p.price]);
                     });
-
+                    
                     autoTable(doc, {
                         head: [['Panne', 'Prix Estimé']],
                         body: bodyArray,
@@ -271,10 +270,12 @@ const NewRepairOrderForm = () => {
                         theme: 'grid',
                         tableWidth: receiptWidth - 4,
                         styles: {
-                            fontSize: 8,
-                            cellPadding: 0
+                            fontSize: 10,
+                            cellPadding: 1,
+                            fontStyle: 'bold',
+                            textColor: 'black'
                         },
-                        headStyles: { fillColor: [24, 24, 24] },
+                        headStyles: { fillColor: [24, 24, 24], textColor: 'white' },
                         didDrawPage: (d) => { cursorY = d.cursor.y }
                     });
                     cursorY += 2;

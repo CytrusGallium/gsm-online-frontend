@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { InputFieldStyle } from '../Styles';
 import { AwesomeButton } from 'react-awesome-button';
-import { GetPrintServerAddress, GetPrinterName } from '../const';
+import { GetPrintServerAddress, GetPrinterName, GetIfReducedPerformance } from '../const';
 
 const Config = () => {
 
@@ -10,6 +10,7 @@ const Config = () => {
 
         setPrintServerAddress(GetPrintServerAddress());
         setPrinterName(GetPrinterName());
+        setReducedPerformance(GetIfReducedPerformance());
 
         if (localStorage.getItem("footerNote")) {
             setFooterNote(localStorage.getItem("footerNote"));
@@ -17,6 +18,8 @@ const Config = () => {
 
         if (localStorage.getItem("receiptWidth")) {
             setReceiptWidth(localStorage.getItem("receiptWidth"));
+        } else {
+            setReceiptWidth("72.1");
         }
 
     }, []);
@@ -25,6 +28,7 @@ const Config = () => {
     const [printerName, setPrinterName] = useState("");
     const [footerNote, setFooterNote] = useState("");
     const [receiptWidth, setReceiptWidth] = useState("");
+    const [reducedPerformance, setReducedPerformance] = useState(false);
     const [changesAvailable, setChangesAvailable] = useState(false);
 
     const handlePrintServerAddressChange = (e) => {
@@ -41,17 +45,23 @@ const Config = () => {
         setFooterNote(e.target.value);
         setChangesAvailable(true);
     }
-    
+
     const handleReceiptWidthChange = (e) => {
         setReceiptWidth(e.target.value);
         setChangesAvailable(true);
     }
+    
+    const handleReducedPerformanceChange = () => {
+        setReducedPerformance(!reducedPerformance);
+        setChangesAvailable(true);
+    };
 
     const saveBtnOnClick = () => {
         localStorage.setItem("printServerAddress", printServerAddress);
         localStorage.setItem("printerName", printerName);
         localStorage.setItem("footerNote", footerNote);
         localStorage.setItem("receiptWidth", receiptWidth);
+        localStorage.setItem("reducedPerformance", reducedPerformance);
         setChangesAvailable(false);
     }
 
@@ -80,6 +90,11 @@ const Config = () => {
             <br />
             <input type='number' name='receiptWidth' value={receiptWidth} onChange={handleReceiptWidthChange} placeholder="Largeur du Ticket de Caisse..." className={InputFieldStyle} />
             <br />
+            <br />
+            <label>
+                <input type="checkbox" checked={reducedPerformance} onChange={handleReducedPerformanceChange} className='mr-1 w-4 h-4' />
+                <p className='ml-1 text-gray-100 font-bold inline text-lg'>Performance Réduite</p>
+            </label>
             <br />
             <br />
             {changesAvailable && <AwesomeButton type='primary' onPress={saveBtnOnClick} >Enregistrer</AwesomeButton>}

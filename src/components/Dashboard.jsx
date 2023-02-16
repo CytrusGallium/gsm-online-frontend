@@ -1,29 +1,58 @@
 import React from 'react';
-import { FaUserFriends, FaClipboardList, FaList, FaBox, FaShoppingCart, FaCog, FaTag, FaUtensils, FaChartLine } from 'react-icons/fa';
 import AppData from '../App.json';
+import BackgroundVideo from './BackgroundVideo';
+import MainMenuCard from './MainMenuCard';
+import { IsAdmin, IsManagerOrHigher, IsEmployeeOrHigher } from '../LoginManager';
+import {
+  FaUserFriends,
+  FaClipboardList,
+  FaList,
+  FaBox,
+  FaShoppingCart,
+  FaCog,
+  FaTag,
+  FaUtensils,
+  FaChartBar,
+  FaCartPlus,
+  FaTruck,
+  FaRegClock,
+  FaSmile
+} from 'react-icons/fa';
+
 
 const Dashboard = () => {
-  
+
   const buttonStyling = `flex space-x-3 mx-8 font-semibold bg-gradient-to-r from-indigo-900 via-indigo-700 to-blue-600 
   text-gray-100 rounded-sm ring-2 ring-blue-200 px-6 py-2 
-  hover:bg-white  hover:text-white hover:ring-slate-300 mx-8`;
-  
+  hover:bg-white hover:text-white hover:ring-slate-300 mx-8`;
+
+  console.log("IS ADMIN ? " + IsAdmin());
+
   return (
     <div>
-      <div className='flex flex-col'>
-        {AppData.DEVICE_MAINTENANCE_FLAG && <div><h3 className={buttonStyling}><a href='/add-repair-order' className='text-xl'><FaClipboardList className='inline' size={24}/> Ajouter un Ordre de Réparation</a></h3><br/></div>}
-        {AppData.DEVICE_MAINTENANCE_FLAG && <div><h3 className={buttonStyling}><a href='/repair-orders-list' className='text-xl'><FaList className='inline' size={24}/> Liste des Ordres de Répartion</a></h3><br/></div>}
-        
-        {AppData.PRODUCT_MANAGEMENT_FLAG && <div><h3 className={buttonStyling}><a href='/product-editor' className='text-xl'><FaBox className='inline' size={24}/> Ajouter un Produit</a></h3><br/></div>}
-        {AppData.PRODUCT_MANAGEMENT_FLAG && <div><h3 className={buttonStyling}><a href='/product-list' className='text-xl'><FaList className='inline' size={24}/> Liste des produits</a></h3><br/></div>}
-        {AppData.PRODUCT_MANAGEMENT_FLAG && <div><h3 className={buttonStyling}><a href='/new-category' className='text-xl'><FaTag className='inline' size={24}/> Ajouter une Categorie</a></h3><br/></div>}
-        
-        {AppData.CATERING_FLAG && <div><h3 className={buttonStyling}><a href='/catering-sales-point' className='text-xl'><FaShoppingCart className='inline' size={24}/> Point de Vente</a></h3><br/></div>}
-        {AppData.CATERING_FLAG && <div><h3 className={buttonStyling}><a href='/catering-sales-list' className='text-xl'><FaUtensils className='inline' size={24}/> Liste des Ventes</a></h3><br/></div>}
+      <BackgroundVideo />
+      <div>
+        <div className='flex'>
+          <div className='flex flex-wrap mx-4 mt-4'>
+            {AppData.CATERING_FLAG && <MainMenuCard label="Point de Vente" before={<FaShoppingCart size={48} />} href='/catering-sales-point' />}
+            {AppData.CATERING_FLAG && <MainMenuCard label="Gestion des Ventes" before={<FaUtensils size={48} />} href='/catering-sales-list' />}
+            
+            {AppData.DEVICE_MAINTENANCE_FLAG && <MainMenuCard label="Ajouter un Ordre de Réparation" before={<FaClipboardList size={48} />} href='/add-repair-order' />}
+            {AppData.DEVICE_MAINTENANCE_FLAG && <MainMenuCard label="Gestion Des Ordres de Répartion" before={<FaList size={48} />} href='/repair-orders-list' />}
 
-        <div><h3 className={buttonStyling}><a href='/statistics' className='text-xl'><FaChartLine className='inline' size={24}/> Statistiques</a></h3><br/></div>
-        <div><h3 className={buttonStyling}><a href='/user-manager' className='text-xl'><FaUserFriends className='inline' size={24}/> Gestion des Utilisateurs</a></h3><br/></div>
-        <div><h3 className={buttonStyling}><a href='/config' className='text-xl'><FaCog className='inline' size={24}/> Configuration</a></h3><br/></div>
+            {AppData.PRODUCT_MANAGEMENT_FLAG && <MainMenuCard label="Gestion Des Fournisseurs" before={<FaTruck size={48} />} href='/provider-list' />}
+            {AppData.PRODUCT_MANAGEMENT_FLAG && <MainMenuCard label="Gestion Des Réceptions" before={<FaCartPlus size={48} />} href='/reception-list' />}
+            {AppData.PRODUCT_MANAGEMENT_FLAG && <MainMenuCard label="Gestion Des Produits" before={<FaBox size={48} />} href='/product-list' />}
+            {AppData.PRODUCT_MANAGEMENT_FLAG && <MainMenuCard label="Gestion Des Catégories" before={<FaTag size={48} />} href='/new-category' />}
+            
+            {AppData.EMPLOYEE_MANAGEMENT_FLAG && <MainMenuCard label="Gestion Des Employés" before={<FaSmile size={48} />} href='/new-category' />}
+            {AppData.EMPLOYEE_MANAGEMENT_FLAG && <MainMenuCard label="Pointage Des Employés" before={<FaRegClock size={48} />} href='/new-category' />}
+
+            {IsAdmin() && <MainMenuCard label="Statistiques" before={<FaChartBar size={48} />} href='/statistics' />}
+            {IsAdmin() && <MainMenuCard label="Gestion Des Utilisateurs" before={<FaUserFriends size={48} />} href='/user-manager' />}
+            {IsAdmin() && <MainMenuCard label="Configuration" before={<FaCog size={48} />} href='/config' />}
+          </div>
+        </div>
       </div>
     </div>
   )

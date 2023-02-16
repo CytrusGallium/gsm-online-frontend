@@ -2,8 +2,11 @@
     "engine": "Nukode Reaknotron",
     "customer": "Ilyes Ben Abadji",
     "company": "Dar Mima",
-    "company_label": "GSM Online",
-    "DEVICE_MAINTENANCE_FLAG" : true,
-    "CATERING_FLAG" : false,
-    "PRODUCT_MANAGEMENT_FLAG" : false
+    "company_label": "Dar Mima",
+    "BG_VIDEO": "Golden Light Background.mp4",
+    "PRIMARY_COLOR": "gray",
+    "DEVICE_MAINTENANCE_FLAG" : false,
+    "CATERING_FLAG" : true,
+    "PRODUCT_MANAGEMENT_FLAG" : true,
+    "EMPLOYEE_MANAGEMENT_FLAG" : true
 }

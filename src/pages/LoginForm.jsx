@@ -35,7 +35,7 @@ const LoginForm = () => {
 
             if (res.data["token"]) {
                 // localStorage.setItem("token", res.data["token"]);
-                Login(res.data["token"]);
+                Login(res.data["token"], res.data["level"]);
                 setUIMessage("Bienvenue !");
                 window.location = "/Dashboard";
             }
@@ -71,6 +71,7 @@ const LoginForm = () => {
 
     return (
         <div className='flex flex-col items-center'>
+            <br/>
             <form onSubmit={LoginOnClick}>
                 <div>
                     <input type="text" name="username" placeholder="Nom d'Utilisateur..." value={loginInfo.username} onChange={handleChange} required className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500' />

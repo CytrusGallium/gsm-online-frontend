@@ -86,7 +86,8 @@ export default class DeviceProblemList extends Component {
                     )
                 }
                 <br />
-                <div className='w-full cursor-pointer grid h-screen place-items-center h-16'>
+                {/* <div className='w-full cursor-pointer grid h-screen place-items-center h-16'> */}
+                <div className='cursor-pointer flex flex-col items-center'>
                     <div onClick={this.OnAdd} className={this.buttonStyle + " w-8 h-8"}>+</div>
                     <div className="text-gray-500 text-sm">F2</div>
                 </div>
