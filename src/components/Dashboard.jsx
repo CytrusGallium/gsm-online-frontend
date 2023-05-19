@@ -16,7 +16,10 @@ import {
   FaCartPlus,
   FaTruck,
   FaRegClock,
-  FaSmile
+  FaSmile,
+  FaFileInvoiceDollar,
+  FaCartArrowDown,
+  FaDatabase
 } from 'react-icons/fa';
 
 
@@ -33,10 +36,12 @@ const Dashboard = () => {
       <BackgroundVideo />
       <div>
         <div className='flex'>
-          <div className='flex flex-wrap mx-4 mt-4'>
+          <div className='flex flex-wrap items-center justify-center mx-4 mt-4'>
+            {AppData.SALES_POINT_FLAG && <MainMenuCard label="Point de Vente" before={<FaCartArrowDown size={48} />} href='/sales-point' />}
+
             {AppData.CATERING_FLAG && <MainMenuCard label="Point de Vente" before={<FaShoppingCart size={48} />} href='/catering-sales-point' />}
             {AppData.CATERING_FLAG && <MainMenuCard label="Gestion des Ventes" before={<FaUtensils size={48} />} href='/catering-sales-list' />}
-            
+
             {AppData.DEVICE_MAINTENANCE_FLAG && <MainMenuCard label="Ajouter un Ordre de Réparation" before={<FaClipboardList size={48} />} href='/add-repair-order' />}
             {AppData.DEVICE_MAINTENANCE_FLAG && <MainMenuCard label="Gestion Des Ordres de Répartion" before={<FaList size={48} />} href='/repair-orders-list' />}
 
@@ -44,13 +49,16 @@ const Dashboard = () => {
             {AppData.PRODUCT_MANAGEMENT_FLAG && <MainMenuCard label="Gestion Des Réceptions" before={<FaCartPlus size={48} />} href='/reception-list' />}
             {AppData.PRODUCT_MANAGEMENT_FLAG && <MainMenuCard label="Gestion Des Produits" before={<FaBox size={48} />} href='/product-list' />}
             {AppData.PRODUCT_MANAGEMENT_FLAG && <MainMenuCard label="Gestion Des Catégories" before={<FaTag size={48} />} href='/new-category' />}
-            
-            {AppData.EMPLOYEE_MANAGEMENT_FLAG && <MainMenuCard label="Gestion Des Employés" before={<FaSmile size={48} />} href='/new-category' />}
-            {AppData.EMPLOYEE_MANAGEMENT_FLAG && <MainMenuCard label="Pointage Des Employés" before={<FaRegClock size={48} />} href='/new-category' />}
+
+            {AppData.EMPLOYEE_MANAGEMENT_FLAG && <MainMenuCard label="Gestion Des Employés" before={<FaSmile size={48} />} href='/employee-manager' />}
+            {AppData.EMPLOYEE_MANAGEMENT_FLAG && <MainMenuCard label="Pointage Des Employés" before={<FaRegClock size={48} />} href='/employee-clocking-board' />}
+
+            {AppData.FEE_MANAGEMENT_FLAG && <MainMenuCard label="Gestion Des Frais" before={<FaFileInvoiceDollar size={48} />} href='/fee-manager' />}
 
             {IsAdmin() && <MainMenuCard label="Statistiques" before={<FaChartBar size={48} />} href='/statistics' />}
             {IsAdmin() && <MainMenuCard label="Gestion Des Utilisateurs" before={<FaUserFriends size={48} />} href='/user-manager' />}
             {IsAdmin() && <MainMenuCard label="Configuration" before={<FaCog size={48} />} href='/config' />}
+            {IsAdmin() && <MainMenuCard label="Gestion de la Base de Données" before={<FaDatabase size={48} />} href='/db-manager' />}
           </div>
         </div>
       </div>

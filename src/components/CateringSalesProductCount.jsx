@@ -1,24 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { GetBackEndUrl } from '../const';
-import { BarChart, BarSeries, Bar, BarLabel } from 'reaviz';
+import { BarChart } from 'reaviz';
 
-const CateringSalesProductCount = () => {
+const CateringSalesProductCount = (props) => {
 
     // Effects
     useEffect(() => {
 
         GetCateringOrdersListFromDB();
 
-    }, []);
+    }, [props]);
 
     // States
-    // const [salesInfo, setSalesInfo] = useState({ salesCount: 0, salesTotal: 0, salesTotalPayment: 0, salesDiff: 0, salesDiffPercentage: 0 });
-    const [products, setproducts] = useState({});
+    // const [products, setproducts] = useState({});
     const [chartData, setChartData] = useState(null);
-
-    // const leftCellStyle = 'mt-2';
-    // const rightCellStyle = 'font-bold bg-gray-700 p-2 rounded-xl';
 
     const GetCateringOrdersListFromDB = async () => {
         let res;
@@ -26,20 +22,23 @@ const CateringSalesProductCount = () => {
         try {
 
             // Build Req/Res
-            var url = GetBackEndUrl() + "/api/get-catering-orders-list";
+            let url;
+
+            if (props.start && props.end)
+                url = GetBackEndUrl() + "/api/get-catering-orders-list?start=" + props.start.toISOString() + "&end=" + props.end.toISOString();
+            else
+                url = GetBackEndUrl() + "/api/get-catering-orders-list";
 
             console.log("GET : " + url);
             res = await axios.get(url);
 
             if (res) {
                 // console.log("RESULT = " + JSON.stringify(res.data));
-                // console.log("RESULT COUNT = " + res.data.length);
 
                 let tmpProducts = {};
                 res.data.forEach(sale => {
                     if (sale.consumedProducts) {
                         Object.keys(sale.consumedProducts).forEach(k => {
-                            // console.log("K = " + k);
                             let productInfo;
                             if (tmpProducts[k])
                                 productInfo = { name: sale.consumedProducts[k].name, amount: tmpProducts[k].amount + sale.consumedProducts[k].amount };
@@ -49,7 +48,6 @@ const CateringSalesProductCount = () => {
                             tmpProducts[k] = productInfo;
                         });
                     }
-                    // console.log("P = " + JSON.stringify(sale.consumedProducts));
                 });
 
                 // Build chart data
@@ -59,7 +57,7 @@ const CateringSalesProductCount = () => {
                 });
 
                 // Sort
-                data.sort((a, b) => b.data-a.data);
+                data.sort((a, b) => b.data - a.data);
 
                 // Update
                 setChartData(data);
@@ -75,17 +73,6 @@ const CateringSalesProductCount = () => {
             }
         }
     }
-
-    // const position = select(
-    //     'Position',
-    //     {
-    //         top: 'top',
-    //         center: 'center',
-    //         bottom: 'bottom'
-    //     },
-    //     'top'
-    // );
-    // const fill = color('Color', '');
 
     return (
         <div className='flex flex-col items-center'>

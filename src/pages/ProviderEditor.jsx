@@ -25,7 +25,7 @@ const ProviderEditor = () => {
 
             let providerToPost = { firstName: providerInfo.firstName, familyName: providerInfo.familyName };
             let url = GetBackEndUrl() + "/api/new-provider";
-            console.log("GET : " + url);
+            console.log("POST : " + url);
             let res = await axios.post(url, providerToPost);
 
             setChangesAvailable(false);

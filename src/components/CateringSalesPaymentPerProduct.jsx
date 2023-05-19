@@ -3,14 +3,14 @@ import axios from 'axios';
 import { GetBackEndUrl } from '../const';
 import { BarChart } from 'reaviz';
 
-const CateringSalesPaymentPerProduct = () => {
+const CateringSalesPaymentPerProduct = (props) => {
 
     // Effects
     useEffect(() => {
 
         GetCateringOrdersListFromDB();
 
-    }, []);
+    }, [props]);
 
     // States
     // const [products, setproducts] = useState({});
@@ -22,7 +22,12 @@ const CateringSalesPaymentPerProduct = () => {
         try {
 
             // Build Req/Res
-            var url = GetBackEndUrl() + "/api/get-catering-orders-list";
+            let url;
+
+            if (props.start && props.end)
+                url = GetBackEndUrl() + "/api/get-catering-orders-list?start=" + props.start.toISOString() + "&end=" + props.end.toISOString();
+            else
+                url = GetBackEndUrl() + "/api/get-catering-orders-list";
 
             console.log("GET : " + url);
             res = await axios.get(url);
@@ -33,18 +38,18 @@ const CateringSalesPaymentPerProduct = () => {
                 let tmpProducts = {};
                 res.data.forEach(sale => {
                     let priceModifier = 0;
-                    
+
                     try {
                         priceModifier = sale.fulfilledPaiement / sale.totalPrice;
                     } catch (error) {
                         console.log("Price modifier calculation error : " + error + " /// Payment = " + sale.fulfilledPaiement + " /// Total Price = " + sale.totalPrice);
                     }
 
-                    console.log("PM = " + priceModifier);
+                    // console.log("PM = " + priceModifier);
 
                     if (sale.consumedProducts) {
                         Object.keys(sale.consumedProducts).forEach(k => {
-                            console.log("P = " + JSON.stringify(sale.consumedProducts[k]));
+                            // console.log("P = " + JSON.stringify(sale.consumedProducts[k]));
                             let productInfo;
                             if (tmpProducts[k])
                                 productInfo = { name: sale.consumedProducts[k].name, price: (sale.consumedProducts[k].amount * sale.consumedProducts[k].price * priceModifier) + tmpProducts[k].price };
@@ -63,7 +68,7 @@ const CateringSalesPaymentPerProduct = () => {
                 });
 
                 // Sort
-                data.sort((a, b) => b.data-a.data);
+                data.sort((a, b) => b.data - a.data);
 
                 // Update
                 setChartData(data);
@@ -79,17 +84,6 @@ const CateringSalesPaymentPerProduct = () => {
             }
         }
     }
-
-    // const position = select(
-    //     'Position',
-    //     {
-    //         top: 'top',
-    //         center: 'center',
-    //         bottom: 'bottom'
-    //     },
-    //     'top'
-    // );
-    // const fill = color('Color', '');
 
     return (
         <div className='flex flex-col items-center'>

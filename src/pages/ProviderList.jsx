@@ -14,7 +14,6 @@ const ProviderList = () => {
     }, []);
 
     const [providerList, setProviderList] = useState();
-    const [tableData, setTableData] = useState();
 
     const columns = [
         {
@@ -46,9 +45,7 @@ const ProviderList = () => {
 
             if (res) {
                 console.log("PROVIDER LIST RESULT = " + JSON.stringify(res.data));
-                // setProviderList(res.data);
-                // UpdateTableData(res.data);
-                // this.setState({ isBusy: false });
+                setProviderList(res.data);
             }
 
         } catch (error) {
@@ -62,20 +59,6 @@ const ProviderList = () => {
         }
     }
 
-    const UpdateTableData = (ParamProviderList) => {
-
-        let result = [];
-
-        ParamProviderList.forEach(p => {
-            result.push({
-                firstName: p.firstName,
-                familyName: p.familyName
-            });
-        });
-
-        setTableData(result);
-    }
-
     return (
         <div className='text-gray-100'>
             <br />
@@ -85,7 +68,7 @@ const ProviderList = () => {
             <br />
             <br />
             <div className='flex flex-col items-center'>
-                <Table columns={columns} data={tableData} rowKey="id" />
+                <Table columns={columns} data={providerList} rowKey="_id" />
             </div>
             <br />
             <br />

@@ -5,7 +5,8 @@ import { GetBackEndUrl } from '../const';
 import { data } from 'autoprefixer';
 import { GetBaseUrl } from '../Reaknotron/Libs/RknRouterUtils';
 import { AwesomeButton } from 'react-awesome-button';
-import { FaPlus, FaInfinity } from 'react-icons/fa';
+import { FaPlus, FaInfinity, FaEdit, FaTrash } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 
 const ProductList = () => {
 
@@ -19,6 +20,14 @@ const ProductList = () => {
     const [tableData, setTableData] = useState();
 
     const columns = [
+        {
+            title: 'Opérations',
+            dataIndex: '',
+            key: 'operations',
+            width: 128,
+            className: 'border border-gray-500',
+            render: i => GenerateOperationButtons(i)
+        },
         {
             title: 'Designation',
             dataIndex: '',
@@ -70,7 +79,7 @@ const ProductList = () => {
             key: 'availableAmount',
             width: 128,
             className: 'border border-gray-500',
-            render: i => i.buyable ? i.availableAmount : <FaInfinity className='inline' color='555555'/>
+            render: i => i.buyable ? i.availableAmount : <FaInfinity className='inline' color='555555' />
         }
     ];
 
@@ -85,13 +94,13 @@ const ProductList = () => {
         try {
 
             // Build Req/Res
-            var url = GetBackEndUrl() + "/api/get-product-list?resolveCategoryID=true";
+            var url = GetBackEndUrl() + "/api/get-product-list?resolveCategoryID=true&ignoreDeleted=true";
 
             console.log("GET : " + url);
             res = await axios.get(url);
 
             if (res) {
-                console.log("RESULT = " + JSON.stringify(res));
+                // console.log("RESULT = " + JSON.stringify(res));
                 setProductList(res.data);
                 UpdateTableData(res.data);
                 // this.setState({ isBusy: false });
@@ -113,20 +122,65 @@ const ProductList = () => {
         let result = [];
 
         ParamProductList.forEach(p => {
-            result.push({ 
-                id: p._id, 
-                name: p.name, 
-                price: p.price, 
-                altLangName: p.altLangName, 
+            result.push({
+                id: p._id,
+                name: p.name,
+                price: p.price,
+                altLangName: p.altLangName,
                 category: p.category,
                 buyable: p.buyable,
                 sellable: p.sellable,
                 availableAmount: p.availableAmount
-             });
+            });
         });
 
         // return result;
         setTableData(result);
+    }
+
+    const GenerateOperationButtons = (ParamItem) => {
+
+        const buttonStyle = 'bg-gray-900 text-gray-100 rounded-lg p-2 my-2 mx-1 text-sm hover:bg-gray-700 inline';
+
+        if (ParamItem) {
+            return (
+                <div className='flex flex-row'>
+                    <button className={buttonStyle}> <Link to={"/product-editor?id=" + ParamItem.id}> <FaEdit size={20} /></Link> </button>
+                    <button className={buttonStyle} onClick={() => { console.log("DELETE"); DeleteProductInDB(ParamItem.id)}}> <FaTrash size={20} /> </button>
+                </div>
+            )
+        }
+
+        return "N/A";
+    }
+
+    const DeleteProductInDB = async (ParamID) => {
+
+        // this.setState({ isBusy: true });
+        let res;
+
+        try {
+
+            // Build Req/Res
+            var url = GetBackEndUrl() + "/api/delete-product?id=" + ParamID;
+
+            console.log("GET : " + url);
+            res = await axios.get(url);
+
+            if (res) {
+                // setState({ isBusy: false });
+                GetProductListFromDb();
+            }
+
+        } catch (error) {
+            console.log("ERROR : " + error);
+
+            if (error.response && error.response.status >= 400 && error.response.status <= 500) {
+
+                console.log(error.response.data);
+
+            }
+        }
     }
 
     return (
@@ -137,8 +191,8 @@ const ProductList = () => {
             <AwesomeButton before={<FaPlus />}><a href='/product-editor'>Ajouter Un Produit</a></AwesomeButton>
             <br />
             <br />
-            <div className='flex flex-col items-center'>
-                <Table columns={columns} data={tableData} rowKey="id" />
+            <div className='flex flex-col items-center overflow-x-visible md:overflow-x-hidden'>
+                <Table columns={columns} data={tableData} rowKey="id" tableLayout='auto' />
             </div>
             <br />
             <br />

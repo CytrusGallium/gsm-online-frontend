@@ -5,36 +5,35 @@ const ProblemListValidator = (props) => {
 
     useEffect(() => {
 
-        let newArray = [];
+        if (props.value) {
+            let newArray = [];
 
-        props.value.forEach(p => {
-            newArray.push({key:p.key, name:p.name, price:p.price, state:"DONE"});
-        });
+            try {
+                props.value.forEach(p => {
+                    newArray.push({ key: p.key, name: p.name, price: p.price, state: "DONE" });
+                });
+            } catch (error) {
+                console.log("FOR-EACH-ERROR");
+            }
 
-        setValue(newArray);
+            setValue(newArray);
 
-        // console.log("NEW ARRAY = " + JSON.stringify(newArray));
-        props.onChange(newArray);
+            // console.log("NEW ARRAY = " + JSON.stringify(newArray));
+            if (props.onChange)
+                props.onChange(newArray);
+        }
 
     }, []);
-    
+
     const [value, setValue] = useState();
 
     const handleProblemStateChange = (ParamValue, ParamKey) => {
-        // console.log("V = " + JSON.stringify(value));
-        // console.log("K = " + ParamKey);
         let tmpProblem = GetProblemByKey(ParamKey);
-        // console.log("P = " + JSON.stringify(p));
-        // console.log("V = " + ParamValue);
         tmpProblem.state = ParamValue;
-        // console.log("P2 = " + JSON.stringify(p));
-        // let tmpArray = value.filter(p => p.key != ParamKey);
         let tmpArray = value.filter((p) => {
             return p.key !== ParamKey;
         });
-        // console.log("TMP ARRAY = " + JSON.stringify(tmpArray));
         tmpArray.push(tmpProblem);
-        // console.log("TMP ARRAY = " + JSON.stringify(tmpArray));
         props.onChange(tmpArray);
     }
 
@@ -50,14 +49,11 @@ const ProblemListValidator = (props) => {
 
     return (
         <div className='grid grid-cols-1 gap-0'>
-            {/* <p>{props.value.length}</p>
-            <p>{JSON.stringify(props.value)}</p> */}
-            {props.value.map(p => {
+            {props.value ? props.value.map(p => {
                 return <div key={p.key} className='grid grid-cols-2 gap-1'>
                     <div className='bg-gray-700 p-1 mb-1 rounded-lg border border-gray-600 text-sm'>{p.name}</div><DeviceStateSelector onChange={(e) => handleProblemStateChange(e, p.key)} />
                 </div>
-                // return <div key={p.key}>HELLO</div>
-            })}
+            }) : <p>Cette appareil n'a aucun problem...</p>}
         </div>
     )
 }

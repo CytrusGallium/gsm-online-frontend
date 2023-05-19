@@ -47,6 +47,15 @@ const CateringSalesList = () => {
             render: d => <p className='inline text-sm'>{(new Date(d)).toLocaleDateString('fr-FR', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}</p>
         },
         {
+            title: 'Heure de Paiement',
+            dataIndex: 'finalizationTime',
+            key: 'finalizationTime',
+            width: 128,
+            className: 'border border-gray-500',
+            render: d => <p className='inline text-sm'>{d ? (new Date(d)).toLocaleDateString('fr-FR', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : "-"}</p>
+            // render: d => JSON.stringify(d)
+        },
+        {
             title: 'Table',
             dataIndex: 'cst',
             key: 'cst',
@@ -137,7 +146,7 @@ const CateringSalesList = () => {
         let result = [];
 
         ParamCoList.forEach(co => {
-            let row = { id: co._id, coid: co.coid, totalPrice: co.totalPrice, fulfilledPaiement: co.fulfilledPaiement, consumedProducts: co.consumedProducts, empty: co.empty, finalized: co.finalized, time: co.time };
+            let row = { id: co._id, coid: co.coid, totalPrice: co.totalPrice, fulfilledPaiement: co.fulfilledPaiement, consumedProducts: co.consumedProducts, empty: co.empty, finalized: co.finalized, time: co.time, finalizationTime: co.finalizationTime };
             if (co.table[0]) {
                 row.cst = co.table[0];
                 // console.log("TABLE = " + JSON.stringify(co.table[0]));

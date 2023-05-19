@@ -21,11 +21,11 @@ function GetDateTimeDMYHM(ParamDate) {
     return [day, month, year].join('-') + " " + [hour, minute].join(':');
 }
 
-function GetShortDate() {
+const GetShortDate = () => {
     return (new Date()).toLocaleDateString('fr-FR', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-function GetTimeHM2Digits () {
+function GetTimeHM2Digits() {
     var d = new Date();
     var hour = '' + d.getHours();
     var minute = '' + d.getMinutes();
@@ -39,4 +39,8 @@ function GetTimeHM2Digits () {
     return hour + ":" + minute;
 }
 
-module.exports = { GetDateTimeDMYHM, GetShortDate, GetTimeHM2Digits }
+module.exports = {
+    GetDateTimeDMYHM,
+    GetTimeHM2Digits,
+    GetShortDate
+}

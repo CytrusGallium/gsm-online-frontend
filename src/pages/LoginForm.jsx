@@ -7,6 +7,7 @@ import { FaCog } from 'react-icons/fa';
 import { AwesomeButton } from 'react-awesome-button';
 import 'react-awesome-button/dist/styles.css';
 import { Login } from '../LoginManager';
+// import { Html5QrcodeScanner } from 'html5-qrcode';
 
 const LoginForm = () => {
 
@@ -69,9 +70,28 @@ const LoginForm = () => {
         // '--button-secondary-color-active': "#ff0505",
     };
 
+    function onScanSuccess(decodedText, decodedResult) {
+        // handle the scanned code as you like, for example:
+        console.log(`Code matched = ${decodedText}`, decodedResult);
+    }
+
+    function onScanFailure(error) {
+        // handle scan failure, usually better to ignore and keep scanning.
+        // for example:
+        // console.warn(`Code scan error = ${error}`);
+    }
+
+    // const InitScanner = () => {
+    //     let html5QrcodeScanner = new Html5QrcodeScanner(
+    //         "reader",
+    //         { fps: 10, qrbox: { width: 250, height: 250 } },
+    //         /* verbose= */ false);
+    //     html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+    // }
+
     return (
         <div className='flex flex-col items-center'>
-            <br/>
+            <br />
             <form onSubmit={LoginOnClick}>
                 <div>
                     <input type="text" name="username" placeholder="Nom d'Utilisateur..." value={loginInfo.username} onChange={handleChange} required className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500' />
@@ -92,6 +112,9 @@ const LoginForm = () => {
             <br />
             <br />
             <AwesomeButton type="primary" style={awsBtnStyle} before={<FaCog />}><a href='/connexion-settings'>Options de Connexion</a></AwesomeButton>
+            {/* <br />
+            <div onClick={InitScanner} className='cursor-pointer'>Scan</div>
+            <div id='reader'></div> */}
         </div>
     )
 }

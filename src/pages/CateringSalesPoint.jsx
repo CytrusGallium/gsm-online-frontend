@@ -79,6 +79,7 @@ const CateringSalesPoint = () => {
     const [kitchenOrderIssued, setKitchenOrderIssued] = useState(false);
     const [finalized, setFinalized] = useState(false);
     const [categories, setCategories] = useState([]);
+    const [categoryPresenceCheck, setCategoryPresenceCheck] = useState({});
     const [changesAvailable, setChangesAvailable] = useState(false);
     const [paymentValidationWindowOpen, setPaymentValidationWindowOpen] = useState(false);
     const [addMiscProductPopupOpen, setAddMiscProductPopupOpen] = useState(false);
@@ -106,14 +107,23 @@ const CateringSalesPoint = () => {
         try {
 
             // Build Req/Res
-            var url = GetBackEndUrl() + "/api/get-product-list?sellable=true";
+            var url = GetBackEndUrl() + "/api/get-product-list?sellable=true&ignoreDeleted=true";
 
             console.log("GET : " + url);
             res = await axios.get(url);
 
             if (res) {
-                setProductList(res.data);
+                // console.log(JSON.stringify(res.data));
                 // this.setState({ isBusy: false });
+                setProductList(res.data);
+
+                // Check present categories
+                let tmpCategoryPresenceCheck = {};
+                res.data.forEach((p) => {
+                    tmpCategoryPresenceCheck[p.category] = true;
+                });
+                setCategoryPresenceCheck(tmpCategoryPresenceCheck);
+
                 getCategoryListFromDB();
             }
 
@@ -169,7 +179,9 @@ const CateringSalesPoint = () => {
 
             if (res) {
 
-                setConsumedProductsList_V2(res.data.consumedProducts);
+                if (res.data.consumedProducts)
+                    setConsumedProductsList_V2(res.data.consumedProducts);
+
                 setCateringOrderIDinDB(res.data._id);
                 setCOID(res.data.coid);
                 setSelectedCSTinDB(res.data.customerSittingTableID);
@@ -295,10 +307,12 @@ const CateringSalesPoint = () => {
         setTimeout(() => { handleBubbleExpire(productCounter) }, 1000);
 
         let productInfo;
-        if (consumedProductsList_V2[ParamProduct._id])
+        if (consumedProductsList_V2[ParamProduct._id]) {
             productInfo = { key: ParamProduct._id, id: ParamProduct._id, name: ParamProduct.name, price: ParamProduct.price, altLangName: ParamProduct.altLangName, amount: consumedProductsList_V2[ParamProduct._id].amount + 1 };
-        else
+        }
+        else {
             productInfo = { key: ParamProduct._id, id: ParamProduct._id, name: ParamProduct.name, price: ParamProduct.price, altLangName: ParamProduct.altLangName, amount: 1 };
+        }
 
         let tmpObj_V2 = consumedProductsList_V2;
         tmpObj_V2[ParamProduct._id] = productInfo;
@@ -371,8 +385,16 @@ const CateringSalesPoint = () => {
         setKitchenOrderIssued(true);
 
         // Print in kitchen
-        const doc = await BuildKitchenPDF();
-        await PrintKitchenPDF(doc);
+        const doc_1 = await BuildKitchenPDF();
+        PrintKitchenPDF(doc_1);
+
+        // Print waiting ticket for takeout orders
+        console.log("PRE-PRINT");
+        if (selectedCSTinDB == null) {
+            console.log("ON-PRINT");
+            const doc_2 = await BuildWaitingTicketPDF();
+            PrintWaitingTicketPDF(doc_2);
+        }
     }
 
     const SaveOnClick = () => {
@@ -589,18 +611,23 @@ const CateringSalesPoint = () => {
         doc.text("Commande N° " + COID, halfReceiptWidth, cursorY, 'center');
         cursorY += 4;
         doc.setFont(undefined, 'normal');
-
+        
         // Sitting Table
         const tableLabel = GetCustomerSittingTableLabelInPrint();
         if (tableLabel && tableLabel != "") {
             doc.setTextColor(0, 0, 0);
             doc.setFontSize(10);
             doc.text(tableLabel, halfReceiptWidth, cursorY, 'center');
-            cursorY += 9;
+            cursorY += 10;
             doc.setFont(undefined, 'normal');
         }
         else {
-            cursorY += 5;
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(12);
+            doc.text("• A Emporter •", halfReceiptWidth, cursorY, 'center');
+            cursorY += 9;
+            doc.setFont(undefined, 'normal');
         }
 
         // Date
@@ -645,6 +672,80 @@ const CateringSalesPoint = () => {
             bodyStyles: { lineColor: [0, 0, 0] }
         });
         cursorY += 9;
+
+        return doc;
+    }
+
+    const BuildWaitingTicketPDF = async () => {
+
+        var receiptWidth = 60;
+
+        if (localStorage.getItem("receiptWidth")) {
+            receiptWidth = Number(localStorage.getItem("receiptWidth"));
+        }
+
+        const halfReceiptWidth = receiptWidth / 2;
+
+        const doc = new jspdf.jsPDF('p', 'mm', [192, receiptWidth]); // Portrait, Milimeter, Height, Width
+        var cursorY = 5;
+
+        // N°
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(12);
+        doc.text("Commande à emporter N° " + COID, halfReceiptWidth, cursorY, 'center');
+        cursorY += 7;
+        doc.setFont(undefined, 'normal');
+
+        // Date
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(8);
+        doc.text(GetShortDate(), 3, cursorY, 'left');
+
+        // Time
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(8);
+        doc.text(GetTimeHM2Digits(), receiptWidth - 3, cursorY, 'right');
+        cursorY += 1;
+
+        // Consumption table
+        const tableData = buildConsumedProductsTableDataForPDF(false);
+
+        let cellTextFontSize = 10;
+        autoTable(doc, {
+            head: [tableData.head],
+            body: tableData.body,
+            startY: cursorY,
+            margin: 2,
+            theme: 'grid',
+            tableWidth: receiptWidth - 4,
+            styles: {
+                fontSize: cellTextFontSize,
+                cellPadding: 1,
+                fontStyle: 'bold',
+                textColor: 'black'
+            },
+            headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255] },
+            didDrawPage: (d) => { cursorY = d.cursor.y },
+        });
+        cursorY += 9;
+
+        // Total
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(12);
+
+        doc.text("Total à Payer : " + GetTotalPrice() + " DA", halfReceiptWidth, cursorY, 'center');
+
+        cursorY += 4;
+        doc.setFont(undefined, 'normal');
+
+        // Note
+        doc.setFont(undefined, 'bold');
+        doc.setFontSize(7);
+        doc.text("veuillez patienter...", halfReceiptWidth, cursorY, 'center');
+        cursorY += 3;
+        doc.setFont(undefined, 'normal');
 
         return doc;
     }
@@ -716,6 +817,25 @@ const CateringSalesPoint = () => {
         const response = await axios({
             method: "post",
             // url: GetPrintServerAddress() + "?printer=" + GetPrinterName(),
+            url: url,
+            data: formData
+        }, {}, () => console.log("CALLBACK"));
+    }
+
+    const PrintWaitingTicketPDF = async (ParamPDF) => {
+
+        const doc = ParamPDF;
+
+        // Build form
+        const formData = new FormData();
+        formData.append("pdf", doc.output('blob'));
+
+        const url = GetPrintServerAddress() + "?printer=" + GetPrinterName();
+        console.log("POST : " + url);
+
+        // Build Req/Res
+        const response = await axios({
+            method: "post",
             url: url,
             data: formData
         }, {}, () => console.log("CALLBACK"));
@@ -816,8 +936,7 @@ const CateringSalesPoint = () => {
 
         let res = await axios.post(url, cateringOrderToPost);
 
-        if (res)
-        {
+        if (res) {
             GetCustomerSittingTablesListFromDb();
             GetTakeOutOrdersListFromDb();
         }
@@ -829,6 +948,9 @@ const CateringSalesPoint = () => {
 
         const docKitchen = await BuildKitchenPDF();
         docKitchen.save("Bon-Dar-Mima-Cuisine.pdf");
+
+        const docWaitingTicket = await BuildWaitingTicketPDF();
+        docWaitingTicket.save("Tiquet-Dar-Mima.pdf");
     }
 
     const getCustomerSittingTableStyle = (ParamIsOccupied, ParamTableID) => {
@@ -879,9 +1001,9 @@ const CateringSalesPoint = () => {
     const AddMiscProduct = (ParamDesignation, ParamPrice, ParamAmout) => {
         let productInfo;
         if (consumedProductsList_V2[ParamDesignation])
-            productInfo = { key: ParamDesignation, id: ParamDesignation, name: ParamDesignation, price: ParamPrice, altLangName: "", amount: consumedProductsList_V2[ParamDesignation].amount + ParamAmout };
+            productInfo = { key: ParamDesignation, id: ParamDesignation, name: ParamDesignation, price: ParamPrice, altLangName: "", custom: true, amount: consumedProductsList_V2[ParamDesignation].amount + ParamAmout };
         else
-            productInfo = { key: ParamDesignation, id: ParamDesignation, name: ParamDesignation, price: ParamPrice, altLangName: "", amount: ParamAmout };
+            productInfo = { key: ParamDesignation, id: ParamDesignation, name: ParamDesignation, price: ParamPrice, altLangName: "", custom: true, amount: ParamAmout };
 
         let tmpObj_V2 = consumedProductsList_V2;
         tmpObj_V2[ParamDesignation] = productInfo;
@@ -916,8 +1038,8 @@ const CateringSalesPoint = () => {
     return (
         <div>
             {/* Fixed Control Buttons */}
-            <div className='fixed right-4 top-16 w-40 flex flex-col'>
-                <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type={finalized || !changesAvailable ? 'disabled' : 'primary'} onPress={SaveOnClick} before={<FaSave size={24} />}>Enregistrer</AwesomeButton></div></div>
+            <div className='fixed right-0 top-16 w-44 bg-gray-800 border-l-2 border-gray-500 bottom-0 px-1 flex flex-col'>
+                <div className='mt-0 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type={finalized || !changesAvailable ? 'disabled' : 'primary'} onPress={SaveOnClick} before={<FaSave size={24} />}>Enregistrer</AwesomeButton></div></div>
                 <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type={finalized ? 'disabled' : selectedCSTinDB ? 'disabled' : selectedCSTinUI ? 'primary' : 'disabled'} before={<FaChair size={24} />} onPress={OccupyCST}>Reserver</AwesomeButton></div></div>
                 <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type={finalized ? 'disabled' : kitchenOrderIssued ? 'secondary' : 'primary'} onPress={IssueCateringOrder} before={<FaRegPaperPlane size={24} />}>Commande</AwesomeButton></div></div>
                 <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type={finalized ? 'disabled' : 'primary'} onPress={() => !finalized && setPaymentValidationWindowOpen(true)} before={<FaCheckCircle size={24} />}>Paiement</AwesomeButton></div></div>
@@ -925,6 +1047,18 @@ const CateringSalesPoint = () => {
                 <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type={finalized ? 'disabled' : 'primary'} onPress={() => !finalized && setAddMiscProductPopupOpen(true)} before={<FaPizzaSlice size={24} />}>Divers</AwesomeButton></div></div>
                 <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type='primary' onPress={downloadPDFOnClick} before={<FaDownload size={24} />}>Télécharger</AwesomeButton></div></div>
                 <div className='mt-1 h-12 cursor-pointer'><div className='mt-2'><AwesomeButton className='w-full' type='primary' before={<FaPlus size={24} />}><a href={GetBaseUrl() + "/catering-sales-point"}>Nouveau</a></AwesomeButton></div></div>
+
+                {/* Takeout Orders */}
+                <div className='mt-3 h-7 bg-gray-800 rounded-t-xl border border-gray-500 text-gray-300 font-bold text-xs pt-1'>Commandes à emporter</div>
+                <div className='h-40 cursor-pointer grow bg-gray-700 mb-1 flex flex-col overflow-auto scrollbar rounded-b-xl border border-gray-500'>
+                    {takeoutOrders.map(t =>
+                        <a key={t._id} className='inline m-1 p-1 text-gray-900 rounded-lg cursor-pointer select-none bg-gray-500 text-lg font-bold flex flex-col justify-center items-center h-12 hover:bg-gray-900 hover:text-gray-100 duration-150' href={GetBaseUrl() + "/catering-sales-point?id=" + t._id}>
+                            <div className='flex flex-row'>
+                                <FaShoppingBag className='inline mt-1 mx-1' />
+                                <span>{t.coid}</span>
+                            </div>
+                        </a>)}
+                </div>
             </div>
 
             {/* Price Bubbles */}
@@ -956,13 +1090,12 @@ const CateringSalesPoint = () => {
             <CateringSalesPointPaymentPopup value={GetTotalPrice()} isOpen={paymentValidationWindowOpen} onClose={paymentValidationWindowOnClose} onConfirm={FinalizeCateringOrder} />
             <AddMiscProductPopup isOpen={addMiscProductPopupOpen} onClose={addMiscProductPopupOnClose} onConfirm={AddMiscProduct} />
             <CustomAmountPopup isOpen={customAmountPopupOpen} onClose={() => setCustomAmountPopupOpen(false)} onConfirm={onCustomAmountPopupConfirm} />
-            <GenericMessagePopup isOpen={errorPopupOpen} onClose={() => setErrorPopupOpen(false)} message={errorPopupMessage} />
+            <GenericMessagePopup isOpen={errorPopupOpen} onClose={() => setErrorPopupOpen(false)} message={errorPopupMessage} closeButton={true} sad={true} />
 
             {/* CST */}
             <div className='fixed h-28 bg-gray-900 rounded-xl left-2 text-gray-100 border-2 border-gray-100 right-48 z-10 top-16'>
                 <div className='flex flex-wrap overflow-auto scrollbar h-24 m-1'>
                     {customerSittingTables.map(t => <p key={t._id} className={getCustomerSittingTableStyle(t.occupied, t._id)} onClick={() => handleCSTonClick(t)}>Table {t.name}</p>)}
-                    {takeoutOrders.map(t => <a key={t._id} className={cstStyle} href={GetBaseUrl() + "/catering-sales-point?id=" + t._id}> <div className='flex flex-row'><FaShoppingBag className='inline mt-1 mx-1' /> <span>{t.coid}</span></div> </a>)}
                 </div>
             </div>
 
@@ -989,7 +1122,7 @@ const CateringSalesPoint = () => {
                 {/* Categorized Products */}
                 {
                     categories.map(cat =>
-                        <div className='flex flex-wrap bg-gray-800 pb-16 ml-4 rounded-3xl mr-48 my-2' key={cat._id}>
+                        <div className={'flex flex-wrap bg-gray-800 pb-16 ml-4 rounded-3xl mr-48 my-2' + (categoryPresenceCheck[cat._id] ? "" : " hidden")} key={cat._id}>
                             <p className='w-full text-xl font-bold text-gray-100 bg-gray-700'>{cat.name}</p><br />
                             <div className='flex flex-wrap bg-gray-800 pb-16 ml-4 rounded-3xl mr-48'>
                                 {productList.map(p => p.category == cat._id && <NetImage value={p} key={p._id} size={32} onClick={(e) => handleProductOnClick(e, p)} onContextMenu={(e) => handleProductOnClick(e, p)} />)}
@@ -1001,9 +1134,11 @@ const CateringSalesPoint = () => {
                 }
 
                 {/* Non-Categorized Products */}
-                <div className='flex flex-wrap bg-gray-800 pb-16 ml-4 rounded-3xl mr-48 my-2'>
-                    <p className='w-full text-xl font-bold text-gray-100 bg-gray-700'>Divers</p><br />
-                    {productList.map(p => p.category == "NULL" && <NetImage value={p} key={p._id} size={32} onClick={(e) => handleProductOnClick(e, p)} onContextMenu={(e) => handleProductOnClick(e, p)} />)}
+                <div className='bg-gray-800 pb-16 ml-4 rounded-3xl mr-48 my-2'>
+                    <div className='w-full text-xl font-bold text-gray-100 bg-gray-700'>Divers</div>
+                    <div className='flex flex-wrap'>
+                        {productList.map(p => p.category === "" && <NetImage value={p} key={p._id} size={32} onClick={(e) => handleProductOnClick(e, p)} onContextMenu={(e) => handleProductOnClick(e, p)} />)}
+                    </div>
                     <br />
                     <br />
                 </div>

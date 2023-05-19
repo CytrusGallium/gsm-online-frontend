@@ -4,7 +4,7 @@ import { GridLoader } from 'react-spinners';
 import axios from "axios";
 import { GetBackEndUrl } from '../const';
 import DeviceIconList from '../components/DeviceIconList';
-import { FaSearch, FaTimesCircle, FaWrench, FaLock, FaCheck, FaEdit, FaTrash, FaUnlock, FaKey } from 'react-icons/fa';
+import { FaSearch, FaWrench, FaLock, FaCheck, FaEdit, FaTrash, FaUnlock, FaKey, FaFileExcel } from 'react-icons/fa';
 import Popup from 'reactjs-popup';
 import 'reactjs-popup/dist/index.css';
 import '../ModalWindow.css';
@@ -13,6 +13,9 @@ import { AwesomeButtonProgress } from "react-awesome-button";
 import DeviceValidationList from '../components/DeviceValidationList';
 import DeviceStateSelector from '../components/DeviceStateSelector';
 import RepairOrderValidationPopup from '../components/RepairOrderValidationPopup';
+import { GetBaseUrl } from '../Reaknotron/Libs/RknRouterUtils';
+import { Link } from 'react-router-dom';
+import { IsAdmin } from '../LoginManager';
 
 export default class RepairOrderID extends Component {
 
@@ -31,12 +34,11 @@ export default class RepairOrderID extends Component {
             render: lock => <div className='flex flex-col items-center'> <p>{lock ? <FaLock /> : <FaWrench />}</p></div>
         },
         {
-            title: 'Operations',
+            title: 'Opérations',
             dataIndex: '',
             key: 'operations',
             width: 128,
             className: 'border border-gray-500',
-            // render: i => <button className='bg-gray-900 text-gray-100 rounded-lg p-2 my-2 text-sm hover:bg-gray-700' onClick={() => { this.setState({ validationWindowOpen: true, currentValidationRepairOrder: i }); }}>Valider</button>
             render: i => this.GenerateOperationButtons(i)
         },
         {
@@ -47,12 +49,20 @@ export default class RepairOrderID extends Component {
             className: 'border border-gray-500'
         },
         {
-            title: 'Date',
+            title: "Date d'Entrée",
             dataIndex: 'time',
             key: 'time',
             width: 256,
             className: 'border border-gray-500',
-            render: d => (new Date(d)).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+            render: d => <p className='text-sm'>{(new Date(d)).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}</p>
+        },
+        {
+            title: 'Date de Sortie',
+            dataIndex: 'exitDate',
+            key: 'exitDate',
+            width: 256,
+            className: 'border border-gray-500',
+            render: d => <p className='text-sm'>{d ? (new Date(d)).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : "-"}</p>
         },
         {
             title: 'Client',
@@ -74,7 +84,7 @@ export default class RepairOrderID extends Component {
             key: 'items',
             className: 'border border-gray-500',
             width: 256,
-            render: items => <DeviceIconList value={items} />
+            render: items => <div>{<DeviceIconList value={items} />}</div>
         }
     ];
 
@@ -91,29 +101,11 @@ export default class RepairOrderID extends Component {
 
     popupOnClose() {
         // console.log("popupOnClose()");
-        this.setState({ validationWindowOpen: false });
+        this.setState({ validationWindowOpen: false, currentValidationRepairOrder: "" });
+        this.GetRepairOrdersListFromDB();
     }
 
-    render() {
-        return (
-            <div className='text-gray-100 flex flex-col items-center'>
-                Liste des Orders de Réparation
-                <RepairOrderValidationPopup value={this.state.currentValidationRepairOrder} isOpen={this.state.validationWindowOpen} onClose={() => { this.popupOnClose() }} />
-                <br />
-                <br />
-                <div>
-                    <FaSearch className='inline' size={24} />
-                    <input type="text" value={this.state.roidInputValue} className='inline rounded p-2 text-black mx-2' onChange={e => this.RoidSearchFieldOnChange(e)} placeholder="Identifiant du bon..." />
-                    <input type="text" value={this.state.customerInputValue} className='inline rounded p-2 text-black mx-2' onChange={e => this.CustomerSearchFieldOnChange(e)} placeholder="Nom du client..." />
-                    <input type="text" value={this.state.phoneInputValue} className='inline rounded p-2 text-black mx-2' onChange={e => this.PhoneSearchFieldOnChange(e)} placeholder="N° de Téléphone..." />
-                    <input type="text" value={this.state.imeiInputValue} className='inline rounded p-2 text-black mx-2' onChange={e => this.IMEISearchFieldOnChange(e)} placeholder="IMEI/NS..." />
-                </div>
-                <br />
-                <br />
-                {this.state.isBusy ? <GridLoader color='#AAAAAA' /> : <>{this.state.tableData.length > 0 ? <Table columns={this.columns} data={this.state.tableData} rowKey="roid" className='ml-16' /> : <p>Aucun Ordre de Réparation à Afficher...</p>}</>}
-            </div>
-        )
-    }
+
 
     async GetRepairOrdersListFromDB(ParamSearchProperty, ParamSearchProbe) {
 
@@ -181,7 +173,7 @@ export default class RepairOrderID extends Component {
     }
 
     UpdateTableData(ParamTableData) {
-        console.log("DATA = " + JSON.stringify(ParamTableData));
+        // console.log("DATA = " + JSON.stringify(ParamTableData));
         this.setState({ tableData: ParamTableData });
     }
 
@@ -231,7 +223,7 @@ export default class RepairOrderID extends Component {
                 return (
                     <div className='flex flex-row'>
                         <button className={buttonStyle} onClick={() => { this.setState({ validationWindowOpen: true, currentValidationRepairOrder: ParamRepairOrder }); }}> <FaCheck size={20} /> </button>
-                        {/* <button className={buttonStyle} onClick={() => { console.log("EDIT"); }}> <FaEdit size={20} /> </button> */}
+                        {IsAdmin() && <button className={buttonStyle}> <Link to={"/add-repair-order?id=" + ParamRepairOrder.roid}> <FaEdit size={20} /></Link> </button>}
                         <button className={buttonStyle} onClick={() => { console.log("DELETE"); this.DeleteRepairOrderFromDB(ParamRepairOrder.roid) }}> <FaTrash size={20} /> </button>
                     </div>
                 )
@@ -239,5 +231,29 @@ export default class RepairOrderID extends Component {
         }
 
         return "N/A";
+    }
+
+    render() {
+        return (
+            <div className='text-gray-100 flex flex-col items-center'>
+                <br />
+                <h3 className='font-bold text-xl' >Liste des Orders de Réparation</h3>
+                {IsAdmin() && <a href={GetBackEndUrl() + "/api/get-ro-list-xls"} target="_blank" className='text-sm text-gray-400 bg-gray-800 border border-gray-400 p-1 rounded-lg m-1 hover:text-gray-100 hover:border-gray-100'> <FaFileExcel className='inline mb-1'/> Download Excel File</a>}
+                <RepairOrderValidationPopup value={this.state.currentValidationRepairOrder} isOpen={this.state.validationWindowOpen} onClose={() => { this.popupOnClose() }} />
+                <br />
+                <br />
+                <div>
+                    <FaSearch className='hidden md:inline' size={24} />
+                    <input type="text" value={this.state.roidInputValue} className='inline rounded p-2 text-black mx-2' onChange={e => this.RoidSearchFieldOnChange(e)} placeholder="Identifiant du bon..." />
+                    <input type="text" value={this.state.customerInputValue} className='inline rounded p-2 text-black mx-2' onChange={e => this.CustomerSearchFieldOnChange(e)} placeholder="Nom du client..." />
+                    <input type="text" value={this.state.phoneInputValue} className='inline rounded p-2 text-black mx-2' onChange={e => this.PhoneSearchFieldOnChange(e)} placeholder="N° de Téléphone..." />
+                    <input type="text" value={this.state.imeiInputValue} className='inline rounded p-2 text-black mx-2' onChange={e => this.IMEISearchFieldOnChange(e)} placeholder="IMEI/NS..." />
+                </div>
+                <br />
+                <br />
+                {this.state.isBusy ? <GridLoader color='#AAAAAA' /> : <>{this.state.tableData.length > 0 ? <Table columns={this.columns} data={this.state.tableData} rowKey="roid" className='mx-4' /> : <p>Aucun Ordre de Réparation à Afficher...</p>}</>}
+                <br />
+            </div>
+        )
     }
 }

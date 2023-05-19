@@ -16,21 +16,21 @@ const GenericMessagePopup = (props) => {
             <Popup
                 open={props.isOpen}
                 modal
-                closeOnDocumentClick
+                closeOnDocumentClick={false}
                 onClose={() => { CloseModal(); }}
-                onOpen={() => { props.message && setMessage(props.message); }}
+                onOpen={() => { props.message && setMessage(props.message) && console.log("MESSAGE = " + props.message) }}
             >
-                <div className="modal bg-red-900 text-gray-100 p-2">
+                <div className={props.sad ? "modal bg-red-900 text-gray-100 p-2" : "modal bg-gray-900 text-gray-100 p-2"}>
                     <button className="close" onClick={() => { CloseModal(); }}>
                         <FaTimesCircle />
                     </button>
                     <div className="flex flex-col items-center ">
-                        <FaRegFrown size={48} className='my-2' />
+                        {props.sad && <FaRegFrown size={48} className='my-2' />}
                     </div>
                     <div className="content flex flex-col items-center">
-                        <p className='text-gray-100 text-lg font-bold mt-1' >{message}</p>
+                        <span className='text-gray-100 text-lg font-bold mt-1' >{message}</span>
                         <br/>
-                        <AwesomeButton type="primary" onPress={CloseModal}><div className='text-xl'>OK</div></AwesomeButton>
+                        {props.closeButton && <AwesomeButton type="primary" onPress={CloseModal}><div className='text-xl'>OK</div></AwesomeButton>}
                     </div>
                 </div>
             </Popup>

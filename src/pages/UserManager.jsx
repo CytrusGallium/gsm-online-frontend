@@ -9,7 +9,7 @@ const UserManager = () => {
 
   useEffect(() => {
 
-    GetCateringOrdersListFromDB();
+    GetUserListFromDB();
 
   }, []);
 
@@ -36,7 +36,7 @@ const UserManager = () => {
     }
   ];
 
-  const GetCateringOrdersListFromDB = async () => {
+  const GetUserListFromDB = async () => {
     let res;
 
     try {

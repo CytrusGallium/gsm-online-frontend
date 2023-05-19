@@ -1,51 +1,11 @@
-import React, { Component } from 'react';
+import React from 'react';
 import { PulseLoader } from 'react-spinners';
-import axios from "axios";
-import { GetBackEndUrl } from '../const';
 
-export default class RepairOrderID extends Component {
+const RepairOrderID = (props) => {
 
-    constructor(props) {
-        super(props);
-        this.state = { id: "" };
-    }
-
-    componentDidMount() {
-        this.GetIDFromDB();
-    }
-
-    render() {
-        return (
-            <div className='text-gray-100 mt-2'>{this.state.id == "" ? <PulseLoader color='#AAAAAA' /> : "Identifiant " + this.state.id}</div>
-        )
-    }
-
-    async GetIDFromDB() {
-        let res;
-
-        try {
-
-            // Build Req/Res
-            const url = GetBackEndUrl() + "/api/generate-empty-repair-order";
-            res = await axios.get(url);
-
-            if (res) {
-                this.UpdateID(res.data.id);
-            }
-
-        } catch (error) {
-            console.log("ERROR : " + error);
-
-            if (error.response && error.response.status >= 400 && error.response.status <= 500) {
-
-                console.log(error.response.data);
-
-            }
-        }
-    }
-
-    UpdateID(ParamID) {
-        this.setState({ id: ParamID });
-        this.props.OnChange(ParamID);
-    }
+    return (
+        <div className='text-gray-100 font-bold text-xl'>{(props.id == null || props.id == "") ? <PulseLoader color='#AAAAAA' /> : <div><span className='text-gray-500 mr-2'>IDENTIFIANT</span><span className='bg-gray-900 rounded-lg m-1 p-2 border-2 border-teal-700'>{props.id}</span></div>}</div>
+    )
 }
+
+export default RepairOrderID

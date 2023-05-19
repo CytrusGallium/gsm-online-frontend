@@ -8,5 +8,6 @@
     "DEVICE_MAINTENANCE_FLAG" : false,
     "CATERING_FLAG" : true,
     "PRODUCT_MANAGEMENT_FLAG" : true,
-    "EMPLOYEE_MANAGEMENT_FLAG" : true
+    "EMPLOYEE_MANAGEMENT_FLAG" : true,
+    "FEE_MANAGEMENT_FLAG" : true
 }

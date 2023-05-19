@@ -3,14 +3,14 @@ import axios from 'axios';
 import { GetBackEndUrl } from '../const';
 import { BarChart } from 'reaviz';
 
-const CateringSalesRevenueBarChart = () => {
+const CateringSalesRevenueStats = (props) => {
 
     // Effects
     useEffect(() => {
 
         GetCateringOrdersListFromDB();
 
-    }, []);
+    }, [props]);
 
     // States
     const [salesInfo, setSalesInfo] = useState({ salesCount: 0, salesTotal: 0, salesTotalPayment: 0, salesDiff: 0, salesDiffPercentage: 0 });
@@ -25,7 +25,12 @@ const CateringSalesRevenueBarChart = () => {
         try {
 
             // Build Req/Res
-            var url = GetBackEndUrl() + "/api/get-catering-orders-list";
+            let url;
+
+            if (props.start && props.end)
+                url = GetBackEndUrl() + "/api/get-catering-orders-list?start=" + props.start.toISOString() + "&end=" + props.end.toISOString();
+            else
+                url = GetBackEndUrl() + "/api/get-catering-orders-list";
 
             console.log("GET : " + url);
             res = await axios.get(url);
@@ -93,12 +98,12 @@ const CateringSalesRevenueBarChart = () => {
                 <div className={leftCellStyle}>Différence</div><div className={rightCellStyle + ' border-2 border-pink-500'} >{salesInfo.salesDiff} DA</div>
                 <div className={leftCellStyle}>Différence en pourcentage</div><div className={rightCellStyle + ' border-2 border-pink-500'} >{salesInfo.salesDiffPercentage} %</div>
             </div>
-            <br/>
+            <br />
             {chartData && <BarChart width={320} height={256} data={chartData} />}
-            <br/>
-            <br/>
+            <br />
+            <br />
         </div>
     )
 }
 
-export default CateringSalesRevenueBarChart
+export default CateringSalesRevenueStats
