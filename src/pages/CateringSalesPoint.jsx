@@ -2,6 +2,7 @@ import { React, useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { FaRegPaperPlane, FaTrash, FaCheckCircle, FaDownload, FaPlus, FaChair, FaSave, FaPizzaSlice, FaShoppingBag } from 'react-icons/fa';
 import NetImage from '../components/NetImage';
+import MMSSCountdown from '../components/MMSSCountDown';
 import { GetBackEndUrl, GetPrintServerAddress, GetPrinterName } from '../const';
 import axios from 'axios';
 import autoTable from 'jspdf-autotable';
@@ -27,7 +28,7 @@ const CateringSalesPoint = () => {
     // Effect 1
     useEffect(() => {
 
-        console.log("BASE URL = " + GetBaseUrl());
+        // console.log("BASE URL = " + GetBaseUrl());
 
         if (searchParams.get("id")) {
             GetCateringOrderFromDB(searchParams.get("id"));
@@ -242,8 +243,44 @@ const CateringSalesPoint = () => {
 
             if (res) {
                 // console.log("RESULT = " + JSON.stringify(res));
-                setTakeoutOrders(res.data);
+                // console.log("RESULT = " + JSON.stringify(res.data));
                 // this.setState({ isBusy: false });
+
+                // setTakeoutOrders(res.data);
+
+                // Build ID, COID, Duration...etc array
+                let tmpArray = [];
+                let lastReadyTime = null;
+                let timeBuildUp = 0;
+
+                res.data.forEach((o) => {
+
+                    let kot = new Date(o.kitchenOrderTime);
+                    let readyTime;
+
+                    if (lastReadyTime && kot < lastReadyTime) {
+                        timeBuildUp += Math.abs(lastReadyTime.getTime() - kot.getTime());
+                        readyTime = new Date(kot.getTime() + (o.preparationDuration * 60000) + timeBuildUp);
+                    } else if (lastReadyTime && kot > lastReadyTime) {
+                        timeBuildUp = 0;
+                        readyTime = new Date(kot.getTime() + o.preparationDuration * 60000);
+                        lastReadyTime = readyTime;
+                    } else {
+                        readyTime = new Date(kot.getTime() + o.preparationDuration * 60000);
+                        lastReadyTime = readyTime;
+                    }
+
+                    tmpArray.push({
+                        _id: o._id,
+                        coid: o.coid,
+                        preparationDuration: o.preparationDuration,
+                        kitchenOrderTime: kot,
+                        readyTime: readyTime
+                    });
+                })
+
+                setTakeoutOrders(tmpArray);
+                console.log("ATO = " + JSON.stringify(tmpArray));
             }
 
         } catch (error) {
@@ -292,6 +329,8 @@ const CateringSalesPoint = () => {
         if (finalized)
             return;
 
+        console.log("Duration = " + ParamProduct.preparationDuration);
+
         if (e.type === 'click') {
             // console.log('1 : Left click');
         } else if (e.type === 'contextmenu') {
@@ -308,10 +347,10 @@ const CateringSalesPoint = () => {
 
         let productInfo;
         if (consumedProductsList_V2[ParamProduct._id]) {
-            productInfo = { key: ParamProduct._id, id: ParamProduct._id, name: ParamProduct.name, price: ParamProduct.price, altLangName: ParamProduct.altLangName, amount: consumedProductsList_V2[ParamProduct._id].amount + 1 };
+            productInfo = { key: ParamProduct._id, id: ParamProduct._id, name: ParamProduct.name, price: ParamProduct.price, altLangName: ParamProduct.altLangName, amount: consumedProductsList_V2[ParamProduct._id].amount + 1, preparationDuration: ParamProduct.preparationDuration };
         }
         else {
-            productInfo = { key: ParamProduct._id, id: ParamProduct._id, name: ParamProduct.name, price: ParamProduct.price, altLangName: ParamProduct.altLangName, amount: 1 };
+            productInfo = { key: ParamProduct._id, id: ParamProduct._id, name: ParamProduct.name, price: ParamProduct.price, altLangName: ParamProduct.altLangName, amount: 1, preparationDuration: ParamProduct.preparationDuration };
         }
 
         let tmpObj_V2 = consumedProductsList_V2;
@@ -360,6 +399,22 @@ const CateringSalesPoint = () => {
         return total;
     }
 
+    const GetTotalPreparationDuration = () => {
+
+        if (!consumedProductsList_V2)
+            return 0;
+
+        var total = 0;
+
+        for (const k in consumedProductsList_V2) {
+
+            if (consumedProductsList_V2[k].preparationDuration)
+                total += (consumedProductsList_V2[k].preparationDuration * consumedProductsList_V2[k].amount);
+        };
+
+        return total;
+    }
+
     const handleClearAllOnClick = () => {
         if (finalized)
             return;
@@ -374,7 +429,7 @@ const CateringSalesPoint = () => {
             return;
 
         // Update in DB
-        UpdateCateringOrderInDB(cateringOrderIDinDB, consumedProductsList_V2, true, selectedCSTinUI, GetTotalPrice());
+        UpdateCateringOrderInDB(cateringOrderIDinDB, consumedProductsList_V2, true, selectedCSTinUI, GetTotalPrice(), GetTotalPreparationDuration());
 
         // Mark table occupied
         if (selectedCSTinUI) {
@@ -611,7 +666,7 @@ const CateringSalesPoint = () => {
         doc.text("Commande N° " + COID, halfReceiptWidth, cursorY, 'center');
         cursorY += 4;
         doc.setFont(undefined, 'normal');
-        
+
         // Sitting Table
         const tableLabel = GetCustomerSittingTableLabelInPrint();
         if (tableLabel && tableLabel != "") {
@@ -841,9 +896,16 @@ const CateringSalesPoint = () => {
         }, {}, () => console.log("CALLBACK"));
     }
 
-    const UpdateCateringOrderInDB = async (ParamID, ParamConsumedProducts, ParamKitchenOrderIssued, ParamTableID, ParamTotalPrice) => {
+    const UpdateCateringOrderInDB = async (ParamID, ParamConsumedProducts, ParamKitchenOrderIssued, ParamTableID, ParamTotalPrice, ParamPreparationDuration) => {
 
-        let cateringOrderToPost = { id: ParamID, consumedProducts: ParamConsumedProducts, kitchenOrderIssued: ParamKitchenOrderIssued, customerSittingTableID: ParamTableID, totalPrice: ParamTotalPrice };
+        let cateringOrderToPost = {
+            id: ParamID,
+            consumedProducts: ParamConsumedProducts,
+            kitchenOrderIssued: ParamKitchenOrderIssued,
+            customerSittingTableID: ParamTableID,
+            totalPrice: ParamTotalPrice,
+            preparationDuration: ParamPreparationDuration
+        };
 
         // Add token
         // const token = localStorage.getItem("token");
@@ -1055,7 +1117,10 @@ const CateringSalesPoint = () => {
                         <a key={t._id} className='inline m-1 p-1 text-gray-900 rounded-lg cursor-pointer select-none bg-gray-500 text-lg font-bold flex flex-col justify-center items-center h-12 hover:bg-gray-900 hover:text-gray-100 duration-150' href={GetBaseUrl() + "/catering-sales-point?id=" + t._id}>
                             <div className='flex flex-row'>
                                 <FaShoppingBag className='inline mt-1 mx-1' />
-                                <span>{t.coid}</span>
+                                {/* <span>{t.coid + " (" + t.readyAt.getHours() + ":" + t.readyAt.getMinutes() + ")"}</span> */}
+                                {/* <span>{t.coid + " (" + t.readyAt.getHours() + ":" + t.readyAt.getMinutes() + ")"}</span> */}
+                                <span className='mr-2'>{t.coid}</span>
+                                <MMSSCountdown date={t.readyTime} />
                             </div>
                         </a>)}
                 </div>
@@ -1100,10 +1165,11 @@ const CateringSalesPoint = () => {
             </div>
 
             {/* Catering Order Info */}
-            <div className='fixed h-12 bg-gray-900 rounded-xl left-2 text-gray-100 border-2 border-gray-100 right-48 top-44 z-10 grid grid-cols-3'>
-                <div className='bg-gray-700 rounded-xl m-1 mr-0 text-lg font-bold pt-0.5'>Commande N° : {COID}</div>
-                <div className='bg-gray-700 rounded-xl m-1 text-lg font-bold pt-0.5'>{selectedCSTinDB ? GetCustomerSittingTableLabelInPrint() : "Aucune Table"}</div>
-                <div className='bg-gray-700 rounded-xl m-1 ml-0 text-lg font-bold pt-0.5'>Prix Total : {GetTotalPrice()} DA</div>
+            <div className='fixed h-12 bg-gray-900 rounded-xl left-2 text-gray-800 border-2 border-gray-100 right-48 top-44 z-10 grid grid-cols-4'>
+                <div className='bg-white rounded-xl m-1 mr-0 text-lg font-bold pt-0.5'>Commande N° : {COID}</div>
+                <div className='bg-white rounded-xl m-1 mr-0.5 text-lg font-bold pt-0.5'>{selectedCSTinDB ? GetCustomerSittingTableLabelInPrint() : "Aucune Table"}</div>
+                <div className='bg-white rounded-xl m-1 ml-0.5 text-lg font-bold pt-0.5'>{GetTotalPreparationDuration() + " Minutes"}</div>
+                <div className='bg-white rounded-xl m-1 ml-0 text-lg font-bold pt-0.5'>Prix Total : {GetTotalPrice()} DA</div>
             </div>
 
             {/* Consumed Products */}

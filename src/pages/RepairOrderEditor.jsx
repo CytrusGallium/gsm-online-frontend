@@ -1,19 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import ProblemPriceGrid from '../components/ProblemPriceGrid';
 import RepairOrderItem from '../components/RepairOrderItem';
-import ReactTooltip from 'react-tooltip';
-// import { json } from 'react-router-dom';
 import RepairOrderID from '../components/RepairOrderID';
 import { GetBackEndUrl, GetPrintServerAddress, GetPrinterName } from '../const';
 import axios from "axios";
 import { AwesomeButton } from 'react-awesome-button';
-import { FaPrint, FaDownload, FaCheckCircle, FaList, FaSave } from 'react-icons/fa';
+import { FaPrint, FaDownload, FaCheckCircle, FaList, FaSave, FaPlus } from 'react-icons/fa';
 import { GetDateTimeDMYHM, GetShortDate, GetTimeHM2Digits } from '../Reaknotron/Libs/RknTimeTools';
 import GenericMessagePopup from '../components/GenericMessagePopup';
-import { PulseLoader, CircleLoader } from 'react-spinners';
-// import hotkeys from 'hotkeys-js';
-// import { useHotkeys } from 'react-hotkeys-hook'
+import { CircleLoader } from 'react-spinners';
+import { GetBaseUrl } from '../Reaknotron/Libs/RknRouterUtils';
+import { useHotkeys } from 'react-hotkeys-hook';
+
+// Dexie
+import Dexie from 'dexie';
+import { useLiveQuery } from 'dexie-react-hooks';
 
 // JS PDF
 import "jspdf-barcode";
@@ -34,30 +35,28 @@ var isF1Down = false;
 
 const NewRepairOrderForm = () => {
 
+    useHotkeys('m', () => {
+        console.log("M");
+
+        const db = new Dexie('rknLog');
+
+        db.version(1).stores({
+            actions: '++id, name, content',
+        });
+
+        db.table('actions').toArray().then(data => {
+            console.log("DATA = " + JSON.stringify(data));
+        }).catch(error => {
+            console.error(error.stack || error);
+        });
+    }, []);
+
     useEffect(() => {
 
-        // document.addEventListener("keydown", e => {
-        //     if (e.key === "F1") {
-        //         if (isF1Down) return;
-        //         isF1Down = true;
-        //         e.preventDefault();
-        //         console.log("F1 Gen4");
-        //         SaveAndPrint();
-        //     }
-        // });
-
-        // document.addEventListener("keyup", e => {
-        //     if (e.key === "F1") {
-        //         isF1Down = false;
-        //     }
-        // });
-
         if (searchParams.get("id")) {
-            // GetCateringOrderFromDB(searchParams.get("id"));
             GetRepairOrderFromDB(searchParams.get("id"));
         }
         else {
-            // GenerateNewCateringOrder();
             GetNewIDFromDB();
         }
 
@@ -71,9 +70,11 @@ const NewRepairOrderForm = () => {
 
     let displayDate = GetDateTimeDMYHM(new Date());
 
-    const itemOnChange = (ParamItemState, ParamID) => {
+    const itemOnChange = (ParamID, ParamItemState, ParamProblems, ParamTotal) => {
         let tmpItems = items;
         tmpItems[ParamID] = ParamItemState;
+        tmpItems[ParamID].problems = ParamProblems;
+        tmpItems[ParamID].estPrice = ParamTotal;
         setItems(tmpItems);
         setTotalEstPrice(getTotalEstPrice());
         setDummy(dummy + 1);
@@ -99,10 +100,11 @@ const NewRepairOrderForm = () => {
     // Navigation
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
+    const defaultItemState = [{ key: 0, deviceType: "SMART_PHONE", ref: "", imei: "", problems: [{ key: 0, name: "", price: 0 }], estPrice: "0", price: "0", state: "PENDING" }];
 
     // var [items, setItems] = useState([{ key: 0, deviceType: "SMART_PHONE", ref: "", imei: "", problems: [{ key: 0, name: "", price: 0 }], estPrice: "0", price: "0", state: "PENDING" }]);
     const [repairOrder, setRepairOrder] = useState({ location: "Tlemcen", customer: "", phone: "" });
-    const [items, setItems] = useState([{ key: 0, deviceType: "SMART_PHONE", ref: "", imei: "", problems: [{ key: 0, name: "", price: 0 }], estPrice: "0", price: "0", state: "PENDING" }]);
+    const [items, setItems] = useState(defaultItemState);
     const [dummy, setDummy] = useState(0);
     const [totalEstPrice, setTotalEstPrice] = useState(0);
     const [ROID, setROID] = useState(null);
@@ -152,6 +154,7 @@ const NewRepairOrderForm = () => {
                 setROID(res.data.roid);
                 setItems(res.data.items);
                 setRepairOrder({ location: res.data.location, customer: res.data.customer, phone: res.data.phone });
+                setTotalEstPrice(getTotalEstPrice());
                 // navigate('/add-repair-order?id=' + res.data.id);
             }
 
@@ -165,11 +168,6 @@ const NewRepairOrderForm = () => {
             }
         }
     }
-
-    // useHotkeys('f1', function (event, handler) {
-    //     event.preventDefault();
-    //     console.log("F1 Hook");
-    // }, { keydown:false, keyup:true, preventDefault:true });
 
     const handleChange = ({ currentTarget: input }) => {
         setRepairOrder({ ...repairOrder, [input.name]: input.value });
@@ -212,20 +210,23 @@ const NewRepairOrderForm = () => {
             return;
         }
 
+
         setIsSaving(true);
 
         let res;
 
         try {
 
-            let itemToPost = { 
-                location: repairOrder.location, 
-                customer: repairOrder.customer, 
-                phone: repairOrder.phone, 
-                items: items, 
+            let itemToPost = {
+                location: repairOrder.location,
+                customer: repairOrder.customer,
+                phone: repairOrder.phone,
+                items: items,
                 roid: ROID,
-                estPrice : totalEstPrice 
+                estPrice: totalEstPrice
             };
+
+            Dexie_RecordSaveAction(itemToPost);
 
             const url = GetBackEndUrl() + "/api/update-repair-order";
             res = await axios.post(url, itemToPost);
@@ -236,12 +237,12 @@ const NewRepairOrderForm = () => {
                 setDummy(dummy + 1);
                 setIsSaving(false);
             }
-            
+
         } catch (error) {
             setOnError(true);
             setErrorMessage("Impossible d'effectuer la sauvegarde, Veuillez contacter votre support technique si le problème persiste.")
             console.log("ERROR : " + error);
-            
+
             if (error.response && error.response.status >= 400 && error.response.status <= 500) {
                 console.log(error.response.data);
             }
@@ -253,8 +254,13 @@ const NewRepairOrderForm = () => {
     const AddItemOnClick = (event) => {
         event.preventDefault();
 
-        let tmpItems = items;
-        tmpItems[items.length] = { key: items.length, deviceType: "", ref: "", imei: "", problem: "", estPrice: "0", price: "0", state: "Encours de réparation..." };
+        let tmpItems;
+        if (items == null || items == '' || items == 0)
+            tmpItems = defaultItemState;
+        else
+            tmpItems = items;
+
+        tmpItems[items.length] = { key: items.length, deviceType: "", ref: "", imei: "", problems: "", estPrice: "0", price: "0", state: "Encours de réparation..." };
         setItems(tmpItems);
 
         setDummy(dummy + 1);
@@ -467,6 +473,38 @@ const NewRepairOrderForm = () => {
         }, {}, () => console.log("CALLBACK"));
     }
 
+    const Dexie_RecordSaveAction = async (ParamContent) => {
+
+        const db = new Dexie('rknLog');
+
+        db.version(1).stores({
+            actions: '++id, name, content',
+        });
+
+        Dexie.exists('rknLog').then(exists => {
+            if (exists) {
+                // Database exists, do nothing
+            } else {
+                // Database does not exist, create it
+                db.open();
+            }
+        }).catch(error => {
+            // console.error(error.stack || error);
+        });
+
+        await db.actions.add({
+            name: 'RO Save Attempt',
+            content: ParamContent
+        });
+
+        db.table('actions').toArray().then(data => {
+            console.log("DATA = " + JSON.stringify(data));
+        }).catch(error => {
+            console.error(error.stack || error);
+        });
+
+    }
+
     return (
         <div>
             {/* Toolbar */}
@@ -480,6 +518,7 @@ const NewRepairOrderForm = () => {
                 <span className='mx-1' />
                 <AwesomeButton type='primary' onPress={DownloadPDF} before={<FaDownload size={24} />}><p className='hidden sm:block'>Télécharger le Bon</p></AwesomeButton>
                 <span className='mx-1' />
+                <AwesomeButton type='primary' before={<FaPlus size={24} />}><a className='hidden sm:block' href={GetBaseUrl() + "/add-repair-order"}>Nouveau Bon</a></AwesomeButton>
             </div>
 
             {/* Editor */}
@@ -505,12 +544,12 @@ const NewRepairOrderForm = () => {
                 </div>
                 <br />
                 <div className='bg-gray-700 rounded-lg m-1 p-2'><FaList className='inline mr-1.5 mb-1' size={20} color='#CCCCCC' /><p className='inline text-gray-100 mt-4 font-bold text-lg'>Liste Des Appareils</p></div>
-                
+
                 {/* Item List */}
                 {ROID && <div className='mx-2 flex flex-col items-center'>{items.map(item => <RepairOrderItem key={item.key} id={item.key} onChange={itemOnChange} value={item} />)}</div>}
                 <br />
                 <button type="button" name='add-item' className={buttonStyle} onClick={AddItemOnClick}>+</button>
-                
+
                 <br />
                 <br />
                 <GenericMessagePopup isOpen={isSaving} message={<div className='flex flex-col items-center' ><p>Sauvegarde en cours...</p><br /><CircleLoader color='#AAAAAA' /></div>} />

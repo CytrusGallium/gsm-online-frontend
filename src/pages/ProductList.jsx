@@ -80,12 +80,14 @@ const ProductList = () => {
             width: 128,
             className: 'border border-gray-500',
             render: i => i.buyable ? i.availableAmount : <FaInfinity className='inline' color='555555' />
+        },
+        {
+            title: 'Temps de Préparation',
+            dataIndex: 'preparationDuration',
+            key: 'preparationDuration',
+            width: 128,
+            className: 'border border-gray-500'
         }
-    ];
-
-    data = [
-        { name: 'Jack', price: 28, altLangName: 'some where', category: 'ANY', key: '1' },
-        { name: 'Jack', price: 28, altLangName: 'some where', category: 'ANY', key: '2' },
     ];
 
     const GetProductListFromDb = async () => {
@@ -130,7 +132,8 @@ const ProductList = () => {
                 category: p.category,
                 buyable: p.buyable,
                 sellable: p.sellable,
-                availableAmount: p.availableAmount
+                availableAmount: p.availableAmount,
+                preparationDuration: p.preparationDuration
             });
         });
 

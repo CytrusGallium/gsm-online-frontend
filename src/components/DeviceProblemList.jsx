@@ -44,9 +44,15 @@ const DeviceProblemList = (props) => {
             return;
 
         if (ParamProblems)
+        {
             props.onChange(ParamProblems);
+            console.log("MARK A : " + JSON.stringify(ParamProblems));
+        }
         else
+        {
             props.onChange(problems);
+            console.log("MARK B : " + JSON.stringify(problems));
+        }
     }
 
     const OnAdd = () => {

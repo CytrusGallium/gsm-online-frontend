@@ -11,6 +11,8 @@ import MizzappChoicePanel from '../components/MizzappChoicePanel';
 
 const SalesPoint = () => {
 
+    // {"1":"Tomato","10":"Lettuce","2":"Red Ognion","3":"Ognion","4":"Orange","5":"Potato","6":"Lemon","7":"White Potato","8":"Banana","9":"Apple","EVENT":"RESULT","WEIGHT":"7"}{"EVENT":"RESET"}{"1":"Orange","10":"Banana","2":"Red Ognion","3":"Lemon","4":"Tomato","5":"Apple","6":"Lettuce","7":"White Potato","8":"Ognion","9":"Potato","EVENT":"RESULT","WEIGHT":"?"}{"EVENT":"RESET"}{"1":"Tomato","10":"Lettuce","2":"Red Ognion","3":"Ognion","4":"Orange","5":"Potato","6":"Lemon","7":"White Potato","8":"Banana","9":"Apple","EVENT":"RESULT","WEIGHT":"7"}
+
     // const UpdateTotal = () => {
     //     setTotal(total + 100);
     // }
@@ -28,10 +30,29 @@ const SalesPoint = () => {
     const [query, setQuery] = useState("");
     const [displayMessage, setDisplayMessage] = useState("");
     // const [mizzapResult, setMizzapResult] = useState({"1":"Red Ognion","10":"Lettuce","2":"Tomato","3":"Ognion","4":"Orange","5":"Potato","6":"Lemon","7":"White Potato","8":"Banana","9":"Apple"});
-    const [mizzapResult, setMizzapResult] = useState(null);
+    const [mizzappResult, setMizzappResult] = useState(null);
+    const [mizzapWeight, setMizzapWeight] = useState(0);
 
     // useHotkeys('u', UpdateTotal, [total]);
 
+    const MockMizzapResults = () => {
+        const mock = { "1": "Red Ognion", "10": "Lettuce", "2": "Tomato", "3": "Ognion", "4": "Orange", "5": "Potato", "6": "Lemon", "7": "White Potato", "8": "Banana", "9": "Apple" };
+        setMizzappResult(mock);
+        setMizzapWeight(777);
+    }
+
+    useHotkeys('m', MockMizzapResults, [mizzappResult]);
+
+    const AddMizzapResult = (ParamResultID) => {
+        if (mizzappResult) {
+            console.log("Searching for : " + mizzappResult[ParamResultID]);
+            PerformGetRequest("/api/get-product?mizzappID=" + mizzappResult[ParamResultID], OnMizzappProductFound);
+        }
+    }
+
+    useHotkeys('1', () => { AddMizzapResult("1") }, [mizzappResult]);
+    useHotkeys('2', () => { AddMizzapResult("2") }, [mizzappResult]);
+    useHotkeys('3', () => { AddMizzapResult("3") }, [mizzappResult]);
 
     useEffect(() => {
         const timeOutId = setTimeout(() => PerformGetRequest("/api/get-product?barcode=" + query, OnProductFound), 400);
@@ -52,11 +73,17 @@ const SalesPoint = () => {
             const obj = JSON.parse(event.data);
 
             if (obj.EVENT === "RESET")
-                setMizzapResult(null);
+                setMizzappResult(null);
             else if (obj.EVENT === "RESULT")
-                setMizzapResult(obj);
+            {
+                setMizzappResult(obj);
+
+                if (obj.WEIGHT)
+                    setMizzapWeight(obj.WEIGHT);
+            }
             else
-                setMizzapResult(null);
+                setMizzappResult(null);
+
         });
 
         socket.addEventListener('error', (error) => {
@@ -88,7 +115,7 @@ const SalesPoint = () => {
     }
 
     const OnProductFound = (ParamResult) => {
-        console.log(ParamResult.data);
+        // console.log(ParamResult.data);
         if (ParamResult.data) {
 
             var tmp = products;
@@ -105,6 +132,31 @@ const SalesPoint = () => {
             setChangesAvailable(true);
             setCount(count + 1);
             setQuery('');
+            ref.current.focus();
+        } else {
+            // setDisplayMessage("NOT FOUND");
+        }
+    }
+
+    const OnMizzappProductFound = (ParamResult) => {
+        console.log("Result = " + JSON.stringify(ParamResult.data));
+        if (ParamResult.data) {
+
+            var tmp = products;
+
+            if (tmp[ParamResult.data._id]) {
+                tmp[ParamResult.data._id].amount += mizzapWeight;
+            } else {
+                tmp[ParamResult.data._id] = ParamResult.data;
+                tmp[ParamResult.data._id].amount = mizzapWeight;
+            }
+
+            setProducts(tmp);
+            setTotal(total + ParamResult.data.price);
+            setChangesAvailable(true);
+            setMizzappResult(null);
+            setQuery('');
+            setCount(count + 1);
             ref.current.focus();
         } else {
             // setDisplayMessage("NOT FOUND");
@@ -190,7 +242,7 @@ const SalesPoint = () => {
             <br />
 
             {/* Grid */}
-            <div className='text-gray-100 mt-2 h-96 overflow-auto scrollbar'>
+            <div className='text-gray-100 mt-2 mx-4 h-96 overflow-auto scrollbar'>
                 {/* Header */}
                 <div className='w-full flex flex-row'>
                     <div className='inline w-1/3 bg-gray-900 m-0.5 p-1 rounded-lg font-bold border border-gray-500'>Produit(s)</div>
@@ -211,7 +263,7 @@ const SalesPoint = () => {
                 )}</div>
 
             {/* Mizzap Choice Panel */}
-            {mizzapResult && <MizzappChoicePanel value={mizzapResult} />}
+            {mizzappResult && <MizzappChoicePanel value={mizzappResult} weight={mizzapWeight} onClick={AddMizzapResult} />}
         </div>
     )
 }
