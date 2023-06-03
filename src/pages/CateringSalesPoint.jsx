@@ -280,7 +280,7 @@ const CateringSalesPoint = () => {
                 })
 
                 setTakeoutOrders(tmpArray);
-                console.log("ATO = " + JSON.stringify(tmpArray));
+                // console.log("ATO = " + JSON.stringify(tmpArray));
             }
 
         } catch (error) {
@@ -329,7 +329,7 @@ const CateringSalesPoint = () => {
         if (finalized)
             return;
 
-        console.log("Duration = " + ParamProduct.preparationDuration);
+        // console.log("Duration = " + ParamProduct.preparationDuration);
 
         if (e.type === 'click') {
             // console.log('1 : Left click');
@@ -347,10 +347,10 @@ const CateringSalesPoint = () => {
 
         let productInfo;
         if (consumedProductsList_V2[ParamProduct._id]) {
-            productInfo = { key: ParamProduct._id, id: ParamProduct._id, name: ParamProduct.name, price: ParamProduct.price, altLangName: ParamProduct.altLangName, amount: consumedProductsList_V2[ParamProduct._id].amount + 1, preparationDuration: ParamProduct.preparationDuration };
+            productInfo = { key: ParamProduct._id, id: ParamProduct._id, name: ParamProduct.name, category: ParamProduct.category, price: ParamProduct.price, altLangName: ParamProduct.altLangName, amount: consumedProductsList_V2[ParamProduct._id].amount + 1, preparationDuration: ParamProduct.preparationDuration };
         }
         else {
-            productInfo = { key: ParamProduct._id, id: ParamProduct._id, name: ParamProduct.name, price: ParamProduct.price, altLangName: ParamProduct.altLangName, amount: 1, preparationDuration: ParamProduct.preparationDuration };
+            productInfo = { key: ParamProduct._id, id: ParamProduct._id, name: ParamProduct.name, category: ParamProduct.category, price: ParamProduct.price, altLangName: ParamProduct.altLangName, amount: 1, preparationDuration: ParamProduct.preparationDuration };
         }
 
         let tmpObj_V2 = consumedProductsList_V2;
@@ -404,12 +404,43 @@ const CateringSalesPoint = () => {
         if (!consumedProductsList_V2)
             return 0;
 
+        let sameProdPrepTimeModifier = 0.2;
+        let sameCatPrepTimeModifier = 0.5;
+
+        if (localStorage.getItem("sameProdPrepTimeModifier")) {
+            sameProdPrepTimeModifier = localStorage.getItem("sameProdPrepTimeModifier");
+        }
+
+        if (localStorage.getItem("sameCatPrepTimeModifier")) {
+            sameCatPrepTimeModifier = localStorage.getItem("sameCatPrepTimeModifier");
+        }
+
         var total = 0;
+        var tmpCategories = [];
 
         for (const k in consumedProductsList_V2) {
 
-            if (consumedProductsList_V2[k].preparationDuration)
-                total += (consumedProductsList_V2[k].preparationDuration * consumedProductsList_V2[k].amount);
+            let cp = consumedProductsList_V2[k];
+            let categoryModifier = 1;
+
+            if (cp.preparationDuration) {
+
+                if (cp.category) {
+                    if (tmpCategories.includes(cp.category))
+                        categoryModifier = sameCatPrepTimeModifier;
+                    else
+                        tmpCategories.push(cp.category);
+                }
+
+                const amount = cp.amount;
+                if (amount > 1) {
+                    const batchableAmount = amount - 1;
+                    total += cp.preparationDuration;
+                    total += (cp.preparationDuration * batchableAmount * sameProdPrepTimeModifier);
+                } else {
+                    total += (cp.preparationDuration * cp.amount * categoryModifier);
+                }
+            }
         };
 
         return total;

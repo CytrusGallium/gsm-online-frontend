@@ -39,8 +39,22 @@ function GetTimeHM2Digits() {
     return hour + ":" + minute;
 }
 
+function ConvertMsToDHMS(ParamMilliseconds) {
+
+    const days = Math.floor(ParamMilliseconds / (24 * 60 * 60 * 1000));
+    const daysMod = Math.floor(ParamMilliseconds % (24 * 60 * 60 * 1000));
+    const hours = Math.floor(daysMod / (60 * 60 * 1000));
+    const hoursMod = Math.floor(daysMod % (60 * 60 * 1000));
+    const minutes = Math.floor(hoursMod / (60 * 1000));
+    const minutesMod = Math.floor(hoursMod % (60 * 1000));
+    const seconds = Math.floor(minutesMod / 1000);
+
+    return days + ":" + hours + ":" + minutes + ":" + seconds;
+}
+
 module.exports = {
     GetDateTimeDMYHM,
     GetTimeHM2Digits,
-    GetShortDate
+    GetShortDate,
+    ConvertMsToDHMS
 }

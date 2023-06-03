@@ -29,7 +29,7 @@ const Dashboard = () => {
   text-gray-100 rounded-sm ring-2 ring-blue-200 px-6 py-2 
   hover:bg-white hover:text-white hover:ring-slate-300 mx-8`;
 
-  console.log("IS ADMIN ? " + IsAdmin());
+  // console.log("IS ADMIN ? " + IsAdmin());
 
   return (
     <div>
@@ -43,7 +43,7 @@ const Dashboard = () => {
             {AppData.CATERING_FLAG && <MainMenuCard label="Gestion des Ventes" before={<FaUtensils size={48} />} href='/catering-sales-list' />}
 
             {AppData.DEVICE_MAINTENANCE_FLAG && <MainMenuCard label="Ajouter un Ordre de Réparation" before={<FaClipboardList size={48} />} href='/add-repair-order' />}
-            {AppData.DEVICE_MAINTENANCE_FLAG && <MainMenuCard label="Gestion Des Ordres de Répartion" before={<FaList size={48} />} href='/repair-orders-list' />}
+            {AppData.DEVICE_MAINTENANCE_FLAG && <MainMenuCard label="Gestion Des Ordres de Réparation" before={<FaList size={48} />} href='/repair-orders-list' />}
 
             {AppData.PRODUCT_MANAGEMENT_FLAG && <MainMenuCard label="Gestion Des Fournisseurs" before={<FaTruck size={48} />} href='/provider-list' />}
             {AppData.PRODUCT_MANAGEMENT_FLAG && <MainMenuCard label="Gestion Des Réceptions" before={<FaCartPlus size={48} />} href='/reception-list' />}

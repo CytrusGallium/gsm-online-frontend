@@ -1,13 +1,16 @@
 {
     "engine": "Nukode Reaknotron",
-    "customer": "Ilyes Ben Abadji",
-    "company": "Dar Mima",
-    "company_label": "Dar Mima",
+    "customer": "Nukode",
+    "company": "Nukode",
+    "company_label": "WebApp",
     "BG_VIDEO": "Golden Light Background.mp4",
     "PRIMARY_COLOR": "gray",
-    "DEVICE_MAINTENANCE_FLAG" : false,
+    "DEVICE_MAINTENANCE_FLAG" : true,
     "CATERING_FLAG" : true,
     "PRODUCT_MANAGEMENT_FLAG" : true,
     "EMPLOYEE_MANAGEMENT_FLAG" : true,
-    "FEE_MANAGEMENT_FLAG" : true
+    "FEE_MANAGEMENT_FLAG" : true,
+    "PRODUCT_BARCODE_FLAG" : true,
+    "SALES_POINT_FLAG" : true,
+    "MIZZAPP_FLAG" : true
 }

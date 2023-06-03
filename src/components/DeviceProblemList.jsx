@@ -43,13 +43,11 @@ const DeviceProblemList = (props) => {
         if (!props.onChange)
             return;
 
-        if (ParamProblems)
-        {
+        if (ParamProblems) {
             props.onChange(ParamProblems);
             console.log("MARK A : " + JSON.stringify(ParamProblems));
         }
-        else
-        {
+        else {
             props.onChange(problems);
             console.log("MARK B : " + JSON.stringify(problems));
         }
@@ -73,13 +71,13 @@ const DeviceProblemList = (props) => {
                 }}
             ></ReactHotkeys>
 
-            {problems.length > 1 && <p className='text-gray-100 mb-1'>Liste Des Pannes</p>}
+            <h4 className='text-gray-100 mb-1'>Liste Des Pannes</h4>
             {
                 problems.map(problem =>
                     <div className='flex-1 flex-nowrap flex-row' key={problem.key}>
-                        {problems.length > 1 && <span className='text-gray-100'>{problem.key} </span>}
-                        <input type="text" name="problem" id={problem.key} placeholder="Panne.." onChange={HandleNameOrPriceChange} className={inputStyle + ((problems.length > 1) ? " w-1/3" : " w-full")} autoComplete="off" value={problem.name} />
-                        {problems.length > 1 && <input type="number" name="price" id={problem.key} placeholder="Prix.." onChange={HandleNameOrPriceChange} className={inputStyle + " w-1/3"} autoComplete="off" value={problem.price} />}
+                        <span className='text-gray-100 mr-1 bg-gray-800 rounded-lg p-1 text-xs font-bold'>Panne N° {problem.key}</span>
+                        <input type="text" name="problem" id={problem.key} placeholder="Panne.." onChange={HandleNameOrPriceChange} className={inputStyle + " w-1/3"} autoComplete="off" value={problem.name} />
+                        <input type="number" name="price" id={problem.key} placeholder="Prix.." onChange={HandleNameOrPriceChange} className={inputStyle + " w-1/3"} autoComplete="off" value={problem.price} />
                     </div>
                 )
             }

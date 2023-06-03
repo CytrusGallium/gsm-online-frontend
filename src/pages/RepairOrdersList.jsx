@@ -4,7 +4,7 @@ import { GridLoader } from 'react-spinners';
 import axios from "axios";
 import { GetBackEndUrl } from '../const';
 import DeviceIconList from '../components/DeviceIconList';
-import { FaSearch, FaWrench, FaLock, FaCheck, FaEdit, FaTrash, FaUnlock, FaKey, FaFileExcel } from 'react-icons/fa';
+import { FaSearch, FaWrench, FaLock, FaCheck, FaEdit, FaTrash, FaUnlock, FaKey, FaFileExcel, FaArrowRight, FaArrowLeft } from 'react-icons/fa';
 import Popup from 'reactjs-popup';
 import 'reactjs-popup/dist/index.css';
 import '../ModalWindow.css';
@@ -16,9 +16,10 @@ import RepairOrderValidationPopup from '../components/RepairOrderValidationPopup
 import { GetBaseUrl } from '../Reaknotron/Libs/RknRouterUtils';
 import { Link } from 'react-router-dom';
 import { IsAdmin } from '../LoginManager';
+import RepairOrdersTable from '../components/RepairOrdersTable/RepairOrdersTable';
 
 export default class RepairOrderID extends Component {
-
+    
     constructor(props) {
         super(props);
         this.state = { tableData: [], isBusy: false, validationWindowOpen: false, currentValidationRepairOrder: "" };
@@ -93,6 +94,8 @@ export default class RepairOrderID extends Component {
         { name: 'Rose', age: 36, address: 'some where', key: '2' },
     ];
 
+    page = 0;
+
     // isBusy = false;
 
     componentDidMount() {
@@ -105,8 +108,6 @@ export default class RepairOrderID extends Component {
         this.GetRepairOrdersListFromDB();
     }
 
-
-
     async GetRepairOrdersListFromDB(ParamSearchProperty, ParamSearchProbe) {
 
         this.setState({ isBusy: true });
@@ -115,7 +116,7 @@ export default class RepairOrderID extends Component {
         try {
 
             // Build Req/Res
-            var url = GetBackEndUrl() + "/api/get-repair-orders-list";
+            var url = GetBackEndUrl() + "/api/get-repair-orders-list?page=" + this.page;
 
             if (ParamSearchProbe && ParamSearchProbe.length > 1)
                 url += `?${ParamSearchProperty}=` + ParamSearchProbe;
@@ -237,8 +238,8 @@ export default class RepairOrderID extends Component {
         return (
             <div className='text-gray-100 flex flex-col items-center'>
                 <br />
-                <h3 className='font-bold text-xl' >Liste des Orders de Réparation</h3>
-                {IsAdmin() && <a href={GetBackEndUrl() + "/api/get-ro-list-xls"} target="_blank" className='text-sm text-gray-400 bg-gray-800 border border-gray-400 p-1 rounded-lg m-1 hover:text-gray-100 hover:border-gray-100'> <FaFileExcel className='inline mb-1'/> Download Excel File</a>}
+                <h3 className='font-bold text-xl' >Liste des Ordres de Réparation</h3>
+                {IsAdmin() && <a href={GetBackEndUrl() + "/api/get-ro-list-xls"} target="_blank" className='text-sm text-gray-400 bg-gray-800 border border-gray-400 p-1 rounded-lg m-1 hover:text-gray-100 hover:border-gray-100'> <FaFileExcel className='inline mb-1' /> Download Excel File</a>}
                 <RepairOrderValidationPopup value={this.state.currentValidationRepairOrder} isOpen={this.state.validationWindowOpen} onClose={() => { this.popupOnClose() }} />
                 <br />
                 <br />
@@ -251,7 +252,14 @@ export default class RepairOrderID extends Component {
                 </div>
                 <br />
                 <br />
-                {this.state.isBusy ? <GridLoader color='#AAAAAA' /> : <>{this.state.tableData.length > 0 ? <Table columns={this.columns} data={this.state.tableData} rowKey="roid" className='mx-4' /> : <p>Aucun Ordre de Réparation à Afficher...</p>}</>}
+                <RepairOrdersTable items={this.state.tableData} onValidationClick={(ParamRepairOrder) => { this.setState({ validationWindowOpen: true, currentValidationRepairOrder: ParamRepairOrder }); }} onDeleteClick={(ParamRepairOrder) => { this.DeleteRepairOrderFromDB(ParamRepairOrder.roid) }} />
+                <br />
+                <div className='flex flex-row'>
+                    <FaArrowLeft className='inline p-1 border border-gray-500 bg-gray-900 mr-2 hover:bg-gray-100 hover:text-gray-900 cursor-pointer' size={24} onClick={() => {this.page -= 1; this.GetRepairOrdersListFromDB(); }}/>
+                    <p className='inline'>Page {this.page + 1}</p>
+                    <FaArrowRight className='inline p-1 border border-gray-500 bg-gray-900 ml-2 hover:bg-gray-100 hover:text-gray-900 cursor-pointer' size={24} onClick={() => {this.page += 1; this.GetRepairOrdersListFromDB(); }}/>
+                </div>
+                {/* {this.state.isBusy ? <GridLoader color='#AAAAAA' /> : <>{this.state.tableData.length > 0 ? <Table columns={this.columns} data={this.state.tableData} rowKey="roid" className='mx-4' /> : <p>Aucun Ordre de Réparation à Afficher...</p>}</>} */}
                 <br />
             </div>
         )

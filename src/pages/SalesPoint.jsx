@@ -7,7 +7,7 @@ import { AwesomeButton } from 'react-awesome-button';
 import { FaPrint, FaDownload, FaCheckCircle, FaList, FaSave } from 'react-icons/fa';
 import '../ScrollBar.css';
 import MizzappChoicePanel from '../components/MizzappChoicePanel';
-// import io from 'socket.io-client';
+import { motion } from "framer-motion";
 
 const SalesPoint = () => {
 
@@ -74,12 +74,17 @@ const SalesPoint = () => {
 
             if (obj.EVENT === "RESET")
                 setMizzappResult(null);
-            else if (obj.EVENT === "RESULT")
-            {
+            else if (obj.EVENT === "RESULT") {
                 setMizzappResult(obj);
 
                 if (obj.WEIGHT)
                     setMizzapWeight(obj.WEIGHT);
+            }
+            else if (obj.EVENT === "WEIGHT") {
+                // setMizzappResult(obj);
+
+                if (obj.WEIGHT)
+                    setMizzapWeight(Number(obj.WEIGHT));
             }
             else
                 setMizzappResult(null);
@@ -212,7 +217,12 @@ const SalesPoint = () => {
             <br />
 
             {/* Toolbar */}
-            <div className='fixed h-16 bg-gray-900 backdrop-blur bg-opacity-50 top-20 left-2 right-2 z-10 rounded-xl border-2 border-gray-500 flex flex-row items-center justify-center'>
+            <motion.div
+                className='fixed h-16 bg-gray-900 backdrop-blur bg-opacity-50 top-20 left-2 right-2 z-10 rounded-xl border-2 border-gray-500 flex flex-row items-center justify-center'
+                initial={{ opacity: 0, y: "-25%" }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay : 0.1 }}
+            >
                 <span className='mx-1' />
                 <AwesomeButton type={changesAvailable ? 'primary' : 'disabled'} onPress={Save} before={<FaSave size={24} />}><p className='hidden sm:block'>Enregistrer</p></AwesomeButton>
                 <span className='mx-1' />
@@ -222,27 +232,43 @@ const SalesPoint = () => {
                 <span className='mx-1' />
                 <AwesomeButton type='primary' onPress={DownloadPDF} before={<FaDownload size={24} />}><p className='hidden sm:block'>Télécharger le Bon</p></AwesomeButton>
                 <span className='mx-1' />
-            </div>
+            </motion.div>
 
             <br />
             <br />
             <br />
 
             {/* Total Panel */}
-            <p className='text-sm font-bold bg-gray-700 p-1 mx-2 border-gray-500 border-2 rounded-t-xl'>Total</p>
-            <div className='text-gray-100 text-3xl font-bold border-2 border-gray-500 rounded-b-3xl mx-2 p-2'>
-                <CountUp end={total} useEasing={false} preserveValue={true} duration='0.4' /> DA
-            </div>
+            <motion.div
+                initial={{ opacity: 0, y: "-25%" }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay : 0.2 }}
+            >
+                <p className='text-sm font-bold bg-gray-700 p-1 mx-2 border-gray-500 border-2 rounded-t-xl'>Total</p>
+                <div className='text-gray-100 text-3xl font-bold border-2 border-gray-500 rounded-b-3xl mx-2 p-2'>
+                    <CountUp end={total} useEasing={false} preserveValue={true} duration='0.4' /> DA
+                </div>
+            </motion.div>
             <br />
 
             {/* Search Field */}
-            <p className='text-sm font-bold bg-gray-700 p-1 border-gray-500 border-2 rounded-t-xl w-64 mx-auto md:w-96'>Rechercher un Produit</p>
-            <input type="text" value={query} ref={ref} onChange={event => setQuery(event.target.value)} className={'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-b-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 mb-1 w-64 mx-auto md:w-96'} placeholder='Codebar ou Nom du Produit...' />
+            <motion.div
+                initial={{ opacity: 0, y: "-25%" }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay : 0.3 }}
+            >
+                <p className='text-sm font-bold bg-gray-700 p-1 border-gray-500 border-2 rounded-t-xl w-64 mx-auto md:w-96'>Rechercher un Produit</p>
+                <input type="text" value={query} ref={ref} onChange={event => setQuery(event.target.value)} className={'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-b-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 mb-1 w-64 mx-auto md:w-96'} placeholder='Codebar ou Nom du Produit...' />
+            </motion.div>
             <br />
             <br />
 
             {/* Grid */}
-            <div className='text-gray-100 mt-2 mx-4 h-96 overflow-auto scrollbar'>
+            <motion.div className='text-gray-100 mt-2 mx-4 h-96 overflow-auto scrollbar'
+                initial={{ opacity: 0, y: "-25%" }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay : 0.4 }}
+            >
                 {/* Header */}
                 <div className='w-full flex flex-row'>
                     <div className='inline w-1/3 bg-gray-900 m-0.5 p-1 rounded-lg font-bold border border-gray-500'>Produit(s)</div>
@@ -260,7 +286,7 @@ const SalesPoint = () => {
                         <div className='inline w-1/3 bg-gray-700 m-0.5 p-1 rounded-lg'>{products[pk].amount}</div>
                         <div className='inline w-1/3 bg-gray-700 m-0.5 p-1 rounded-lg'>{products[pk].price * products[pk].amount}</div>
                     </div>
-                )}</div>
+                )}</motion.div>
 
             {/* Mizzap Choice Panel */}
             {mizzappResult && <MizzappChoicePanel value={mizzappResult} weight={mizzapWeight} onClick={AddMizzapResult} />}
