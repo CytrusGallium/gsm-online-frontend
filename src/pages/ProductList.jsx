@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import Table from 'rc-table';
 import axios from 'axios';
 import { GetBackEndUrl } from '../const';
-import { data } from 'autoprefixer';
 import { GetBaseUrl } from '../Reaknotron/Libs/RknRouterUtils';
 import { AwesomeButton } from 'react-awesome-button';
 import { FaPlus, FaInfinity, FaEdit, FaTrash } from 'react-icons/fa';

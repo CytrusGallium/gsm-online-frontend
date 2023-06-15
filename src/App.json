@@ -1,16 +1,21 @@
 {
-    "engine": "Nukode Reaknotron",
-    "customer": "Nukode",
-    "company": "Nukode",
-    "company_label": "WebApp",
+    "ENGINE": "Nukode Reaknotron",
+    "CUSTOMER": "Nukode",
+    "COMPANY": "Nukode",
+    "COMPANY_LABEL": "WebApp",
+    "LOGO": "Logo-Technology-By-Smashicons.png",
+    "LOGO_TOP_DISTANCE": "14px",
     "BG_VIDEO": "Golden Light Background.mp4",
     "PRIMARY_COLOR": "gray",
     "DEVICE_MAINTENANCE_FLAG" : true,
     "CATERING_FLAG" : true,
+    "STORAGE_MANAGEMENT_FLAG" : true,
     "PRODUCT_MANAGEMENT_FLAG" : true,
     "EMPLOYEE_MANAGEMENT_FLAG" : true,
     "FEE_MANAGEMENT_FLAG" : true,
     "PRODUCT_BARCODE_FLAG" : true,
     "SALES_POINT_FLAG" : true,
-    "MIZZAPP_FLAG" : true
+    "MIZZAPP_FLAG" : true,
+    "COMPUTER_SPECS_FLAG" : true,
+    "SHARE_PRODUCT_ON_FACEBOOK_FLAG" : true
 }

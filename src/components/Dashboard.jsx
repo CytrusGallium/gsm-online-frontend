@@ -19,7 +19,8 @@ import {
   FaSmile,
   FaFileInvoiceDollar,
   FaCartArrowDown,
-  FaDatabase
+  FaDatabase,
+  FaLaptop
 } from 'react-icons/fa';
 
 
@@ -45,10 +46,13 @@ const Dashboard = () => {
             {AppData.DEVICE_MAINTENANCE_FLAG && <MainMenuCard label="Ajouter un Ordre de Réparation" before={<FaClipboardList size={48} />} href='/add-repair-order' />}
             {AppData.DEVICE_MAINTENANCE_FLAG && <MainMenuCard label="Gestion Des Ordres de Réparation" before={<FaList size={48} />} href='/repair-orders-list' />}
 
-            {AppData.PRODUCT_MANAGEMENT_FLAG && <MainMenuCard label="Gestion Des Fournisseurs" before={<FaTruck size={48} />} href='/provider-list' />}
-            {AppData.PRODUCT_MANAGEMENT_FLAG && <MainMenuCard label="Gestion Des Réceptions" before={<FaCartPlus size={48} />} href='/reception-list' />}
+            {AppData.STORAGE_MANAGEMENT_FLAG && <MainMenuCard label="Gestion Des Fournisseurs" before={<FaTruck size={48} />} href='/provider-list' />}
+            {AppData.STORAGE_MANAGEMENT_FLAG && <MainMenuCard label="Gestion Des Réceptions" before={<FaCartPlus size={48} />} href='/reception-list' />}
+            
             {AppData.PRODUCT_MANAGEMENT_FLAG && <MainMenuCard label="Gestion Des Produits" before={<FaBox size={48} />} href='/product-list' />}
             {AppData.PRODUCT_MANAGEMENT_FLAG && <MainMenuCard label="Gestion Des Catégories" before={<FaTag size={48} />} href='/new-category' />}
+            
+            {AppData.COMPUTER_SPECS_FLAG && <MainMenuCard label="Gestion Des Configurations d'Ordinateur" before={<FaLaptop size={48} />} href='/computer-specs-manager' />}
 
             {AppData.EMPLOYEE_MANAGEMENT_FLAG && <MainMenuCard label="Gestion Des Employés" before={<FaSmile size={48} />} href='/employee-manager' />}
             {AppData.EMPLOYEE_MANAGEMENT_FLAG && <MainMenuCard label="Pointage Des Employés" before={<FaRegClock size={48} />} href='/employee-clocking-board' />}

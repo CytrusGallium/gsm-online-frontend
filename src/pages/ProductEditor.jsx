@@ -6,6 +6,9 @@ import { GetBackEndUrl } from '../const';
 import axios from 'axios';
 import FileSelectAndDrop from '../components/FileSelectAndDrop';
 import { AwesomeButton } from 'react-awesome-button';
+import ComputerSpecsEditor from '../components/ComputerSpecsEditor';
+import { FaFacebook } from 'react-icons/fa';
+import PostToFacebookPopup from '../components/PostToFacebookPopup';
 
 const inputFieldStyle = 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 mt-2 w-4/5';
 const buttonStyle = "bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded mt-2";
@@ -38,6 +41,9 @@ const ProductEditor = () => {
     const [targetID, setTargetID] = useState("");
     const [sellable, setSellable] = useState(true);
     const [buyable, setBuyable] = useState(true);
+    const [computerSpecsID, setComputerSpecsID] = useState(null);
+    const [computerSpecs, setComputerSpecs] = useState(null);
+    const [currentSpecsToPost, setCurrentSpecsToPost] = useState(null);
 
     const handleChange = ({ currentTarget: input }) => {
         setProductInfo({ ...productInfo, [input.name]: input.value });
@@ -158,45 +164,6 @@ const ProductEditor = () => {
         }
     }
 
-    // const updateProductInDB = async () => {
-    //     try {
-
-    //         console.log("TARGET ID STATE = " + targetID);
-
-    //         let productToPost = {
-    //             id: targetID,
-    //             name: productInfo.name,
-    //             description: productInfo.description,
-    //             price: productInfo.price,
-    //             altLangName: productInfo.altLangName,
-    //             category: productInfo.category,
-    //             buyable: buyable,
-    //             sellable: sellable,
-    //             barcode: productInfo.barcode,
-    //             mizzappID : productInfo.mizzappID,
-    //             picture : selectedFile
-    //         };
-
-    //         // console.log("PRODUCT : " + JSON.stringify(productToPost));
-
-    //         // Add token
-    //         // const token = localStorage.getItem("token");
-    //         // const config = {
-    //         //     headers: { Authorization: `Bearer ${token}` }
-    //         // };
-
-    //         const url = GetBackEndUrl() + "/api/update-product";
-    //         console.log("POST : " + url);
-
-    //         let res = await axios.post(url, productToPost);
-
-    //         setChangesAvailable(false);
-
-    //     } catch (error) {
-    //         console.log("ERROR : " + error);
-    //     }
-    // }
-
     const getCategoryListFromDB = async () => {
         let res;
 
@@ -233,13 +200,38 @@ const ProductEditor = () => {
             // Build Req/Res
             var url = GetBackEndUrl() + "/api/get-product?id=" + ParamID;
 
+            if (AppData.COMPUTER_SPECS_FLAG)
+                url += "&computerSpecs=1";
+
             console.log("GET : " + url);
             res = await axios.get(url);
 
             if (res) {
-                setProductInfo({ name: res.data.name, description: res.data.description, altLangName: res.data.altLangName, price: res.data.price, category: res.data.category, mizzappID: res.data.mizzappID, preparationDuration: res.data.preparationDuration });
+
+                console.log("RESULT = " + JSON.stringify(res.data));
+
+                setProductInfo({
+                    name: res.data.name,
+                    description: res.data.description,
+                    altLangName: res.data.altLangName,
+                    price: res.data.price,
+                    category: res.data.category,
+                    mizzappID: res.data.mizzappID,
+                    preparationDuration: res.data.preparationDuration
+                });
+
                 setBuyable(res.data.buyable);
                 setSellable(res.data.sellable);
+
+                if (res.data.computerSpecsID) {
+                    setComputerSpecsID(res.data.computerSpecsID);
+                    // Build Req/Res
+                    let url_2 = GetBackEndUrl() + "/api/computer-specs-by-id?id=" + res.data.computerSpecsID;
+                    console.log("GET : " + url_2);
+                    let res_2 = await axios.get(url_2);
+                    console.log("DATA = " + JSON.stringify(res_2.data));
+                    setComputerSpecs(res_2.data);
+                }
             }
 
         } catch (error) {
@@ -283,7 +275,7 @@ const ProductEditor = () => {
                 <label className="block text-sm font-medium text-gray-900 dark:text-white">Prix :</label>
                 <input type="number" step="0.01" name="price" className={inputFieldStyle} value={productInfo.price} placeholder="Prix du produit..." onChange={handleChange} />
                 <br />
-                
+
                 <label className="block text-sm font-medium text-gray-900 dark:text-white">Temps de Préparation :</label>
                 <input type="number" step="1" name="preparationDuration" className={inputFieldStyle} value={productInfo.preparationDuration} placeholder="Temps de Préparation..." onChange={handleChange} />
                 <br />
@@ -319,6 +311,18 @@ const ProductEditor = () => {
                 {imageAvailable && <img src={imageURL} alt="preview" className="object-cover h-64 w-64 m-auto border-2 border-gray-300 rounded-2xl" />}
                 {imageAvailable && <div className='text-xl text-gray-500 font-bold border-2 border-gray-500 rounded-2xl w-64 m-auto mt-1 hover:bg-gray-500 hover:text-gray-100' onClick={handleImageClear}>X</div>}
 
+                <br />
+                <br />
+
+                {/* {AppData.COMPUTER_SPECS_FLAG && <ComputerSpecsEditor value={computerSpecs} />} */}
+
+                {/* Facebook */}
+                <br />
+                {AppData.SHARE_PRODUCT_ON_FACEBOOK_FLAG && <AwesomeButton type='primary' before={<FaFacebook />} onPress={() => { setCurrentSpecsToPost(computerSpecs); }}>Partager</AwesomeButton>}
+                {currentSpecsToPost &&
+                    <PostToFacebookPopup value={currentSpecsToPost} isOpen={true} onClose={() => { setCurrentSpecsToPost(null); }} />
+                }
+                <br />
 
                 <div>
                     {changesAvailable && <button type="submit" className={buttonStyle}>Enregistrer</button>}
