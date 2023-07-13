@@ -276,9 +276,13 @@ const ProductEditor = () => {
                 <input type="number" step="0.01" name="price" className={inputFieldStyle} value={productInfo.price} placeholder="Prix du produit..." onChange={handleChange} />
                 <br />
 
-                <label className="block text-sm font-medium text-gray-900 dark:text-white">Temps de Préparation :</label>
-                <input type="number" step="1" name="preparationDuration" className={inputFieldStyle} value={productInfo.preparationDuration} placeholder="Temps de Préparation..." onChange={handleChange} />
-                <br />
+                {AppData.CATERING_FLAG &&
+                    <div>
+                        <label className="block text-sm font-medium text-gray-900 dark:text-white">Temps de Préparation :</label>
+                        <input type="number" step="1" name="preparationDuration" className={inputFieldStyle} value={productInfo.preparationDuration} placeholder="Temps de Préparation..." onChange={handleChange} />
+                        <br />
+                    </div>
+                }
 
                 {
                     AppData.PRODUCT_BARCODE_FLAG &&
@@ -318,9 +322,10 @@ const ProductEditor = () => {
 
                 {/* Facebook */}
                 <br />
-                {AppData.SHARE_PRODUCT_ON_FACEBOOK_FLAG && <AwesomeButton type='primary' before={<FaFacebook />} onPress={() => { setCurrentSpecsToPost(computerSpecs); }}>Partager</AwesomeButton>}
-                {currentSpecsToPost &&
-                    <PostToFacebookPopup value={currentSpecsToPost} isOpen={true} onClose={() => { setCurrentSpecsToPost(null); }} />
+                {AppData.SHARE_PRODUCT_ON_FACEBOOK_FLAG && targetID && <AwesomeButton type='primary' before={<FaFacebook />} onPress={() => { setCurrentSpecsToPost(computerSpecs); }}>Partager</AwesomeButton>}
+                {
+                    currentSpecsToPost &&
+                    <PostToFacebookPopup value={currentSpecsToPost} productID={targetID} isOpen={true} onClose={() => { setCurrentSpecsToPost(null); }} />
                 }
                 <br />
 
@@ -330,8 +335,8 @@ const ProductEditor = () => {
                 <br />
 
                 <br />
-            </form>
-        </div>
+            </form >
+        </div >
     )
 }
 

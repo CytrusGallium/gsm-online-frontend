@@ -20,12 +20,14 @@ import {
     FaPhone,
     FaDoorOpen,
     FaPhoneSquare,
-    FaHandshake
+    FaHandshake,
+    FaHistory
 } from 'react-icons/fa';
 
 const RepairOrdersTable = (props) => {
 
     useEffect(() => {
+        // console.log("ITEMS = " + JSON.stringify(props.items));
         setItems(props.items);
     }, [props.items]);
 
@@ -37,10 +39,20 @@ const RepairOrdersTable = (props) => {
         const iconSize = 20;
 
         if (ParamRepairOrder) {
+
+            if (ParamRepairOrder.deleted) {
+                return (
+                    <div className='grid grid-cols-2'>
+                        <button className={buttonStyle}> <Link to={"/add-repair-order?id=" + ParamRepairOrder.roid + "&history=true"}> <FaHistory size={iconSize} className='ml-0.5' /></Link> </button>
+                    </div>
+                )
+            }
+            
             if (ParamRepairOrder.locked) {
                 return (
                     <div className='grid grid-cols-2'>
                         <button className={buttonStyle} onClick={() => { console.log("Unlock"); }}><FaKey size={iconSize} /></button>
+                        <button className={buttonStyle}> <Link to={"/add-repair-order?id=" + ParamRepairOrder.roid + "&history=true"}> <FaHistory size={iconSize} className='ml-0.5' /></Link> </button>
                     </div>
                 )
             }
@@ -55,6 +67,8 @@ const RepairOrdersTable = (props) => {
                         <button className='bg-red-900 text-gray-100 h-10 w-14 rounded-lg px-4 my-0.5 mx-0.5 text-sm hover:bg-red-700 inline border border-gray-700 shadow-[0_5px_6px_-5px_rgba(0,0,0,0.95)] hover:shadow-[0_8px_7px_-5px_rgba(0,0,0,0.95)] duration-300' onClick={() => { props.onDeleteClick(ParamRepairOrder); }}>
                             <FaTrash size={iconSize} className='ml-0.5' />
                         </button>
+                        
+                        <button className={buttonStyle}> <Link to={"/add-repair-order?id=" + ParamRepairOrder.roid + "&history=true"}> <FaHistory size={iconSize} className='ml-0.5' /></Link> </button>
 
                     </div>
                 )
@@ -66,21 +80,23 @@ const RepairOrdersTable = (props) => {
 
     const normalItemStyle = 'bg-gray-900 rounded-xl p-1 pt-0.5 pb-2 my-1 border-2 border-gray-500';
     const lockedItemStyle = 'bg-green-900 bg-opacity-40 rounded-xl p-1 pt-0.5 pb-2 my-1 border-2 border-gray-500';
+    const deletedItemStyle = 'bg-red-700 bg-opacity-40 rounded-xl p-1 pt-0.5 pb-2 my-1 border-2 border-gray-500';
 
     return (
-        <div className='flex flex-col items-center justify-center mx-4 p-2 rounded-xl'>
+        <div className='text-gray-100 flex flex-col items-center justify-center mx-4 p-2 rounded-xl'>
             {items &&
                 items.map((item, index) => {
                     return (
                         <motion.div
-                            className={item.locked ? lockedItemStyle : normalItemStyle}
+                            className={item.deleted ? deletedItemStyle : item.locked ? lockedItemStyle : normalItemStyle}
                             initial={{ opacity: 0, x: "-50%" }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.5, delay: 0.1 * index }}
+                            key={index}
                         >
 
                             {/* Main Info */}
-                            <div key={item.key} className='p-1 flex flex-row text-xl font-bold'>
+                            <div className='p-1 flex flex-row text-xl font-bold'>
                                 <div className='flex flex-col items-center w-32 h-10 rounded-lg pt-2 bg-gray-100 text-gray-800 mr-0.5'>{item.locked ? <FaLock /> : <FaWrench />}</div>
                                 <div className='w-80 h-10 rounded-lg pt-1 bg-gray-100 text-gray-800 mr-0.5'><FaBarcode className='inline mr-2 mb-1' />{item.roid}</div>
                                 <div className='w-80 h-10 rounded-lg pt-1 bg-gray-100 text-gray-800 mr-0.5'><FaUser className='inline mr-2 mb-1' />{item.customer}</div>
@@ -88,7 +104,7 @@ const RepairOrdersTable = (props) => {
                             </div>
 
                             {/* Secondary Info */}
-                            <div key={item.key} className='px-1 flex flex-row font-bold text-lg'>
+                            <div className='px-1 flex flex-row font-bold text-lg'>
                                 <div className='flex flex-col items-center w-32 h-24 rounded-lg py-0.5 border border-gray-500 mr-0.5'>
                                     {/* <FaCheck /> <FaEdit /> <FaTrash /> */}
                                     {GenerateOperationButtons(item)}

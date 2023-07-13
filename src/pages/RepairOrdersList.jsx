@@ -1,11 +1,7 @@
-import React, { Component } from 'react';
-import Table from 'rc-table';
+import React, { useEffect, useState, useRef } from 'react';
 import { GridLoader } from 'react-spinners';
 import axios from "axios";
 import { GetBackEndUrl } from '../const';
-import DeviceIconList from '../components/DeviceIconList';
-import { FaSearch, FaWrench, FaLock, FaCheck, FaEdit, FaTrash, FaUnlock, FaKey, FaFileExcel, FaArrowRight, FaArrowLeft } from 'react-icons/fa';
-import Popup from 'reactjs-popup';
 import 'reactjs-popup/dist/index.css';
 import '../ModalWindow.css';
 import { AwesomeButton } from 'react-awesome-button';
@@ -17,116 +13,56 @@ import { GetBaseUrl } from '../Reaknotron/Libs/RknRouterUtils';
 import { Link } from 'react-router-dom';
 import { IsAdmin } from '../LoginManager';
 import RepairOrdersTable from '../components/RepairOrdersTable/RepairOrdersTable';
+import { FaSearch, FaFileExcel, FaArrowRight, FaArrowLeft } from 'react-icons/fa';
+import RepairOrderValidationPopupV2 from '../components/RepairOrderValidationPopupV2';
+import RknConfirmationPopup from '../components/RknUI/RknConfirmationPopup';
+import RknLoaderPopup from '../components/RknUI/RknLoaderPopup';
 
-export default class RepairOrderID extends Component {
-    
-    constructor(props) {
-        super(props);
-        this.state = { tableData: [], isBusy: false, validationWindowOpen: false, currentValidationRepairOrder: "" };
-    }
+const RepairOrdersList = () => {
 
-    columns = [
-        {
-            title: 'Etat',
-            dataIndex: 'locked',
-            key: 'locked',
-            className: 'border border-gray-500',
-            width: 64,
-            render: lock => <div className='flex flex-col items-center'> <p>{lock ? <FaLock /> : <FaWrench />}</p></div>
-        },
-        {
-            title: 'Opérations',
-            dataIndex: '',
-            key: 'operations',
-            width: 128,
-            className: 'border border-gray-500',
-            render: i => this.GenerateOperationButtons(i)
-        },
-        {
-            title: 'Identifiant',
-            dataIndex: 'roid',
-            key: 'roid',
-            width: 200,
-            className: 'border border-gray-500'
-        },
-        {
-            title: "Date d'Entrée",
-            dataIndex: 'time',
-            key: 'time',
-            width: 256,
-            className: 'border border-gray-500',
-            render: d => <p className='text-sm'>{(new Date(d)).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}</p>
-        },
-        {
-            title: 'Date de Sortie',
-            dataIndex: 'exitDate',
-            key: 'exitDate',
-            width: 256,
-            className: 'border border-gray-500',
-            render: d => <p className='text-sm'>{d ? (new Date(d)).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : "-"}</p>
-        },
-        {
-            title: 'Client',
-            dataIndex: 'customer',
-            key: 'customer',
-            width: 300,
-            className: 'border border-gray-500'
-        },
-        {
-            title: 'N° Téléphone',
-            dataIndex: 'phone',
-            key: 'phone',
-            width: 200,
-            className: 'border border-gray-500'
-        },
-        {
-            title: 'Liste des Appareils',
-            dataIndex: 'items',
-            key: 'items',
-            className: 'border border-gray-500',
-            width: 256,
-            render: items => <div>{<DeviceIconList value={items} />}</div>
-        }
-    ];
+    const [tableData, setTableData] = useState([]);
+    const [busy, setBusy] = useState(false);
+    const [validationWindowOpen, setValidationWindowOpen] = useState(false);
+    const [currentValidationRepairOrder, setCurrentValidationRepairOrder] = useState("");
+    const [showDeleted, setShowDeleted] = useState(false);
+    const [page, setPage] = useState(0);
+    const [roidInputValue, setRoidInputValue] = useState("");
+    const [customerInputValue, setCustomerInputValue] = useState("");
+    const [phoneInputValue, setPhoneInputValue] = useState("");
+    const [imeiInputValue, setImeiInputValue] = useState("");
+    const [roToDelete, setRoToDelete] = useState(null);
+    const [deleting, setDeleting] = useState(false);
 
-    data = [
-        { name: 'Jack', age: 28, address: 'some where', key: '1' },
-        { name: 'Rose', age: 36, address: 'some where', key: '2' },
-    ];
+    const checkboxRef = useRef(null);
 
-    page = 0;
+    useEffect(() => {
+        GetRepairOrdersListFromDB();
+    }, [page]);
 
-    // isBusy = false;
+    const GetRepairOrdersListFromDB = async (ParamSearchProperty, ParamSearchProbe) => {
 
-    componentDidMount() {
-        this.GetRepairOrdersListFromDB();
-    }
-
-    popupOnClose() {
-        // console.log("popupOnClose()");
-        this.setState({ validationWindowOpen: false, currentValidationRepairOrder: "" });
-        this.GetRepairOrdersListFromDB();
-    }
-
-    async GetRepairOrdersListFromDB(ParamSearchProperty, ParamSearchProbe) {
-
-        this.setState({ isBusy: true });
+        setBusy(true);
         let res;
 
         try {
 
             // Build Req/Res
-            var url = GetBackEndUrl() + "/api/get-repair-orders-list?page=" + this.page;
+            var url = GetBackEndUrl() + "/api/get-repair-orders-list?page=" + page;
 
             if (ParamSearchProbe && ParamSearchProbe.length > 1)
-                url += `?${ParamSearchProperty}=` + ParamSearchProbe;
+                url += `&${ParamSearchProperty}=` + ParamSearchProbe;
+
+            // Show Deleted ?
+            if (checkboxRef.current.checked)
+                url += "&showDeleted=true";
 
             console.log("GET : " + url);
             res = await axios.get(url);
 
             if (res) {
-                this.UpdateTableData(res.data);
-                this.setState({ isBusy: false });
+                // this.UpdateTableData(res.data);
+                setTableData(res.data);
+                setBusy(false);
             }
 
         } catch (error) {
@@ -140,9 +76,15 @@ export default class RepairOrderID extends Component {
         }
     }
 
-    async DeleteRepairOrderFromDB(ParamROID) {
+    const popupOnClose = () => {
+        setValidationWindowOpen(false);
+        setCurrentValidationRepairOrder("");
+        GetRepairOrdersListFromDB();
+    }
 
-        this.setState({ isBusy: true });
+    const DeleteRepairOrderFromDB = async (ParamROID) => {
+
+        setDeleting(true);
         let res;
 
         try {
@@ -150,17 +92,14 @@ export default class RepairOrderID extends Component {
             // Build Req/Res
             var url = GetBackEndUrl() + "/api/delete-repair-order?roid=" + ParamROID;
 
-            // if (ParamSearchProbe && ParamSearchProbe.length > 1)
-            //     url += `?${ParamSearchProperty}=` + ParamSearchProbe;
-
             console.log("GET : " + url);
             res = await axios.get(url);
 
             if (res) {
-                // this.UpdateTableData(res.data);
-                this.GetRepairOrdersListFromDB("", "");
-                this.setState({ isBusy: false });
+                GetRepairOrdersListFromDB("", "");
             }
+
+            setDeleting(false);
 
         } catch (error) {
             console.log("ERROR : " + error);
@@ -173,95 +112,103 @@ export default class RepairOrderID extends Component {
         }
     }
 
-    UpdateTableData(ParamTableData) {
-        // console.log("DATA = " + JSON.stringify(ParamTableData));
-        this.setState({ tableData: ParamTableData });
+    var searchTimeOut = null;
+
+    const RoidSearchFieldOnChange = (ParamEvent) => {
+
+        setRoidInputValue(ParamEvent.target.value);
+
+        if (searchTimeOut != null)
+            clearTimeout(searchTimeOut);
+
+        searchTimeOut = setTimeout(() => { GetRepairOrdersListFromDB("roid", ParamEvent.target.value) }, 500);
     }
 
-    searchTimeOut = null;
+    const CustomerSearchFieldOnChange = (ParamEvent) => {
 
-    RoidSearchFieldOnChange(ParamEvent) {
+        setCustomerInputValue(ParamEvent.target.value);
 
-        if (this.searchTimeOut != null)
-            clearTimeout(this.searchTimeOut);
+        if (searchTimeOut != null)
+            clearTimeout(searchTimeOut);
 
-        this.searchTimeOut = setTimeout(() => { this.GetRepairOrdersListFromDB("roid", ParamEvent.target.value) }, 500);
+        searchTimeOut = setTimeout(() => { GetRepairOrdersListFromDB("customer", ParamEvent.target.value) }, 500);
     }
 
-    CustomerSearchFieldOnChange(ParamEvent) {
+    const PhoneSearchFieldOnChange = (ParamEvent) => {
 
-        if (this.searchTimeOut != null)
-            clearTimeout(this.searchTimeOut);
+        setPhoneInputValue(ParamEvent.target.value);
 
-        this.searchTimeOut = setTimeout(() => { this.GetRepairOrdersListFromDB("customer", ParamEvent.target.value) }, 500);
+        if (searchTimeOut != null)
+            clearTimeout(searchTimeOut);
+
+        searchTimeOut = setTimeout(() => { GetRepairOrdersListFromDB("phone", ParamEvent.target.value) }, 500);
     }
 
-    PhoneSearchFieldOnChange(ParamEvent) {
+    const IMEISearchFieldOnChange = (ParamEvent) => {
 
-        if (this.searchTimeOut != null)
-            clearTimeout(this.searchTimeOut);
+        setImeiInputValue(ParamEvent.target.value);
 
-        this.searchTimeOut = setTimeout(() => { this.GetRepairOrdersListFromDB("phone", ParamEvent.target.value) }, 500);
+        if (searchTimeOut != null)
+            clearTimeout(searchTimeOut);
+
+        searchTimeOut = setTimeout(() => { GetRepairOrdersListFromDB("imei", ParamEvent.target.value) }, 500);
     }
 
-    IMEISearchFieldOnChange(ParamEvent) {
+    const handleShowDeletedChange = () => {
+        setShowDeleted(!showDeleted);
 
-        if (this.searchTimeOut != null)
-            clearTimeout(this.searchTimeOut);
+        setTimeout(() => {
+            GetRepairOrdersListFromDB();
+        }, 100);
 
-        this.searchTimeOut = setTimeout(() => { this.GetRepairOrdersListFromDB("imei", ParamEvent.target.value) }, 500);
-    }
+        // console.log(checkboxRef.current.checked);
+    };
 
-    GenerateOperationButtons(ParamRepairOrder) {
-
-        const buttonStyle = 'bg-gray-900 text-gray-100 rounded-lg p-2 my-2 mx-1 text-sm hover:bg-gray-700 inline';
-
-        if (ParamRepairOrder) {
-            if (ParamRepairOrder.locked) {
-                return <button className={buttonStyle} onClick={() => { console.log("Unlock"); }}><FaKey size={20} /></button>
-            }
-            else {
-                return (
-                    <div className='flex flex-row'>
-                        <button className={buttonStyle} onClick={() => { this.setState({ validationWindowOpen: true, currentValidationRepairOrder: ParamRepairOrder }); }}> <FaCheck size={20} /> </button>
-                        {IsAdmin() && <button className={buttonStyle}> <Link to={"/add-repair-order?id=" + ParamRepairOrder.roid}> <FaEdit size={20} /></Link> </button>}
-                        <button className={buttonStyle} onClick={() => { console.log("DELETE"); this.DeleteRepairOrderFromDB(ParamRepairOrder.roid) }}> <FaTrash size={20} /> </button>
-                    </div>
-                )
-            }
-        }
-
-        return "N/A";
-    }
-
-    render() {
-        return (
-            <div className='text-gray-100 flex flex-col items-center'>
-                <br />
-                <h3 className='font-bold text-xl' >Liste des Ordres de Réparation</h3>
-                {IsAdmin() && <a href={GetBackEndUrl() + "/api/get-ro-list-xls"} target="_blank" className='text-sm text-gray-400 bg-gray-800 border border-gray-400 p-1 rounded-lg m-1 hover:text-gray-100 hover:border-gray-100'> <FaFileExcel className='inline mb-1' /> Download Excel File</a>}
-                <RepairOrderValidationPopup value={this.state.currentValidationRepairOrder} isOpen={this.state.validationWindowOpen} onClose={() => { this.popupOnClose() }} />
-                <br />
-                <br />
-                <div>
-                    <FaSearch className='hidden md:inline' size={24} />
-                    <input type="text" value={this.state.roidInputValue} className='inline rounded p-2 text-black mx-2' onChange={e => this.RoidSearchFieldOnChange(e)} placeholder="Identifiant du bon..." />
-                    <input type="text" value={this.state.customerInputValue} className='inline rounded p-2 text-black mx-2' onChange={e => this.CustomerSearchFieldOnChange(e)} placeholder="Nom du client..." />
-                    <input type="text" value={this.state.phoneInputValue} className='inline rounded p-2 text-black mx-2' onChange={e => this.PhoneSearchFieldOnChange(e)} placeholder="N° de Téléphone..." />
-                    <input type="text" value={this.state.imeiInputValue} className='inline rounded p-2 text-black mx-2' onChange={e => this.IMEISearchFieldOnChange(e)} placeholder="IMEI/NS..." />
-                </div>
-                <br />
-                <br />
-                <RepairOrdersTable items={this.state.tableData} onValidationClick={(ParamRepairOrder) => { this.setState({ validationWindowOpen: true, currentValidationRepairOrder: ParamRepairOrder }); }} onDeleteClick={(ParamRepairOrder) => { this.DeleteRepairOrderFromDB(ParamRepairOrder.roid) }} />
-                <br />
-                <div className='flex flex-row'>
-                    <FaArrowLeft className='inline p-1 border border-gray-500 bg-gray-900 mr-2 hover:bg-gray-100 hover:text-gray-900 cursor-pointer' size={24} onClick={() => {this.page -= 1; this.GetRepairOrdersListFromDB(); }}/>
-                    <p className='inline'>Page {this.page + 1}</p>
-                    <FaArrowRight className='inline p-1 border border-gray-500 bg-gray-900 ml-2 hover:bg-gray-100 hover:text-gray-900 cursor-pointer' size={24} onClick={() => {this.page += 1; this.GetRepairOrdersListFromDB(); }}/>
-                </div>
-                {/* {this.state.isBusy ? <GridLoader color='#AAAAAA' /> : <>{this.state.tableData.length > 0 ? <Table columns={this.columns} data={this.state.tableData} rowKey="roid" className='mx-4' /> : <p>Aucun Ordre de Réparation à Afficher...</p>}</>} */}
-                <br />
+    return (
+        <div className='text-gray-100 flex flex-col items-center'>
+            <br />
+            <h2 className='font-bold text-2xl mb-2' >Liste des Ordres de Réparation</h2>
+            {IsAdmin() && <a href={GetBackEndUrl() + "/api/get-ro-list-xls"} target="_blank" className='text-xs text-gray-400 bg-gray-800 border border-gray-400 p-1 rounded-lg m-1 hover:text-gray-100 hover:border-gray-100'> <FaFileExcel className='inline mb-1' /> Télécharger Fichier Excel</a>}
+            <br />
+            <br />
+            <div>
+                <FaSearch className='hidden md:inline' size={24} />
+                <input type="text" value={roidInputValue} className='inline rounded p-2 text-black mx-2' onChange={e => RoidSearchFieldOnChange(e)} placeholder="Identifiant du bon..." />
+                <input type="text" value={customerInputValue} className='inline rounded p-2 text-black mx-2' onChange={e => CustomerSearchFieldOnChange(e)} placeholder="Nom du client..." />
+                <input type="text" value={phoneInputValue} className='inline rounded p-2 text-black mx-2' onChange={e => PhoneSearchFieldOnChange(e)} placeholder="N° de Téléphone..." />
+                <input type="text" value={imeiInputValue} className='inline rounded p-2 text-black mx-2' onChange={e => IMEISearchFieldOnChange(e)} placeholder="IMEI/NS..." />
             </div>
-        )
-    }
+            <br />
+            <label className='mb-2 text-gray-100 text-sm'>
+                <input type="checkbox" checked={showDeleted} onChange={handleShowDeletedChange} className='mx-1 w-3 h-3' ref={checkboxRef} />Afficher les Ordres de Réparations Supprimées
+            </label>
+            <br />
+
+            {busy && <GridLoader color='#AAAAAA' />}
+
+            {!busy && tableData && <RepairOrdersTable
+                items={tableData}
+                onValidationClick={(ParamRepairOrder) => {
+                    setValidationWindowOpen(true);
+                    setCurrentValidationRepairOrder(ParamRepairOrder);
+                }}
+                // onDeleteClick={(ParamRepairOrder) => { DeleteRepairOrderFromDB(ParamRepairOrder.roid) }}
+                onDeleteClick={(ParamRepairOrder) => { setRoToDelete(ParamRepairOrder.roid) }}
+            />}
+
+            <br />
+            <div className='flex flex-row'>
+                <FaArrowLeft className='inline p-1 border border-gray-500 bg-gray-900 mr-2 hover:bg-gray-100 hover:text-gray-900 cursor-pointer' size={24} onClick={() => { setPage(page - 1); }} />
+                <p className='inline'>Page {page + 1}</p>
+                <FaArrowRight className='inline p-1 border border-gray-500 bg-gray-900 ml-2 hover:bg-gray-100 hover:text-gray-900 cursor-pointer' size={24} onClick={() => { setPage(page + 1); }} />
+            </div>
+            <br />
+
+            {validationWindowOpen && <RepairOrderValidationPopupV2 value={currentValidationRepairOrder} isOpen={validationWindowOpen} onClose={() => { popupOnClose() }} />}
+            {roToDelete && <RknConfirmationPopup danger={true} onConfirm={() => { DeleteRepairOrderFromDB(roToDelete); setRoToDelete(null); }} onCancel={() => { setRoToDelete(null); }} />}
+            {deleting && <RknLoaderPopup loader='pacman' />}
+        </div>
+    )
 }
+
+export default RepairOrdersList

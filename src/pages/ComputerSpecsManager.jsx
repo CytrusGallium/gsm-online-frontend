@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import Table from 'rc-table';
 import axios from 'axios';
 import { GetBackEndUrl } from '../const';
-import { GetBaseUrl } from '../Reaknotron/Libs/RknRouterUtils';
 import { AwesomeButton } from 'react-awesome-button';
-import { FaPlus, FaInfinity, FaEdit, FaTrash, FaCube, FaFacebookSquare } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
-import PostToFacebookPopup from '../components/PostToFacebookPopup';
+import { FaPlus, FaEdit, FaTrash, FaCube } from 'react-icons/fa';
+import RknPopup from '../components/RknUI/RknPopup';
+import RknLoaderPopup from '../components/RknUI/RknLoaderPopup';
+import { Navigate } from 'react-router-dom';
+import { GetBaseUrl } from '../Reaknotron/Libs/RknRouterUtils';
 
 const ProductList = () => {
 
@@ -18,6 +19,7 @@ const ProductList = () => {
 
     const [csList, setCsList] = useState();
     const [currentSpecsToPost, setCurrentSpecsToPost] = useState(null);
+    const [busy, setBusy] = useState(false);
 
     const columns = [
         {
@@ -99,10 +101,7 @@ const ProductList = () => {
         if (ParamItem) {
             return (
                 <div className='flex flex-row'>
-                    {/* <button className={buttonStyle}> <Link to={"/product-editor?id=" + ParamItem.id}> <FaEdit size={20} /></Link> </button> */}
-                    {/* <button className={buttonStyle} onClick={() => { console.log("DELETE"); DeleteProductInDB(ParamItem.id)}}> <FaTrash size={20} /> </button> */}
-                    <button className={buttonStyle} onClick={() => { console.log("CONVERT"); ConvertCsToProduct(ParamItem._id); }}> <FaCube size={20} /> </button>
-                    {/* <button className={buttonStyle} onClick={() => { console.log("FACEBOOK : " + JSON.stringify(ParamItem)); setCurrentSpecsToPost(ParamItem); }}> <FaFacebookSquare size={20} /> </button> */}
+                    <button className={buttonStyle} onClick={() => { ConvertCsToProduct(ParamItem._id); }}> <FaCube size={20} /> </button>
                 </div>
             )
         }
@@ -141,6 +140,8 @@ const ProductList = () => {
 
     const ConvertCsToProduct = async (ParamID) => {
 
+        setBusy(true);
+        
         let res;
 
         try {
@@ -152,11 +153,14 @@ const ProductList = () => {
             res = await axios.get(url);
 
             if (res) {
-                // setState({ isBusy: false });
+                setBusy(false);
                 console.log("R = " + JSON.stringify(res));
-                GetComputerSpecsListFromDb();
-            }
 
+                if (res.data.message == "OK"){
+                    window.open(GetBaseUrl() + "/product-editor?id=" + res.data.id, '_blank');
+                }
+            }
+            
         } catch (error) {
             console.log("ERROR : " + error);
 
@@ -165,25 +169,24 @@ const ProductList = () => {
                 console.log(error.response.data);
 
             }
+
+            setBusy(false);
         }
     }
 
     return (
         <div className='text-gray-100'>
             <br />
-            <h3 className='text-xl font-bold'>Liste des Produits</h3>
+            <h3 className='text-xl font-bold'>Liste des Configurations d'Ordinateur</h3>
             <br />
-            <AwesomeButton before={<FaPlus />}><a href='/product-editor'>Ajouter Un Produit</a></AwesomeButton>
-            <br />
+            {/* <AwesomeButton before={<FaPlus />}><a href='/product-editor'>Ajouter Un Produit</a></AwesomeButton> */}
             <br />
             <div className='flex flex-col items-center overflow-x-visible md:overflow-x-hidden'>
                 <Table columns={columns} data={csList} rowKey="_id" tableLayout='auto' />
             </div>
             <br />
             <br />
-            {currentSpecsToPost &&
-                <PostToFacebookPopup value={currentSpecsToPost} isOpen={true} onClose={() => { setCurrentSpecsToPost(null); }} />
-            }
+            {busy && <RknLoaderPopup/>}
         </div>
     )
 }

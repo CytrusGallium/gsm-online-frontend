@@ -15,7 +15,6 @@ const RepairOrderValidationPopup = (props) => {
     const [checked, setChecked] = useState(true);
     const [roState, setRoState] = useState("DONE");
     const [note, setNote] = useState("");
-    // const [totalEstPrice, setTotalEstPrice] = useState(0);
     const [paiement, setPaiement] = useState(0);
     const [items, setItems] = useState(null);
 
@@ -58,13 +57,13 @@ const RepairOrderValidationPopup = (props) => {
 
         let total = Number(0);
         ParamRepairOrder.items.forEach(i => {
-            
+
             if (i.problems) {
                 i.problems.forEach(p => {
                     total += Number(p.price);
                 });
             }
-            
+
         });
 
         return total;
@@ -90,40 +89,43 @@ const RepairOrderValidationPopup = (props) => {
                 modal
                 closeOnDocumentClick
                 onClose={() => { CloseModal(); }}
-            // onOpen={() => setItems(props.value.items)}
+                contentStyle={{ width: '80%', height:'80%' }}
             >
                 <div className="modal bg-gray-900 text-gray-100 p-2">
                     <button className="close" onClick={() => { CloseModal(); }}>
                         <FaTimesCircle />
                     </button>
-                    <div className="header"> Validation de l'Ordre de Réparation </div>
-                    <div className="content flex flex-col items-center">
-                        Identifiant : {props.value.roid}
-                        <br />
-                        <br />
-                        <DeviceIconList value={props.value.items} />
-                        <br />
-                        {/* <p className='text-3xl font-bold'>Prix Total Estimé : {GetTotalPrice(props.value)} DA</p> */}
-                        <p className='text-3xl font-bold'>Prix Total Estimé : {props.value.totalPrice} DA</p>
-                        <br />
-                        {/* {props.value.items && props.value.items.map((item,index) => <div key={index}><p>{JSON.stringify(item)} : </p><DeviceStateSelector onChange={handleRoStateOnChange} /></div>)} */}
-                        {props.value.items && props.value.items.map((item) => <div key={item.key} className='m-2'><div className='mb-1 mr-1 p-2 bg-gray-800 rounded-xl font-bold text-lg'>{item.ref}</div><ProblemListValidator key={item.key} value={item.problems} onChange={(v) => { handleProblemListValidatorOnChange(item.key, v); }} /></div>)}
-                        {/* <DeviceStateSelector onChange={handleRoStateOnChange} /> */}
-                        <br />
-                        <input type="text" name='price' placeholder='Montant payer...' className={inputFieldStyle} onChange={handlePriceChange} />
-                        <br />
-                        <textarea name="note" className={inputFieldStyle} value={note} rows="3" placeholder="Ajouter une Note/Observation..." onChange={(e) => { setNote(e.target.value) }} />
-                        <br />
-                        <label>
-                            <input type="checkbox" checked={checked} onChange={handleChange} className='mx-1' />
-                            Vérouiller
-                        </label>
-                        <br />
-                        <AwesomeButtonProgress type="primary" onPress={async (element, next) => {
-                            await ValidateRepairOrderInDB(props.value.roid, roState, paiement, checked, note, items);
-                            next();
-                        }}><div className='text-xl'>Valider</div></AwesomeButtonProgress>
-                    </div>
+
+                    {/* Header */}
+                    <div className="header mb-1"> Validation de l'Ordre de Réparation </div>
+
+                    {true && <div className='flex flex-col'>
+                        <div className='flex flex-col items-center overflow-auto scrollbar bg-red-900'>
+                            Identifiant : {props.value.roid}
+                            <br />
+                            <br />
+                            <DeviceIconList value={props.value.items} />
+                            <br />
+                            <p className='text-3xl font-bold'>Prix Total Estimé : {props.value.totalPrice} DA</p>
+                            <br />
+                            {props.value.items && props.value.items.map((item) => <div key={item.key} className='m-2'><div className='mb-1 mr-1 p-2 bg-gray-800 rounded-xl font-bold text-lg'>{item.ref}</div><ProblemListValidator key={item.key} value={item.problems} onChange={(v) => { handleProblemListValidatorOnChange(item.key, v); }} /></div>)}
+                            <br />
+                            <input type="text" name='price' placeholder='Montant payer...' className={inputFieldStyle} onChange={handlePriceChange} />
+                            <br />
+                            <textarea name="note" className={inputFieldStyle} value={note} rows="3" placeholder="Ajouter une Note/Observation..." onChange={(e) => { setNote(e.target.value) }} />
+                            <br />
+                            <label>
+                                <input type="checkbox" checked={checked} onChange={handleChange} className='mx-1' />
+                                Vérouiller
+                            </label>
+                            <br />
+                            <AwesomeButtonProgress type="primary" onPress={async (element, next) => {
+                                await ValidateRepairOrderInDB(props.value.roid, roState, paiement, checked, note, items);
+                                next();
+                            }}><div className='text-xl'>Valider</div></AwesomeButtonProgress>
+                        </div>
+                    </div>}
+
                 </div>
             </Popup>
         </div>

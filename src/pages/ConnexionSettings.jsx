@@ -22,6 +22,7 @@ const ConnexionSettings = () => {
                 <option value="https://uttermost-first-gravity.glitch.me">https://uttermost-first-gravity.glitch.me</option>
                 <option value="http://localhost:4000">http://localhost:4000</option>
                 <option value="https://localhost:4000">https://localhost:4000</option>
+                <option value="http://reaknotron.freemyip.com:4000">http://reaknotron.freemyip.com:4000</option>
             </select>
         </div>
     );

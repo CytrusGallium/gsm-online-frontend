@@ -1,4 +1,12 @@
+// import AppData from '../App.json';
+
 const GetBackEndUrl = () => {
+
+    const AppData = require('./App.json');
+    
+    if (AppData.FORCED_BACKEND_URL)
+        return AppData.FORCED_BACKEND_URL;
+
     let result = "http://localhost:4000";
 
     const storedValue = localStorage.getItem("serverAddress");

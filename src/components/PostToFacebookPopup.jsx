@@ -55,7 +55,7 @@ const PostToFacebookPopup = (props) => {
 
         try {
 
-            let contentToPost = { content: ParamPostContent };
+            let contentToPost = { content: ParamPostContent, id:props.productID };
             let url = GetBackEndUrl() + "/api/post-on-facebook";
             let res = await axios.post(url, contentToPost);
 

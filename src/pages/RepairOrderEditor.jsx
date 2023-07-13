@@ -5,7 +5,7 @@ import RepairOrderID from '../components/RepairOrderID';
 import { GetBackEndUrl, GetPrintServerAddress, GetPrinterName } from '../const';
 import axios from "axios";
 import { AwesomeButton } from 'react-awesome-button';
-import { FaPrint, FaDownload, FaCheckCircle, FaList, FaSave, FaPlus } from 'react-icons/fa';
+import { FaPrint, FaDownload, FaCheckCircle, FaList, FaSave, FaPlus, FaArrowRight, FaArrowLeft } from 'react-icons/fa';
 import { GetDateTimeDMYHM, GetShortDate, GetTimeHM2Digits } from '../Reaknotron/Libs/RknTimeTools';
 import GenericMessagePopup from '../components/GenericMessagePopup';
 import { CircleLoader } from 'react-spinners';
@@ -47,13 +47,23 @@ const NewRepairOrderForm = () => {
     useHotkeys('f1', (e) => {
         e.preventDefault();
         console.log("F1");
+        console.log(JSON.stringify(versions));
         // SaveAndPrint();
     }, []);
 
     useEffect(() => {
 
         if (searchParams.get("id")) {
-            GetRepairOrderFromDB(searchParams.get("id"));
+
+            // ...
+            if (searchParams.get("history")) {
+                setHistoryMode(true);
+                GetRepairOrderHistoryFromDB(searchParams.get("id"));
+            }
+            else {
+                setHistoryMode(false);
+                GetRepairOrderFromDB(searchParams.get("id"));
+            }
         }
         else {
             GetNewIDFromDB();
@@ -108,6 +118,13 @@ const NewRepairOrderForm = () => {
     const [onError, setOnError] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
 
+    // History Mode
+    const [historyMode, setHistoryMode] = useState(false);
+    const [versions, setVersions] = useState([]);
+    const [versionCount, setVersionCount] = useState(0);
+    const [currentVersion, setCurrentVersion] = useState(null);
+    const [currentVersionIndex, setCurrentVersionIndex] = useState(0);
+
     const GetNewIDFromDB = async () => {
         let res;
 
@@ -149,6 +166,69 @@ const NewRepairOrderForm = () => {
                 setItems(res.data.items);
                 setRepairOrder({ location: res.data.location, customer: res.data.customer, phone: res.data.phone });
                 setTotalEstPrice(getTotalEstPrice(res.data.items));
+            }
+
+        } catch (error) {
+            console.log("ERROR : " + error);
+
+            if (error.response && error.response.status >= 400 && error.response.status <= 500) {
+
+                console.log(error.response.data);
+
+            }
+        }
+    }
+
+    const previousVersion = () => {
+        let i = currentVersionIndex + 1;
+        if (i > versionCount - 1) i = versionCount - 1;
+        // console.log("V = " + i);
+        setCurrentVersionIndex(i);
+
+        setCurrentVersion(versions[i]);
+
+        setROID(versions[i].roid);
+        setItems(versions[i].items);
+        setRepairOrder({ location: versions[i].location, customer: versions[i].customer, phone: versions[i].phone });
+        setTotalEstPrice(getTotalEstPrice(versions[i].items));
+    }
+
+    const nextVersion = () => {
+        let i = currentVersionIndex - 1;
+        if (i < 0) i = 0;
+        // console.log("V = " + i);
+        setCurrentVersionIndex(i);
+
+        setCurrentVersion(versions[i]);
+
+        setROID(versions[i].roid);
+        setItems(versions[i].items);
+        setRepairOrder({ location: versions[i].location, customer: versions[i].customer, phone: versions[i].phone });
+        setTotalEstPrice(getTotalEstPrice(versions[i].items));
+    }
+
+    const GetRepairOrderHistoryFromDB = async (ParamROID) => {
+        let res;
+
+        try {
+
+            // Build Req/Res
+            const url = GetBackEndUrl() + "/api/repair-order-history?roid=" + ParamROID;
+            console.log("GET : " + url);
+            res = await axios.get(url);
+
+            if (res && res.data.length) {
+
+                // console.log("RES H = " + JSON.stringify(res.data));
+
+                setVersions(res.data);
+                setVersionCount(res.data.length);
+                setCurrentVersion(res.data[currentVersionIndex]);
+
+                setROID(res.data[currentVersionIndex].roid);
+                setItems(res.data[currentVersionIndex].items);
+                setRepairOrder({ location: res.data[currentVersionIndex].location, customer: res.data[currentVersionIndex].customer, phone: res.data[currentVersionIndex].phone });
+                setTotalEstPrice(getTotalEstPrice(res.data[currentVersionIndex].items));
             }
 
         } catch (error) {
@@ -245,14 +325,11 @@ const NewRepairOrderForm = () => {
 
         let tmpItems;
         if (items == null || items == '' || items == 0) {
-            console.log("MARK A");
             tmpItems = defaultItemsState;
         }
         else {
-            console.log("MARK B");
             tmpItems = items;
             tmpItems.push(defaultItemsState[0]);
-            // tmpItems[items.length] = defaultItemsState[0];
             tmpItems[items.length - 1].key = items.length - 1;
         }
 
@@ -503,7 +580,7 @@ const NewRepairOrderForm = () => {
     return (
         <div>
             {/* Toolbar */}
-            <motion.div
+            {!historyMode && <motion.div
                 initial={{ opacity: 0, y: "-100%" }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
@@ -519,7 +596,26 @@ const NewRepairOrderForm = () => {
                 <AwesomeButton type='primary' onPress={DownloadPDF} before={<FaDownload size={24} />}><p className='hidden sm:block text-lg'>Télécharger le Bon</p></AwesomeButton>
                 <span className='mx-1' />
                 <AwesomeButton type='primary' before={<FaPlus size={24} />}><a className='hidden sm:block text-lg' href={GetBaseUrl() + "/add-repair-order"}>Nouveau Bon</a></AwesomeButton>
-            </motion.div>
+            </motion.div>}
+
+            {/* History Mode Toolbar */}
+            {historyMode && <motion.div
+                initial={{ opacity: 0, y: "-100%" }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className='fixed h-16 bg-red-900 backdrop-blur bg-opacity-50 top-20 left-4 right-4 z-10 rounded-xl border-2 border-gray-500 flex flex-row items-center justify-center'
+            >
+                <AwesomeButton type={'primary'} onPress={previousVersion}> <FaArrowLeft size={20} className='mr-2' /> <p className='hidden sm:block text-sm'>Version Précédente</p></AwesomeButton>
+                <span className='mx-1' />
+
+                <div className='bg-red-700 rounded-xl py-1 px-2 mx-2 h-12'>
+                    <div className='text-xs text-gray-100'>Mode Historique</div>
+                    <div className='text-lg font-bold text-gray-100'>Version {currentVersion && currentVersion.version} / {versionCount && versionCount}</div>
+                </div>
+
+                <span className='mx-1' />
+                <AwesomeButton type={'primary'} onPress={nextVersion}><p className='hidden sm:block text-sm'>Version Suivante</p> <FaArrowRight size={20} className='ml-2' /> </AwesomeButton>
+            </motion.div>}
 
             {/* Editor */}
             <div className='flex flex-col items-center'>
